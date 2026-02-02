@@ -1,0 +1,16 @@
+{
+  "name": "time-machine",
+  "version": "1.0.0",
+  "description": "Weather engine for environmental simulation systems",
+  "main": "lib/index.js",
+  "bin": {
+    "weather-engine": "./cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["weather", "simulation", "climate"],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
