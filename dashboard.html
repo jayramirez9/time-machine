@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Machine Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sky dome */
+    #sky {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transition: background 2s ease;
+      z-index: 0;
+    }
+
+    /* Sun/Moon */
+    #sun {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      transition: all 1s ease;
+      z-index: 1;
+    }
+
+    .sun-day {
+      background: radial-gradient(circle, #fff5c0 0%, #ffdd44 50%, #ff9500 100%);
+      box-shadow: 0 0 60px 20px rgba(255, 200, 50, 0.4);
+    }
+
+    .sun-night {
+      background: radial-gradient(circle, #f5f5f5 0%, #d0d0d0 50%, #a0a0a0 100%);
+      box-shadow: 0 0 40px 10px rgba(200, 200, 255, 0.2);
+    }
+
+    /* Ground */
+    #ground {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 25%;
+      background: linear-gradient(to bottom, #2d4a2d 0%, #1a2f1a 100%);
+      z-index: 2;
+    }
+
+    /* Rain overlay */
+    #rain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0;
+      background: repeating-linear-gradient(
+        transparent 0px,
+        transparent 4px,
+        rgba(150, 180, 255, 0.1) 4px,
+        rgba(150, 180, 255, 0.1) 5px
+      );
+      animation: rain 0.3s linear infinite;
+    }
+
+    @keyframes rain {
+      from { background-position: 0 0; }
+      to { background-position: 20px 40px; }
+    }
+
+    /* Haze overlay */
+    #haze {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(200, 200, 220, 0.1);
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0;
+      transition: opacity 2s ease;
+    }
+
+    /* Info panel */
+    #panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      z-index: 10;
+      min-width: 280px;
+    }
+
+    #panel h1 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    #location {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    #datetime {
+      font-size: 18px;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+
+    .state-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .state-label {
+      color: #888;
+    }
+
+    .state-value {
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    /* Audio levels */
+    #audio-panel {
+      position: fixed;
+      bottom: 30%;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 12px;
+      z-index: 10;
+    }
+
+    .level-bar {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .level-label {
+      width: 60px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .level-track {
+      width: 100px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .level-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a9eff, #00d4ff);
+      transition: width 1s ease;
+      border-radius: 4px;
+    }
+
+    .level-fill.rain {
+      background: linear-gradient(90deg, #6a8cff, #00a4ff);
+    }
+
+    /* Controls panel */
+    #controls-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 12px;
+      z-index: 10;
+      font-size: 12px;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      min-width: 180px;
+    }
+
+    .control-label {
+      color: #666;
+    }
+
+    .control-value {
+      color: #0f0;
+      font-family: monospace;
+    }
+
+    /* Connection status */
+    #status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      font-size: 12px;
+      color: #666;
+      z-index: 10;
+    }
+
+    #status.connected {
+      color: #4a4;
+    }
+
+    #status.disconnected {
+      color: #a44;
+    }
+
+    /* Comfort indicator */
+    #comfort {
+      position: fixed;
+      bottom: 30%;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      border-radius: 12px;
+      z-index: 10;
+      text-align: center;
+    }
+
+    #comfort-icon {
+      font-size: 36px;
+      margin-bottom: 5px;
+    }
+
+    #comfort-text {
+      font-size: 14px;
+      text-transform: capitalize;
+    }
+  </style>
+</head>
+<body>
+  <div id="sky"></div>
+  <div id="sun" class="sun-day"></div>
+  <div id="ground"></div>
+  <div id="rain"></div>
+  <div id="haze"></div>
+
+  <div id="panel">
+    <h1>Time Machine</h1>
+    <div id="location">--</div>
+    <div id="datetime">--</div>
+    <div class="state-row">
+      <span class="state-label">Time of Day</span>
+      <span class="state-value" id="timeOfDay">--</span>
+    </div>
+    <div class="state-row">
+      <span class="state-label">Sky</span>
+      <span class="state-value" id="sky-state">--</span>
+    </div>
+    <div class="state-row">
+      <span class="state-label">Weather</span>
+      <span class="state-value" id="precip">--</span>
+    </div>
+    <div class="state-row">
+      <span class="state-label">Wind</span>
+      <span class="state-value" id="wind">--</span>
+    </div>
+    <div class="state-row" style="border: none;">
+      <span class="state-label">Comfort</span>
+      <span class="state-value" id="comfort-state">--</span>
+    </div>
+  </div>
+
+  <div id="comfort">
+    <div id="comfort-icon">🌡️</div>
+    <div id="comfort-text">--</div>
+  </div>
+
+  <div id="audio-panel">
+    <div class="level-bar">
+      <span class="level-label">Wind</span>
+      <div class="level-track">
+        <div class="level-fill" id="wind-level" style="width: 0%"></div>
+      </div>
+    </div>
+    <div class="level-bar">
+      <span class="level-label">Rain</span>
+      <div class="level-track">
+        <div class="level-fill rain" id="rain-level" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls-panel">
+    <div class="control-row">
+      <span class="control-label">Luminance</span>
+      <span class="control-value" id="luminance">--</span>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Color Temp</span>
+      <span class="control-value" id="colorTemp">--</span>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Contrast</span>
+      <span class="control-value" id="contrast">--</span>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Haze</span>
+      <span class="control-value" id="haze-val">--</span>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Sun Alt</span>
+      <span class="control-value" id="sunAlt">--</span>
+    </div>
+  </div>
+
+  <div id="status" class="disconnected">Disconnected</div>
+
+  <script>
+    const SKY_COLORS = {
+      night: ['#0a0a1a', '#1a1a3a'],
+      twilight: ['#1a1a3a', '#4a3060'],
+      dawn: ['#ff7b5a', '#ffb088', '#87ceeb'],
+      morning: ['#87ceeb', '#b0d4f1'],
+      day: ['#4a90d9', '#87ceeb'],
+      afternoon: ['#5a9fd4', '#9ac4e8'],
+      dusk: ['#ff6b4a', '#ff9068', '#4a3060']
+    };
+
+    const COMFORT_ICONS = {
+      freezing: '🥶',
+      cold: '❄️',
+      cool: '🌬️',
+      comfortable: '😊',
+      warm: '☀️',
+      hot: '🔥'
+    };
+
+    let ws;
+    let reconnectTimeout;
+
+    function connect() {
+      const host = location.hostname || 'localhost';
+      const port = location.port || '3000';
+      ws = new WebSocket(`ws://${host}:${port}/`);
+
+      ws.onopen = () => {
+        document.getElementById('status').textContent = 'Connected';
+        document.getElementById('status').className = 'connected';
+      };
+
+      ws.onclose = () => {
+        document.getElementById('status').textContent = 'Disconnected - Reconnecting...';
+        document.getElementById('status').className = 'disconnected';
+        reconnectTimeout = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        updateDisplay(data);
+      };
+    }
+
+    function kelvinToRGB(kelvin) {
+      const temp = kelvin / 100;
+      let r, g, b;
+
+      if (temp <= 66) {
+        r = 255;
+        g = Math.min(255, Math.max(0, 99.4708025861 * Math.log(temp) - 161.1195681661));
+      } else {
+        r = Math.min(255, Math.max(0, 329.698727446 * Math.pow(temp - 60, -0.1332047592)));
+        g = Math.min(255, Math.max(0, 288.1221695283 * Math.pow(temp - 60, -0.0755148492)));
+      }
+
+      if (temp >= 66) {
+        b = 255;
+      } else if (temp <= 19) {
+        b = 0;
+      } else {
+        b = Math.min(255, Math.max(0, 138.5177312231 * Math.log(temp - 10) - 305.0447927307));
+      }
+
+      return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
+    }
+
+    function updateDisplay(data) {
+      const { states, controls, engine, timeLocal } = data;
+      const lighting = controls.lighting;
+      const audio = controls.audio;
+      const atmosphere = controls.atmosphere;
+      const visual = controls.visual;
+
+      // Location and time
+      document.getElementById('location').textContent = data.location || 'Unknown';
+
+      if (timeLocal) {
+        const date = new Date(timeLocal);
+        document.getElementById('datetime').textContent = date.toLocaleString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      }
+
+      // States
+      document.getElementById('timeOfDay').textContent = states.timeOfDay;
+      document.getElementById('sky-state').textContent = states.sky;
+      document.getElementById('precip').textContent = states.precip === 'none' ? 'Clear' : states.precip.replace('_', ' ');
+      document.getElementById('wind').textContent = states.wind;
+      document.getElementById('comfort-state').textContent = states.comfort;
+
+      // Comfort icon
+      document.getElementById('comfort-icon').textContent = COMFORT_ICONS[states.comfort] || '🌡️';
+      document.getElementById('comfort-text').textContent = states.comfort;
+
+      // Sky gradient
+      const skyColors = SKY_COLORS[states.timeOfDay] || SKY_COLORS.day;
+      const luminance = lighting.exteriorLuminance;
+      const skyEl = document.getElementById('sky');
+
+      // Adjust sky based on cloud cover
+      let skyGradient;
+      if (states.sky === 'overcast') {
+        skyGradient = `linear-gradient(to bottom, #606070, #808090)`;
+      } else if (states.sky === 'broken') {
+        skyGradient = `linear-gradient(to bottom, ${skyColors[0]}dd, ${skyColors[skyColors.length-1]}aa)`;
+      } else {
+        skyGradient = `linear-gradient(to bottom, ${skyColors.join(', ')})`;
+      }
+      skyEl.style.background = skyGradient;
+
+      // Sun/Moon position
+      const sunEl = document.getElementById('sun');
+      const sunAlt = visual.sunAltitude;
+      const sunAz = visual.sunAzimuth;
+
+      // Map altitude (0-90) to vertical position
+      const maxHeight = window.innerHeight * 0.6;
+      const sunY = maxHeight - (sunAlt / 90) * maxHeight + 50;
+
+      // Map azimuth (90-270 visible range) to horizontal position
+      const sunX = ((sunAz - 90) / 180) * window.innerWidth;
+
+      sunEl.style.left = `${sunX - 30}px`;
+      sunEl.style.top = `${sunY}px`;
+      sunEl.style.opacity = sunAlt > 0 ? 1 : 0.7;
+      sunEl.className = sunAlt > 0 ? 'sun-day' : 'sun-night';
+
+      // Apply color temperature tint
+      const rgb = kelvinToRGB(lighting.colorTempK);
+      sunEl.style.boxShadow = `0 0 ${60 + luminance * 40}px ${20 + luminance * 20}px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.2 + luminance * 0.3})`;
+
+      // Rain overlay
+      const rainEl = document.getElementById('rain');
+      rainEl.style.opacity = audio.rainLevel;
+
+      // Haze overlay
+      const hazeEl = document.getElementById('haze');
+      hazeEl.style.opacity = atmosphere.haze * 2;
+
+      // Audio levels
+      document.getElementById('wind-level').style.width = `${audio.windLevel * 100}%`;
+      document.getElementById('rain-level').style.width = `${audio.rainLevel * 100}%`;
+
+      // Control values
+      document.getElementById('luminance').textContent = lighting.exteriorLuminance.toFixed(2);
+      document.getElementById('colorTemp').textContent = `${lighting.colorTempK}K`;
+      document.getElementById('contrast').textContent = lighting.contrast.toFixed(2);
+      document.getElementById('haze-val').textContent = atmosphere.haze.toFixed(2);
+      document.getElementById('sunAlt').textContent = `${visual.sunAltitude}°`;
+
+      // Update status with sim time
+      if (engine) {
+        document.getElementById('status').textContent = `Connected | Tick ${engine.tickCount} | ${engine.timeScale}x`;
+      }
+    }
+
+    // Start connection
+    connect();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      // Sun position will update on next data push
+    });
+  </script>
+</body>
+</html>
