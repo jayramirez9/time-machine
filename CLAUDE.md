@@ -80,6 +80,32 @@ The environment router (`lib/environmentRouter.js`) maps WorldState fields to do
 
 See `routes.example.json` for a full config example. Transform types: `scale`, `map`, `curve`, `threshold`, `passthrough`.
 
+### Endpoint Dispatcher
+
+The dispatcher (`lib/dispatch.js`) sends routed payloads to downstream endpoints using a plugin transport model. It is called automatically on each publish tick when `routesConfigPath` is provided.
+
+```js
+import { dispatch, registerTransport } from './lib/dispatch.js';
+
+// Replace a stubbed transport with a real one
+registerTransport('http', async (config, params) => {
+  await fetch(config.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+});
+
+// Manual dispatch (called automatically by startEngine when routes are configured)
+const results = await dispatch(
+  { unreal: { fogDensity: 0.003 }, dsp: { '/wind/gain': -48 } },
+  config.endpoints
+);
+// results: { unreal: { ok: true, transport: 'http', params }, dsp: { ok: true, ... } }
+```
+
+Built-in transports (all stubbed, log only): `http`, `osc`, `log`.
+
 ## Daemon
 
 The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell around `startEngine()`.
@@ -121,6 +147,7 @@ This is a Node.js ES modules project:
 - **tm-engine.js** - Daemon shell: CLI arg parsing, HTTP/WebSocket transport. Delegates to `startEngine()`
 - **lib/runtimeEngine.js** - Runtime engine: world time progression, timeline caching, state smoothing, publish tick loop. Exports `startEngine()` and `easeWorldState()`
 - **lib/environmentRouter.js** - Config-driven WorldState field mapping to downstream endpoints. Exports `evaluateRoutes()` and `validateConfig()`
+- **lib/dispatch.js** - Plugin-model endpoint dispatcher. Exports `dispatch()`, `registerTransport()`, `getTransport()`
 - **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
 
 ### Weather Providers
