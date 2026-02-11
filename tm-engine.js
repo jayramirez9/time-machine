@@ -14,6 +14,7 @@
  */
 
 import http from 'http';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { getMockWeather } from './lib/weather.js';
@@ -80,6 +81,14 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
+// Angle interpolation (handles 0/360 wraparound)
+function lerpAngle(a, b, t) {
+  let diff = b - a;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return ((a + diff * t) + 360) % 360;
+}
+
 // Ease between two world states (no snapping)
 function easeWorldState(current, target, rate) {
   if (!current) return target;
@@ -102,9 +111,9 @@ function easeWorldState(current, target, rate) {
         wetness: lerp(current.controls.atmosphere.wetness, target.controls.atmosphere.wetness, rate)
       },
       visual: {
-        windDirection: lerp(current.controls.visual.windDirection, target.controls.visual.windDirection, rate),
+        windDirection: lerpAngle(current.controls.visual.windDirection, target.controls.visual.windDirection, rate),
         sunAltitude: lerp(current.controls.visual.sunAltitude, target.controls.visual.sunAltitude, rate),
-        sunAzimuth: lerp(current.controls.visual.sunAzimuth, target.controls.visual.sunAzimuth, rate),
+        sunAzimuth: lerpAngle(current.controls.visual.sunAzimuth, target.controls.visual.sunAzimuth, rate),
         precipDensity: lerp(current.controls.visual.precipDensity, target.controls.visual.precipDensity, rate),
         heatDistortion: lerp(current.controls.visual.heatDistortion, target.controls.visual.heatDistortion, rate)
       }
@@ -179,7 +188,6 @@ class WebSocketServer {
   }
 
   computeAcceptKey(key) {
-    const crypto = require('crypto');
     const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
     return crypto.createHash('sha1').update(key + GUID).digest('base64');
   }
@@ -346,11 +354,13 @@ class TimeMachineEngine {
 }
 
 // HTTP Server
-function createServer(engine, wss) {
-  return http.createServer((req, res) => {
+function createServer(engine) {
+  const server = http.createServer((req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+    const wss = server.wss;
 
     if (req.method === 'GET' && req.url === '/worldstate') {
       res.setHeader('Content-Type', 'application/json');
@@ -393,6 +403,7 @@ ws.onmessage = (e) => {
       res.end('Not found');
     }
   });
+  return server;
 }
 
 // Main
@@ -402,10 +413,8 @@ async function main() {
   const engine = new TimeMachineEngine(args);
   await engine.initialize();
 
-  const server = createServer(engine, { clientCount: 0 });
+  const server = createServer(engine);
   const wss = new WebSocketServer(server);
-
-  // Update server reference for client count
   server.wss = wss;
 
   server.listen(CONFIG.port, () => {
