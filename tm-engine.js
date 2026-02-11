@@ -15,32 +15,20 @@
 
 import http from 'http';
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import { getMockWeather } from './lib/weather.js';
-import { getWeatherTimeline } from './lib/weatherTimeline.js';
-import { compileWorldState } from './lib/worldStateCompiler.js';
-import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
-
-// Configuration
-const CONFIG = {
-  port: parseInt(process.env.TM_PORT) || 3000,
-  tickRateMs: 1000,           // Internal tick: 1Hz
-  publishIntervalMs: 5000,    // Publish to clients: every 5s
-  timeScale: 60,              // 1 real second = 60 sim seconds (1 min)
-  easeRate: 0.1,              // Lerp factor for smooth transitions
-  logFile: 'tm-engine.log',
-  logMaxLines: 1000
-};
+import { startEngine } from './lib/runtimeEngine.js';
+import { DEFAULT_LOCALE } from './lib/localePresets.js';
 
 // Parse arguments
 function parseArgs(args) {
   const parsed = {
     location: 'Baton Rouge, LA',
     startDate: null,
-    realtime: false,
     locale: DEFAULT_LOCALE,
-    mock: true  // Default to mock until API rate limits reset
+    port: parseInt(process.env.TM_PORT) || 3000,
+    timescale: 60,
+    tickMs: 1000,
+    publishEveryMs: 5000,
+    routesConfigPath: null
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -49,110 +37,18 @@ function parseArgs(args) {
       parsed.location = args[++i];
     } else if (arg === '--date' || arg === '-d') {
       parsed.startDate = args[++i];
-    } else if (arg === '--realtime') {
-      parsed.realtime = true;
     } else if (arg === '--locale') {
       parsed.locale = args[++i];
     } else if (arg === '--port' || arg === '-p') {
-      CONFIG.port = parseInt(args[++i]);
+      parsed.port = parseInt(args[++i]);
     } else if (arg === '--timescale') {
-      CONFIG.timeScale = parseFloat(args[++i]);
-    } else if (arg === '--no-mock') {
-      parsed.mock = false;
+      parsed.timescale = parseFloat(args[++i]);
+    } else if (arg === '--routes') {
+      parsed.routesConfigPath = args[++i];
     }
   }
 
   return parsed;
-}
-
-// Parse date string
-function parseDate(dateStr) {
-  if (!dateStr) return new Date();
-  const match = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (match) {
-    const [, month, day, year] = match;
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
-  }
-  return new Date(dateStr);
-}
-
-// Linear interpolation
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
-// Angle interpolation (handles 0/360 wraparound)
-function lerpAngle(a, b, t) {
-  let diff = b - a;
-  if (diff > 180) diff -= 360;
-  if (diff < -180) diff += 360;
-  return ((a + diff * t) + 360) % 360;
-}
-
-// Ease between two world states (no snapping)
-function easeWorldState(current, target, rate) {
-  if (!current) return target;
-
-  return {
-    ...target,
-    controls: {
-      lighting: {
-        exteriorLuminance: lerp(current.controls.lighting.exteriorLuminance, target.controls.lighting.exteriorLuminance, rate),
-        colorTempK: lerp(current.controls.lighting.colorTempK, target.controls.lighting.colorTempK, rate),
-        contrast: lerp(current.controls.lighting.contrast, target.controls.lighting.contrast, rate)
-      },
-      audio: {
-        baseNoiseFloorDb: lerp(current.controls.audio.baseNoiseFloorDb, target.controls.audio.baseNoiseFloorDb, rate),
-        windLevel: lerp(current.controls.audio.windLevel, target.controls.audio.windLevel, rate),
-        rainLevel: lerp(current.controls.audio.rainLevel, target.controls.audio.rainLevel, rate)
-      },
-      atmosphere: {
-        haze: lerp(current.controls.atmosphere.haze, target.controls.atmosphere.haze, rate),
-        wetness: lerp(current.controls.atmosphere.wetness, target.controls.atmosphere.wetness, rate)
-      },
-      visual: {
-        windDirection: lerpAngle(current.controls.visual.windDirection, target.controls.visual.windDirection, rate),
-        sunAltitude: lerp(current.controls.visual.sunAltitude, target.controls.visual.sunAltitude, rate),
-        sunAzimuth: lerpAngle(current.controls.visual.sunAzimuth, target.controls.visual.sunAzimuth, rate),
-        precipDensity: lerp(current.controls.visual.precipDensity, target.controls.visual.precipDensity, rate),
-        heatDistortion: lerp(current.controls.visual.heatDistortion, target.controls.visual.heatDistortion, rate)
-      }
-    }
-  };
-}
-
-// Rolling log writer
-class RollingLog {
-  constructor(filepath, maxLines) {
-    this.filepath = filepath;
-    this.maxLines = maxLines;
-    this.lines = [];
-    this.load();
-  }
-
-  load() {
-    try {
-      if (fs.existsSync(this.filepath)) {
-        const content = fs.readFileSync(this.filepath, 'utf8');
-        this.lines = content.split('\n').filter(l => l.trim());
-        if (this.lines.length > this.maxLines) {
-          this.lines = this.lines.slice(-this.maxLines);
-        }
-      }
-    } catch (e) {
-      this.lines = [];
-    }
-  }
-
-  write(entry) {
-    const timestamp = new Date().toISOString();
-    const line = `${timestamp} ${JSON.stringify(entry)}`;
-    this.lines.push(line);
-    if (this.lines.length > this.maxLines) {
-      this.lines.shift();
-    }
-    fs.writeFileSync(this.filepath, this.lines.join('\n') + '\n');
-  }
 }
 
 // WebSocket handling (minimal implementation without external deps)
@@ -237,126 +133,9 @@ class WebSocketServer {
   }
 }
 
-// Main Engine
-class TimeMachineEngine {
-  constructor(options) {
-    this.location = options.location;
-    this.locale = LOCALES[options.locale] || LOCALES[DEFAULT_LOCALE];
-    this.useMock = options.mock;
-
-    // World clock
-    this.simTime = options.startDate ? parseDate(options.startDate) : new Date();
-    this.realtime = options.realtime;
-    this.lastTickTime = Date.now();
-
-    // State
-    this.currentState = null;
-    this.targetState = null;
-    this.timeline = null;
-
-    // Logging
-    this.log = new RollingLog(CONFIG.logFile, CONFIG.logMaxLines);
-
-    // Tick counters
-    this.tickCount = 0;
-    this.publishTickInterval = CONFIG.publishIntervalMs / CONFIG.tickRateMs;
-  }
-
-  async initialize() {
-    console.log(`[Engine] Initializing...`);
-    console.log(`[Engine] Location: ${this.location}`);
-    console.log(`[Engine] Start time: ${this.simTime.toISOString()}`);
-    console.log(`[Engine] Time scale: ${CONFIG.timeScale}x`);
-    console.log(`[Engine] Using ${this.useMock ? 'mock' : 'real'} weather provider`);
-
-    await this.refreshTimeline();
-    this.updateTargetState();
-    this.currentState = this.targetState;
-
-    console.log(`[Engine] Ready.`);
-  }
-
-  async refreshTimeline() {
-    try {
-      this.timeline = await getWeatherTimeline({
-        location: this.location,
-        centerDate: this.simTime,
-        windowHours: 6,
-        intervalMinutes: 15,
-        useMock: this.useMock
-      });
-    } catch (e) {
-      console.error(`[Engine] Failed to refresh timeline: ${e.message}`);
-    }
-  }
-
-  updateTargetState() {
-    if (!this.timeline) return;
-
-    this.targetState = compileWorldState({
-      timeline: this.timeline,
-      locale: this.locale,
-      now: this.simTime
-    });
-  }
-
-  tick() {
-    const now = Date.now();
-    const deltaMs = now - this.lastTickTime;
-    this.lastTickTime = now;
-
-    // Advance simulation time
-    if (this.realtime) {
-      this.simTime = new Date();
-    } else {
-      const simDeltaMs = deltaMs * CONFIG.timeScale;
-      this.simTime = new Date(this.simTime.getTime() + simDeltaMs);
-    }
-
-    // Update target state
-    this.updateTargetState();
-
-    // Ease current state toward target
-    this.currentState = easeWorldState(this.currentState, this.targetState, CONFIG.easeRate);
-
-    this.tickCount++;
-
-    // Refresh timeline periodically (every ~5 minutes sim time)
-    if (this.tickCount % 300 === 0) {
-      this.refreshTimeline();
-    }
-  }
-
-  shouldPublish() {
-    return this.tickCount % this.publishTickInterval === 0;
-  }
-
-  getState() {
-    return {
-      ...this.currentState,
-      engine: {
-        simTime: this.simTime.toISOString(),
-        realtime: this.realtime,
-        timeScale: CONFIG.timeScale,
-        tickCount: this.tickCount
-      }
-    };
-  }
-
-  logState() {
-    const summary = {
-      simTime: this.simTime.toISOString(),
-      states: this.currentState?.states,
-      luminance: this.currentState?.controls?.lighting?.exteriorLuminance
-    };
-    this.log.write(summary);
-  }
-}
-
 // HTTP Server
 function createServer(engine) {
   const server = http.createServer((req, res) => {
-    // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
 
@@ -371,8 +150,7 @@ function createServer(engine) {
         status: 'running',
         location: engine.location,
         simTime: engine.simTime.toISOString(),
-        realtime: engine.realtime,
-        timeScale: CONFIG.timeScale,
+        timescale: engine.timescale,
         clients: wss.clientCount,
         uptime: process.uptime()
       }));
@@ -410,40 +188,47 @@ ws.onmessage = (e) => {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  const engine = new TimeMachineEngine(args);
-  await engine.initialize();
+  console.log(`[Engine] Initializing...`);
+  console.log(`[Engine] Location: ${args.location}`);
+  console.log(`[Engine] Time scale: ${args.timescale}x`);
+
+  const engine = await startEngine({
+    location: args.location,
+    startLocalISO: args.startDate,
+    timescale: args.timescale,
+    tickMs: args.tickMs,
+    publishEveryMs: args.publishEveryMs,
+    localePreset: args.locale,
+    routesConfigPath: args.routesConfigPath
+  });
+
+  console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);
+  console.log(`[Engine] Ready.`);
 
   const server = createServer(engine);
   const wss = new WebSocketServer(server);
   server.wss = wss;
 
-  server.listen(CONFIG.port, () => {
-    console.log(`[Server] HTTP:      http://localhost:${CONFIG.port}/worldstate`);
-    console.log(`[Server] WebSocket: ws://localhost:${CONFIG.port}/`);
-    console.log(`[Server] Status:    http://localhost:${CONFIG.port}/status`);
-    console.log(`[Server] Dashboard: http://localhost:${CONFIG.port}/`);
-    console.log('');
+  // Push state to WebSocket clients on every publish
+  engine.onPublish((state) => {
+    wss.broadcast(state);
+
+    const s = state.states;
+    const c = state.controls.lighting;
+    console.log(
+      `[${state.engine.simTime.slice(11, 19)}] ` +
+      `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
+      `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`
+    );
   });
 
-  // Main loop
-  setInterval(() => {
-    engine.tick();
-
-    if (engine.shouldPublish()) {
-      const state = engine.getState();
-      wss.broadcast(state);
-      engine.logState();
-
-      // Console output
-      const s = state.states;
-      const c = state.controls.lighting;
-      console.log(
-        `[${state.engine.simTime.slice(11, 19)}] ` +
-        `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
-        `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`
-      );
-    }
-  }, CONFIG.tickRateMs);
+  server.listen(args.port, () => {
+    console.log(`[Server] HTTP:      http://localhost:${args.port}/worldstate`);
+    console.log(`[Server] WebSocket: ws://localhost:${args.port}/`);
+    console.log(`[Server] Status:    http://localhost:${args.port}/status`);
+    console.log(`[Server] Dashboard: http://localhost:${args.port}/`);
+    console.log('');
+  });
 }
 
 main().catch(console.error);
