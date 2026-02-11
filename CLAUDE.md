@@ -36,16 +36,60 @@ Run tests with Node's built-in test runner:
 npm test
 ```
 
+## Runtime Engine
+
+The core simulation engine (`lib/runtimeEngine.js`) owns the tick loop and publishes WorldState on a fixed cadence. It can be used standalone as a library or via the daemon.
+
+### startEngine() API
+
+```js
+import { startEngine } from './lib/runtimeEngine.js';
+
+const engine = await startEngine({
+  location: 'Baton Rouge, LA',       // Location string
+  startLocalISO: '07-04-1978',       // ISO string or MM-DD-YYYY
+  timescale: 60,                     // Sim speed multiplier (default: 1)
+  tickMs: 1000,                      // Tick interval in ms (default: 1000)
+  publishEveryMs: 5000,              // Publish interval in ms (default: 5000)
+  localePreset: 'baton_rouge_suburb', // Locale preset key
+  routesConfigPath: './routes.json'   // Optional: path to routes config
+});
+
+// Pull current state
+const state = engine.getState();
+
+// Subscribe to publish events (push)
+const unsub = engine.onPublish((state) => {
+  console.log(state.states, state.controls);
+  console.log(state.routed); // present if routesConfigPath was provided
+});
+
+// Read-only properties
+engine.simTime;    // Current simulation Date
+engine.location;   // Location string
+engine.timescale;  // Speed multiplier
+engine.tickCount;  // Total ticks elapsed
+
+// Stop the engine
+engine.stop();
+```
+
+### Environment Router
+
+The environment router (`lib/environmentRouter.js`) maps WorldState fields to downstream endpoint parameters via a JSON config file. When `routesConfigPath` is provided to `startEngine()`, routed values are included in every published state under `state.routed`.
+
+See `routes.example.json` for a full config example. Transform types: `scale`, `map`, `curve`, `threshold`, `passthrough`.
+
 ## Daemon
 
-The Time Machine Engine (`tm-engine.js`) is an always-on service that publishes WorldState on a fixed cadence.
+The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell around `startEngine()`.
 
 ### Running the Daemon
 
 ```bash
 ./tm-engine.js -l "Baton Rouge, LA" -d "07-04-1978"    # Historical simulation
-./tm-engine.js -l "Baton Rouge, LA" --realtime         # Real-time mode
-./tm-engine.js --port 3333 --timescale 120             # Custom port, 2min/sec
+./tm-engine.js --port 3333 --timescale 120              # Custom port, 2min/sec
+./tm-engine.js --routes routes.example.json             # With environment routing
 ```
 
 ### Endpoints
@@ -57,25 +101,16 @@ The Time Machine Engine (`tm-engine.js`) is an always-on service that publishes 
 | `GET /` | Browser dashboard with live updates |
 | `WebSocket /` | Push updates every 5 seconds |
 
-### Configuration
-
-- **Tick rate:** 1Hz internal
-- **Publish interval:** Every 5 seconds
-- **Time scale:** 60x default (1 real second = 1 sim minute)
-- **Easing:** State transitions are smoothed (no snapping)
-- **Log file:** `tm-engine.log` (rolling, 1000 lines)
-
 ### Flags
 
 | Flag | Description |
 |------|-------------|
 | `-l, --location` | Location string (default: "Baton Rouge, LA") |
 | `-d, --date` | Start date in MM-DD-YYYY format |
-| `--realtime` | Use current real time instead of simulated |
 | `--port` | HTTP/WebSocket port (default: 3000) |
 | `--timescale` | Simulation speed multiplier (default: 60) |
 | `--locale` | Locale preset for environment tuning |
-| `--no-mock` | Use real Open-Meteo API instead of mock |
+| `--routes` | Path to environment router JSON config |
 
 ## Architecture
 
@@ -83,7 +118,9 @@ This is a Node.js ES modules project:
 
 ### Core
 - **cli.js** - Command-line interface with three input modes (TTY, piped, flags) and three output modes (raw, timeline, world)
-- **tm-engine.js** - Always-on daemon with HTTP/WebSocket transport, eased state transitions, and persistent world clock
+- **tm-engine.js** - Daemon shell: CLI arg parsing, HTTP/WebSocket transport. Delegates to `startEngine()`
+- **lib/runtimeEngine.js** - Runtime engine: world time progression, timeline caching, state smoothing, publish tick loop. Exports `startEngine()` and `easeWorldState()`
+- **lib/environmentRouter.js** - Config-driven WorldState field mapping to downstream endpoints. Exports `evaluateRoutes()` and `validateConfig()`
 - **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
 
 ### Weather Providers
