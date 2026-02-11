@@ -1,0 +1,116 @@
+{
+  "endpoints": {
+    "unreal": {
+      "transport": "http",
+      "url": "http://localhost:8080/remote/preset/WorldWeather"
+    },
+    "dsp": {
+      "transport": "osc",
+      "host": "127.0.0.1",
+      "port": 9000
+    },
+    "lighting": {
+      "transport": "http",
+      "url": "http://hue-bridge.local/api"
+    }
+  },
+  "routes": [
+    {
+      "source": "controls.lighting.colorTempK",
+      "endpoint": "lighting",
+      "param": "colortemp",
+      "transform": { "type": "scale", "inputRange": [3200, 6500], "outputRange": [153, 500] }
+    },
+    {
+      "source": "controls.lighting.exteriorLuminance",
+      "endpoint": "lighting",
+      "param": "brightness",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 254] }
+    },
+    {
+      "source": "controls.lighting.contrast",
+      "endpoint": "lighting",
+      "param": "contrast",
+      "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "controls.audio.windLevel",
+      "endpoint": "dsp",
+      "param": "/buses/wind_bed/gain",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] }
+    },
+    {
+      "source": "controls.audio.rainLevel",
+      "endpoint": "dsp",
+      "param": "/buses/rain_bed/gain",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] }
+    },
+    {
+      "source": "controls.audio.baseNoiseFloorDb",
+      "endpoint": "dsp",
+      "param": "/buses/ambience/gain",
+      "transform": { "type": "scale", "inputRange": [20, 60], "outputRange": [-40, 0] }
+    },
+    {
+      "source": "controls.atmosphere.haze",
+      "endpoint": "unreal",
+      "param": "ExponentialHeightFog.FogDensity",
+      "transform": { "type": "curve", "gamma": 2.0, "outputRange": [0, 0.05] }
+    },
+    {
+      "source": "controls.atmosphere.wetness",
+      "endpoint": "unreal",
+      "param": "GroundWetness",
+      "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "controls.visual.precipDensity",
+      "endpoint": "unreal",
+      "param": "NiagaraPrecip.SpawnRate",
+      "transform": { "type": "curve", "gamma": 1.5, "outputRange": [0, 5000] }
+    },
+    {
+      "source": "controls.visual.heatDistortion",
+      "endpoint": "unreal",
+      "param": "HeatHaze.Intensity",
+      "transform": { "type": "threshold", "threshold": 0.1, "onValue": 1, "offValue": 0 }
+    },
+    {
+      "source": "controls.visual.sunAltitude",
+      "endpoint": "unreal",
+      "param": "DirectionalLight.Elevation",
+      "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "controls.visual.sunAzimuth",
+      "endpoint": "unreal",
+      "param": "DirectionalLight.Azimuth",
+      "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "states.sky",
+      "endpoint": "unreal",
+      "param": "SkyPresetIndex",
+      "transform": { "type": "map", "values": { "clear": 0, "few": 1, "scattered": 2, "broken": 3, "overcast": 4 } }
+    },
+    {
+      "source": "states.precip",
+      "endpoint": "unreal",
+      "param": "PrecipPresetIndex",
+      "transform": {
+        "type": "map",
+        "default": 0,
+        "values": {
+          "none": 0,
+          "light_rain": 1,
+          "rain": 2,
+          "heavy_rain": 3,
+          "light_snow": 4,
+          "snow": 5,
+          "heavy_snow": 6,
+          "sleet": 7
+        }
+      }
+    }
+  ]
+}
