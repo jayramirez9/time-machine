@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine — DSP WebAudio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    background: #0a0a0a;
+    color: #999;
+    padding: 24px;
+    font-size: 13px;
+    max-width: 480px;
+  }
+  h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ccc;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 20px;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 11px;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #333;
+  }
+  .dot.connected { background: #2a6; }
+  .dot.disconnected { background: #a33; }
+  .info {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 16px;
+  }
+  .info span { color: #888; }
+  button {
+    font-family: inherit;
+    font-size: 12px;
+    background: #1a1a1a;
+    color: #aaa;
+    border: 1px solid #333;
+    padding: 6px 16px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  button:hover { border-color: #555; color: #ccc; }
+  button.active { border-color: #2a6; color: #2a6; }
+  .bus {
+    margin-bottom: 12px;
+  }
+  .bus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .bus-label {
+    font-size: 11px;
+    color: #666;
+  }
+  .bus-value {
+    font-size: 11px;
+    color: #555;
+    font-variant-numeric: tabular-nums;
+  }
+  .meter-track {
+    height: 3px;
+    background: #1a1a1a;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%;
+    background: #333;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .meter-fill.live { background: #2a6; }
+</style>
+</head>
+<body>
+
+<h1>DSP WebAudio</h1>
+<div class="subtitle">Virtual ambient endpoint</div>
+
+<div class="status">
+  <div class="dot" id="wsDot"></div>
+  <span id="wsStatus">disconnected</span>
+</div>
+
+<div class="info">
+  <div>Location: <span id="location">—</span></div>
+  <div>Sim time: <span id="simTime">—</span></div>
+</div>
+
+<button id="startBtn">Start</button>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">bed</span>
+    <span class="bus-value" id="bedDb">—</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="bedMeter"></div></div>
+</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">wind</span>
+    <span class="bus-value" id="windDb">—</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="windMeter"></div></div>
+</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">rain</span>
+    <span class="bus-value" id="rainDb">—</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="rainMeter"></div></div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────
+const WS_URL = 'ws://' + (location.hostname || 'localhost') + ':3000/';
+const MASTER_GAIN = 0.15; // Keep it quiet
+
+// Placeholder CC0 stems — replace with your own
+const STEMS = {
+  bed:  'https://cdn.freesound.org/previews/787/787639_5674468-lq.mp3',
+  wind: 'https://cdn.freesound.org/previews/456/456058_2304582-lq.mp3',
+  rain: 'https://cdn.freesound.org/previews/401/401275_7586479-lq.mp3'
+};
+
+// ── dB → linear ─────────────────────────────────────────────
+function dbToLinear(db) {
+  if (db <= -60) return 0;
+  return Math.pow(10, db / 20);
+}
+
+// ── State ───────────────────────────────────────────────────
+let ctx = null;
+let masterGain = null;
+const buses = {};
+let running = false;
+let ws = null;
+let reconnectTimer = null;
+
+// ── DOM refs ────────────────────────────────────────────────
+const startBtn    = document.getElementById('startBtn');
+const wsDot       = document.getElementById('wsDot');
+const wsStatusEl  = document.getElementById('wsStatus');
+const locationEl  = document.getElementById('location');
+const simTimeEl   = document.getElementById('simTime');
+
+const meters = {
+  bed:  { db: document.getElementById('bedDb'),  fill: document.getElementById('bedMeter')  },
+  wind: { db: document.getElementById('windDb'), fill: document.getElementById('windMeter') },
+  rain: { db: document.getElementById('rainDb'), fill: document.getElementById('rainMeter') }
+};
+
+// ── Audio graph ─────────────────────────────────────────────
+function initAudio() {
+  ctx = new AudioContext();
+
+  masterGain = ctx.createGain();
+  masterGain.gain.value = MASTER_GAIN;
+  masterGain.connect(ctx.destination);
+
+  for (const [name, url] of Object.entries(STEMS)) {
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.loop = true;
+    audio.src = url;
+
+    const source = ctx.createMediaElementSource(audio);
+    const gain = ctx.createGain();
+    gain.gain.value = 0; // Start silent
+
+    source.connect(gain);
+    gain.connect(masterGain);
+
+    buses[name] = { audio, source, gain, currentDb: -Infinity };
+  }
+}
+
+function startAudio() {
+  if (!ctx) initAudio();
+
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+
+  for (const bus of Object.values(buses)) {
+    bus.audio.play().catch(() => {});
+  }
+
+  running = true;
+  startBtn.textContent = 'Stop';
+  startBtn.classList.add('active');
+  updateMeters();
+}
+
+function stopAudio() {
+  for (const bus of Object.values(buses)) {
+    bus.audio.pause();
+  }
+
+  running = false;
+  startBtn.textContent = 'Start';
+  startBtn.classList.remove('active');
+}
+
+startBtn.addEventListener('click', () => {
+  if (running) {
+    stopAudio();
+  } else {
+    startAudio();
+  }
+});
+
+// ── Parameter application ───────────────────────────────────
+function applyParams(dsp) {
+  if (!dsp) return;
+
+  const mapping = {
+    '/buses/ambience/gain': 'bed',
+    '/buses/wind_bed/gain': 'wind',
+    '/buses/rain_bed/gain': 'rain'
+  };
+
+  for (const [param, busName] of Object.entries(mapping)) {
+    if (param in dsp) {
+      const db = dsp[param];
+      const linear = dbToLinear(db);
+      const bus = buses[busName];
+      if (bus) {
+        bus.gain.gain.setTargetAtTime(linear, ctx.currentTime, 0.3);
+        bus.currentDb = db;
+      }
+    }
+  }
+
+  updateMeters();
+}
+
+function applyFallback(controls) {
+  if (!controls || !controls.audio) return;
+  const a = controls.audio;
+
+  // Direct mapping without routing — use raw values
+  const windDb = -60 + a.windLevel * 60;   // 0→-60, 1→0
+  const rainDb = -60 + a.rainLevel * 60;
+  const bedDb  = -40 + ((a.baseNoiseFloorDb - 20) / 40) * 40; // 20→-40, 60→0
+
+  if (buses.wind) {
+    buses.wind.gain.gain.setTargetAtTime(dbToLinear(windDb), ctx.currentTime, 0.3);
+    buses.wind.currentDb = windDb;
+  }
+  if (buses.rain) {
+    buses.rain.gain.gain.setTargetAtTime(dbToLinear(rainDb), ctx.currentTime, 0.3);
+    buses.rain.currentDb = rainDb;
+  }
+  if (buses.bed) {
+    buses.bed.gain.gain.setTargetAtTime(dbToLinear(bedDb), ctx.currentTime, 0.3);
+    buses.bed.currentDb = bedDb;
+  }
+
+  updateMeters();
+}
+
+// ── Meters ──────────────────────────────────────────────────
+function updateMeters() {
+  for (const [name, m] of Object.entries(meters)) {
+    const bus = buses[name];
+    if (!bus) continue;
+
+    const db = bus.currentDb;
+    if (db <= -60) {
+      m.db.textContent = '-inf dB';
+      m.fill.style.width = '0%';
+    } else {
+      m.db.textContent = db.toFixed(1) + ' dB';
+      // Map -60..0 → 0..100%
+      const pct = Math.max(0, Math.min(100, ((db + 60) / 60) * 100));
+      m.fill.style.width = pct + '%';
+    }
+
+    m.fill.classList.toggle('live', running && db > -60);
+  }
+}
+
+// ── WebSocket ───────────────────────────────────────────────
+function connectWs() {
+  if (ws) return;
+
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsDot.className = 'dot connected';
+    wsStatusEl.textContent = 'connected';
+    if (reconnectTimer) {
+      clearInterval(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const state = JSON.parse(e.data);
+
+      // Update info
+      if (state.engine) {
+        simTimeEl.textContent = state.engine.simTime || '—';
+        locationEl.textContent = state.engine.location || '—';
+      }
+
+      // Apply audio params
+      if (running && ctx) {
+        if (state.routed && state.routed.dsp) {
+          applyParams(state.routed.dsp);
+        } else if (state.controls) {
+          applyFallback(state.controls);
+        }
+      }
+    } catch (err) {
+      // Ignore malformed messages
+    }
+  };
+
+  ws.onclose = () => {
+    wsDot.className = 'dot disconnected';
+    wsStatusEl.textContent = 'disconnected';
+    ws = null;
+    scheduleReconnect();
+  };
+
+  ws.onerror = () => {
+    ws.close();
+  };
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setInterval(() => {
+    if (!ws) connectWs();
+  }, 3000);
+}
+
+// ── Init ────────────────────────────────────────────────────
+connectWs();
+updateMeters();
+</script>
+</body>
+</html>
