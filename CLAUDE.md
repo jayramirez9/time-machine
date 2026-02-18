@@ -106,6 +106,50 @@ const results = await dispatch(
 
 Built-in transports (all stubbed, log only): `http`, `osc`, `log`.
 
+### Rate Limiter
+
+The rate limiter (`lib/rateLimiter.js`) sits between route evaluation and dispatch to prevent hour-boundary pops from reaching downstream endpoints. It enforces per-parameter change-rate limits with optional EMA smoothing.
+
+Configure rate limits per route in the routes JSON config:
+
+```json
+{
+  "source": "controls.audio.windLevel",
+  "endpoint": "dsp",
+  "param": "/buses/wind_bed/gain",
+  "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] },
+  "rateLimit": { "maxDelta": 6, "ema": 0.2 }
+}
+```
+
+- `maxDelta` — max change per second per parameter. Deltas exceeding this are clamped.
+- `ema` — optional EMA smoothing factor (0–1). Lower = smoother. Applied before clamping.
+
+When a value is clamped, a violation is reported in the published state under `state.violations` and logged to the JSONL state log.
+
+```js
+import { createRateLimiter } from './lib/rateLimiter.js';
+
+const limiter = createRateLimiter(config.routes);
+const { clamped, violations } = limiter.limit(routed, dtSeconds);
+```
+
+### State Logging
+
+The state logger (`lib/stateLog.js`) writes every published WorldState to a daily JSONL file at `logs/worldstate-YYYY-MM-DD.jsonl`. Each line contains `{ ts, simTime, states, controls, routed?, violations? }`. Logging is automatic when the engine runs; the `logDir` option (default: `"logs"`) controls the output directory.
+
+### Replay CLI
+
+The replay tool (`tm-replay.js`) reads a JSONL state log and feeds it through the rate limiter to detect snaps.
+
+```bash
+./tm-replay.js logs/worldstate-2026-02-17.jsonl                              # Raw delta scan
+./tm-replay.js logs/worldstate-2026-02-17.jsonl --routes routes.example.json  # Rate-limit check
+./tm-replay.js logs/worldstate-2026-02-17.jsonl --duration 30                 # Replay in 30s
+```
+
+Prints a summary with violation count, worst offenders, and largest raw control deltas. Exit code 0 if clean, 1 if violations detected.
+
 ## Daemon
 
 The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell around `startEngine()`.
@@ -116,6 +160,8 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 ./tm-engine.js -l "Baton Rouge, LA" -d "07-04-1978"    # Historical simulation
 ./tm-engine.js --port 3333 --timescale 120              # Custom port, 2min/sec
 ./tm-engine.js --routes routes.example.json             # With environment routing
+./tm-engine.js --routes routes.example.json --quiet     # Only print violations
+./tm-engine.js --routes routes.example.json --overnight # Soak test, summary on exit
 ```
 
 ### Endpoints
@@ -125,7 +171,9 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 | `GET /worldstate` | Pull current world state (JSON) |
 | `GET /status` | Engine status (uptime, clients, sim time) |
 | `GET /` | Browser dashboard with live updates |
-| `WebSocket /` | Push updates every 5 seconds |
+| `WebSocket /` or `/stream` | Push updates every 5 seconds |
+| `GET /audio` | WebAudio browser client |
+| `GET /viz` | WebGPU browser client |
 
 ### Flags
 
@@ -137,6 +185,8 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 | `--timescale` | Simulation speed multiplier (default: 60) |
 | `--locale` | Locale preset for environment tuning |
 | `--routes` | Path to environment router JSON config |
+| `--quiet` | Suppress per-tick output; only print violations |
+| `--overnight` | Implies `--quiet`; prints summary on SIGINT/SIGTERM |
 
 ## Architecture
 
@@ -148,6 +198,9 @@ This is a Node.js ES modules project:
 - **lib/runtimeEngine.js** - Runtime engine: world time progression, timeline caching, state smoothing, publish tick loop. Exports `startEngine()` and `easeWorldState()`
 - **lib/environmentRouter.js** - Config-driven WorldState field mapping to downstream endpoints. Exports `evaluateRoutes()` and `validateConfig()`
 - **lib/dispatch.js** - Plugin-model endpoint dispatcher. Exports `dispatch()`, `registerTransport()`, `getTransport()`
+- **lib/rateLimiter.js** - Per-parameter change-rate clamping with optional EMA smoothing. Exports `createRateLimiter()`
+- **lib/stateLog.js** - JSONL state logger, writes daily files to `logs/`. Exports `createStateLog()`
+- **tm-replay.js** - Replay CLI for feeding logged state through the rate limiter and reporting violations
 - **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
 
 ### Weather Providers
@@ -158,6 +211,12 @@ This is a Node.js ES modules project:
 - **lib/weatherTimeline.js** - Fetches surrounding hours and interpolates to configurable intervals (default: 6hr window, 15min intervals)
 - **lib/worldStateCompiler.js** - Compiles timeline into renderer-independent world state with categorical states and normalized controls (lighting, audio, atmosphere, visual)
 - **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`)
+
+### Browser Clients
+- **audio.html** - WebAudio ambient engine with 4 looping stems (bed, wind, rain, thunder). Served at `/audio`
+- **viz.html** - WebGPU fullscreen renderer with sky, sun, clouds, rain, haze, heat distortion. Served at `/viz`
+
+Both connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.
 
 The world state output is designed to be self-sufficient: renderers can ignore raw weather data and drive entirely from `states` + `controls`.
 
