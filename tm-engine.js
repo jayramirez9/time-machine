@@ -15,8 +15,13 @@
 
 import http from 'http';
 import crypto from 'crypto';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
 import { DEFAULT_LOCALE } from './lib/localePresets.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Parse arguments
 function parseArgs(args) {
@@ -28,7 +33,9 @@ function parseArgs(args) {
     timescale: 60,
     tickMs: 1000,
     publishEveryMs: 5000,
-    routesConfigPath: null
+    routesConfigPath: null,
+    quiet: false,
+    overnight: false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -45,6 +52,11 @@ function parseArgs(args) {
       parsed.timescale = parseFloat(args[++i]);
     } else if (arg === '--routes') {
       parsed.routesConfigPath = args[++i];
+    } else if (arg === '--quiet') {
+      parsed.quiet = true;
+    } else if (arg === '--overnight') {
+      parsed.overnight = true;
+      parsed.quiet = true;
     }
   }
 
@@ -56,7 +68,12 @@ class WebSocketServer {
   constructor(server) {
     this.clients = new Set();
     server.on('upgrade', (req, socket, head) => {
-      this.handleUpgrade(req, socket);
+      const path = req.url.split('?')[0];
+      if (path === '/' || path === '/stream') {
+        this.handleUpgrade(req, socket);
+      } else {
+        socket.destroy();
+      }
     });
   }
 
@@ -133,6 +150,18 @@ class WebSocketServer {
   }
 }
 
+function serveHtml(res, filePath) {
+  fs.readFile(filePath, 'utf8', (err, html) => {
+    if (err) {
+      res.statusCode = 500;
+      res.end('Error reading file');
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html');
+    res.end(html);
+  });
+}
+
 // HTTP Server
 function createServer(engine) {
   const server = http.createServer((req, res) => {
@@ -176,6 +205,10 @@ ws.onmessage = (e) => {
 </body>
 </html>
       `);
+    } else if (req.method === 'GET' && (req.url === '/audio' || req.url === '/audio/')) {
+      serveHtml(res, path.join(__dirname, 'audio.html'));
+    } else if (req.method === 'GET' && (req.url === '/viz' || req.url === '/viz/')) {
+      serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {
       res.statusCode = 404;
       res.end('Not found');
@@ -187,10 +220,13 @@ ws.onmessage = (e) => {
 // Main
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const quiet = args.quiet;
 
   console.log(`[Engine] Initializing...`);
   console.log(`[Engine] Location: ${args.location}`);
   console.log(`[Engine] Time scale: ${args.timescale}x`);
+  if (quiet) console.log(`[Engine] Quiet mode — only violations will be printed`);
+  if (args.overnight) console.log(`[Engine] Overnight soak mode — summary on exit`);
 
   const engine = await startEngine({
     location: args.location,
@@ -209,24 +245,104 @@ async function main() {
   const wss = new WebSocketServer(server);
   server.wss = wss;
 
+  // Violation tracking for quiet/overnight modes
+  const stats = {
+    publishCount: 0,
+    totalViolations: 0,
+    maxDeltaSeen: {},
+    startedAt: Date.now()
+  };
+
   // Push state to WebSocket clients on every publish
   engine.onPublish((state) => {
     wss.broadcast(state);
+    stats.publishCount++;
 
-    const s = state.states;
-    const c = state.controls.lighting;
-    console.log(
-      `[${state.engine.simTime.slice(11, 19)}] ` +
-      `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
-      `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`
-    );
+    const violations = state.violations || [];
+
+    // Track violation stats
+    if (violations.length > 0) {
+      stats.totalViolations += violations.length;
+      for (const v of violations) {
+        const key = `${v.endpoint}::${v.param}`;
+        const absDelta = Math.abs(v.delta);
+        if (!stats.maxDeltaSeen[key] || absDelta > stats.maxDeltaSeen[key]) {
+          stats.maxDeltaSeen[key] = absDelta;
+        }
+      }
+    }
+
+    if (quiet) {
+      // Only print violations
+      for (const v of violations) {
+        console.log(
+          `[SNAP] ${state.engine.simTime} ${v.endpoint}::${v.param} ` +
+          `delta=${v.delta} max=${v.maxDelta} clamped→${v.clamped}`
+        );
+      }
+    } else {
+      const s = state.states;
+      const c = state.controls.lighting;
+      let line =
+        `[${state.engine.simTime.slice(11, 19)}] ` +
+        `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
+        `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`;
+      if (violations.length > 0) {
+        line += ` SNAPS:${violations.length}`;
+      }
+      console.log(line);
+    }
+  });
+
+  // SIGINT/SIGTERM handler — print summary
+  function printSummary() {
+    const elapsed = ((Date.now() - stats.startedAt) / 1000).toFixed(0);
+    console.log('');
+    console.log('═══════════════════════════════════════════');
+    console.log('  ENGINE SUMMARY');
+    console.log('═══════════════════════════════════════════');
+    console.log(`  Runtime:     ${elapsed}s`);
+    console.log(`  Publishes:   ${stats.publishCount}`);
+    console.log(`  Violations:  ${stats.totalViolations}`);
+
+    const offenders = Object.entries(stats.maxDeltaSeen).sort((a, b) => b[1] - a[1]);
+    if (offenders.length > 0) {
+      console.log('');
+      console.log('  Worst offenders:');
+      for (const [key, delta] of offenders.slice(0, 10)) {
+        console.log(`    ${key}: max delta ${delta}`);
+      }
+    }
+
+    if (stats.totalViolations === 0) {
+      console.log('');
+      console.log('  Result: CLEAN');
+    } else {
+      console.log('');
+      console.log(`  Result: ${stats.totalViolations} snap(s) detected`);
+    }
+    console.log('═══════════════════════════════════════════');
+  }
+
+  process.on('SIGINT', () => {
+    printSummary();
+    engine.stop();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', () => {
+    printSummary();
+    engine.stop();
+    process.exit(0);
   });
 
   server.listen(args.port, () => {
     console.log(`[Server] HTTP:      http://localhost:${args.port}/worldstate`);
-    console.log(`[Server] WebSocket: ws://localhost:${args.port}/`);
+    console.log(`[Server] WebSocket: ws://localhost:${args.port}/ or /stream`);
     console.log(`[Server] Status:    http://localhost:${args.port}/status`);
     console.log(`[Server] Dashboard: http://localhost:${args.port}/`);
+    console.log(`[Server] Audio:     http://localhost:${args.port}/audio`);
+    console.log(`[Server] Viz:       http://localhost:${args.port}/viz`);
     console.log('');
   });
 }

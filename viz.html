@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine — Viz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+
+  #hud {
+    position: fixed; top: 16px; left: 16px;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px; color: #888; z-index: 10;
+    pointer-events: none;
+  }
+  #hud .label { color: #555; }
+  #hud div { margin-bottom: 2px; }
+
+  .dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #333; margin-right: 6px; vertical-align: middle;
+  }
+  .dot.ok { background: #2a6; }
+  .dot.err { background: #a33; }
+
+  #fallback {
+    display: none; position: fixed; inset: 0;
+    background: #111; color: #888;
+    font-family: 'SF Mono', monospace; font-size: 14px;
+    justify-content: center; align-items: center;
+    text-align: center; z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div><span class="dot" id="wsDot"></span><span id="wsLabel">disconnected</span></div>
+  <div><span class="label">loc </span><span id="loc">--</span></div>
+  <div><span class="label">sim </span><span id="simTime">--</span></div>
+  <div><span class="label">tod </span><span id="tod">--</span></div>
+  <div><span class="label">sky </span><span id="sky">--</span></div>
+  <div><span class="label">lum </span><span id="lum">--</span></div>
+</div>
+
+<div id="fallback">WebGPU not available in this browser.<br>Try Chrome 113+ or Edge 113+.</div>
+
+<script type="module">
+// ── Config ────────────────────────────────────────────────
+const WS_URL = `ws://${location.host}/stream`;
+
+// ── DOM refs ─────────────────────────────────────────────
+const canvas   = document.getElementById('c');
+const wsDot    = document.getElementById('wsDot');
+const wsLabel  = document.getElementById('wsLabel');
+const locEl    = document.getElementById('loc');
+const timeEl   = document.getElementById('simTime');
+const todEl    = document.getElementById('tod');
+const skyEl    = document.getElementById('sky');
+const lumEl    = document.getElementById('lum');
+
+// ── Current weather uniforms ─────────────────────────────
+const U = {
+  time:          0,
+  luminance:     0.5,
+  colorTempK:    5500,
+  contrast:      0.5,
+  haze:          0.05,
+  wetness:       0.0,
+  windLevel:     0.0,
+  windDir:       180,
+  rainLevel:     0.0,
+  precipDensity: 0.0,
+  sunAlt:        45,
+  sunAz:         180,
+  heatDistort:   0.0,
+};
+
+// Lerp targets (we smooth toward these)
+const T = { ...U };
+
+// ── Sky palette ──────────────────────────────────────────
+const SKY = {
+  night:     [[0.04,0.04,0.10], [0.08,0.06,0.15]],
+  twilight:  [[0.10,0.06,0.18], [0.25,0.12,0.28]],
+  dawn:      [[1.00,0.48,0.35], [0.53,0.81,0.92]],
+  morning:   [[0.40,0.65,0.90], [0.69,0.83,0.94]],
+  day:       [[0.29,0.56,0.85], [0.53,0.81,0.92]],
+  afternoon: [[0.35,0.62,0.83], [0.60,0.77,0.91]],
+  dusk:      [[1.00,0.42,0.29], [0.29,0.19,0.38]],
+};
+let skyTop = [0.29,0.56,0.85], skyBot = [0.53,0.81,0.92];
+let skyTopTarget = skyTop.slice(), skyBotTarget = skyBot.slice();
+
+// ── WebGPU init ──────────────────────────────────────────
+if (!navigator.gpu) {
+  document.getElementById('fallback').style.display = 'flex';
+  throw new Error('WebGPU not supported');
+}
+
+const adapter = await navigator.gpu.requestAdapter();
+const device  = await adapter.requestDevice();
+const ctx     = canvas.getContext('webgpu');
+const format  = navigator.gpu.getPreferredCanvasFormat();
+ctx.configure({ device, format, alphaMode: 'opaque' });
+
+// Resize
+function resize() {
+  const dpr = devicePixelRatio;
+  canvas.width  = canvas.clientWidth  * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+}
+resize();
+addEventListener('resize', resize);
+
+// ── Uniform buffer ───────────────────────────────────────
+// Packed: resolution(2) + time(1) + pad + skyTop(3) + pad + skyBot(3) + pad
+//         + luminance, colorTemp, contrast, haze
+//         + wetness, windLevel, windDir, rainLevel
+//         + precipDensity, sunAlt, sunAz, heatDistort
+const UNIFORM_SIZE = 16 * 4; // 16 floats = 64 bytes — pad to 80 for alignment
+const uniformBuf = device.createBuffer({
+  size: 128, // plenty of room
+  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+});
+
+// ── Fullscreen quad shader ───────────────────────────────
+const shaderCode = /* wgsl */`
+struct Uniforms {
+  res: vec2f,
+  time: f32,
+  _p0: f32,
+  skyTop: vec3f,
+  _p1: f32,
+  skyBot: vec3f,
+  _p2: f32,
+  luminance: f32,
+  colorTemp: f32,
+  contrast: f32,
+  haze: f32,
+  wetness: f32,
+  windLevel: f32,
+  windDir: f32,
+  rainLevel: f32,
+  precipDensity: f32,
+  sunAlt: f32,
+  sunAz: f32,
+  heatDistort: f32,
+};
+
+@group(0) @binding(0) var<uniform> u: Uniforms;
+
+struct VOut { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
+
+@vertex fn vs(@builtin(vertex_index) i: u32) -> VOut {
+  // Fullscreen tri
+  let x = f32(i32(i) / 2) * 4.0 - 1.0;
+  let y = f32(i32(i) % 2) * 4.0 - 1.0;
+  var o: VOut;
+  o.pos = vec4f(x, y, 0.0, 1.0);
+  o.uv  = vec2f((x + 1.0) * 0.5, (1.0 - y) * 0.5);
+  return o;
+}
+
+// ── Noise helpers ──────────────────────────────────────────
+fn hash(p: vec2f) -> f32 {
+  let h = dot(p, vec2f(127.1, 311.7));
+  return fract(sin(h) * 43758.5453);
+}
+
+fn noise2d(p: vec2f) -> f32 {
+  let i = floor(p);
+  let f = fract(p);
+  let s = f * f * (3.0 - 2.0 * f);
+  let a = hash(i);
+  let b = hash(i + vec2f(1.0, 0.0));
+  let c = hash(i + vec2f(0.0, 1.0));
+  let d = hash(i + vec2f(1.0, 1.0));
+  return mix(mix(a, b, s.x), mix(c, d, s.x), s.y);
+}
+
+// ── Fragment shader ────────────────────────────────────────
+@fragment fn fs(@location(0) uv: vec2f) -> @location(0) vec4f {
+  let aspect = u.res.x / u.res.y;
+  let p = vec2f((uv.x - 0.5) * aspect, uv.y - 0.5);
+
+  // -- Sky gradient --
+  let skyMix = smoothstep(0.0, 1.0, uv.y);
+  var col = mix(u.skyTop, u.skyBot, skyMix);
+
+  // Apply luminance
+  col = col * (0.15 + u.luminance * 0.85);
+
+  // -- Sun disc --
+  let sunAltRad = radians(u.sunAlt);
+  let sunAzRad  = radians(u.sunAz);
+  let sunY = 0.5 - sin(sunAltRad) * 0.45;
+  let sunX = (u.sunAz - 180.0) / 360.0;
+  let sunPos = vec2f(sunX * aspect, sunY - 0.5);
+  let sunDist = length(p - sunPos);
+
+  if (u.sunAlt > -5.0) {
+    // Glow
+    let glow = exp(-sunDist * 6.0) * u.luminance * 0.6;
+    let warmth = select(vec3f(1.0, 0.7, 0.3), vec3f(1.0, 0.95, 0.85), u.sunAlt > 20.0);
+    col = col + warmth * glow;
+
+    // Disc
+    let disc = smoothstep(0.03, 0.025, sunDist);
+    col = mix(col, vec3f(1.0, 0.98, 0.9), disc * u.luminance);
+  }
+
+  // -- Ground plane --
+  let groundLine = 0.75;
+  if (uv.y > groundLine) {
+    let gf = (uv.y - groundLine) / (1.0 - groundLine);
+    var ground = mix(vec3f(0.12, 0.18, 0.08), vec3f(0.06, 0.10, 0.04), gf);
+    // Wetness darkens and adds specular
+    ground = ground * (1.0 - u.wetness * 0.4);
+    // Night darken
+    ground = ground * (0.2 + u.luminance * 0.8);
+    col = mix(col, ground, smoothstep(groundLine - 0.005, groundLine + 0.005, uv.y));
+  }
+
+  // -- Rain streaks --
+  if (u.rainLevel > 0.01) {
+    let rainUV = vec2f(
+      uv.x * 80.0 + sin(uv.y * 3.0 + u.time * 0.5) * u.windLevel * 4.0,
+      uv.y * 120.0 - u.time * 60.0
+    );
+    let n = noise2d(rainUV);
+    let streak = smoothstep(0.92 - u.precipDensity * 0.15, 1.0, n) * u.rainLevel;
+    col = col + vec3f(0.5, 0.55, 0.65) * streak * 0.4;
+  }
+
+  // -- Haze / fog --
+  let hazeCol = mix(vec3f(0.6, 0.65, 0.7), vec3f(0.15, 0.15, 0.2), 1.0 - u.luminance);
+  col = mix(col, hazeCol, u.haze * 0.7);
+
+  // -- Cloud layer --
+  let cloudY = uv.y;
+  if (cloudY < 0.55) {
+    let cloudUV = vec2f(
+      uv.x * 3.0 + u.time * 0.02 * (1.0 + u.windLevel),
+      cloudY * 2.0
+    );
+    var cn = noise2d(cloudUV * 2.0) * 0.5 + noise2d(cloudUV * 5.0) * 0.3 + noise2d(cloudUV * 11.0) * 0.2;
+    // More cloud coverage when haze/overcast
+    let cloudThresh = 0.55 - u.haze * 0.3;
+    cn = smoothstep(cloudThresh, cloudThresh + 0.2, cn);
+    let cloudCol = vec3f(0.85, 0.87, 0.9) * (0.3 + u.luminance * 0.7);
+    col = mix(col, cloudCol, cn * 0.6);
+  }
+
+  // -- Heat distortion --
+  if (u.heatDistort > 0.01 && uv.y > 0.65) {
+    let distUV = vec2f(uv.x * 20.0, uv.y * 5.0 - u.time * 2.0);
+    let dist = (noise2d(distUV) - 0.5) * u.heatDistort * 0.01;
+    col = col + vec3f(dist);
+  }
+
+  // -- Contrast --
+  col = mix(vec3f(0.5), col, 0.7 + u.contrast * 0.6);
+
+  // -- Color temperature tint --
+  // Warm < 5500K, cool > 5500K
+  let tempBias = (u.colorTemp - 5500.0) / 3000.0;
+  col.r = col.r + tempBias * -0.03;
+  col.b = col.b + tempBias *  0.03;
+
+  return vec4f(clamp(col, vec3f(0.0), vec3f(1.0)), 1.0);
+}
+`;
+
+const shaderModule = device.createShaderModule({ code: shaderCode });
+
+const bindGroupLayout = device.createBindGroupLayout({
+  entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+              buffer: { type: 'uniform' } }],
+});
+
+const pipeline = device.createRenderPipeline({
+  layout: device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
+  vertex:   { module: shaderModule, entryPoint: 'vs' },
+  fragment: { module: shaderModule, entryPoint: 'fs', targets: [{ format }] },
+  primitive: { topology: 'triangle-list' },
+});
+
+const bindGroup = device.createBindGroup({
+  layout: bindGroupLayout,
+  entries: [{ binding: 0, resource: { buffer: uniformBuf } }],
+});
+
+// ── Render loop ──────────────────────────────────────────
+const startTime = performance.now();
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function frame() {
+  const now = (performance.now() - startTime) / 1000;
+  U.time = now;
+
+  // Smooth toward targets
+  const s = 0.04; // smoothing factor per frame
+  U.luminance     = lerp(U.luminance,     T.luminance,     s);
+  U.colorTempK    = lerp(U.colorTempK,    T.colorTempK,    s);
+  U.contrast      = lerp(U.contrast,      T.contrast,      s);
+  U.haze          = lerp(U.haze,          T.haze,          s);
+  U.wetness       = lerp(U.wetness,       T.wetness,       s);
+  U.windLevel     = lerp(U.windLevel,     T.windLevel,     s);
+  U.windDir       = lerp(U.windDir,       T.windDir,       s);
+  U.rainLevel     = lerp(U.rainLevel,     T.rainLevel,     s);
+  U.precipDensity = lerp(U.precipDensity, T.precipDensity, s);
+  U.sunAlt        = lerp(U.sunAlt,        T.sunAlt,        s);
+  U.sunAz         = lerp(U.sunAz,         T.sunAz,         s);
+  U.heatDistort   = lerp(U.heatDistort,   T.heatDistort,   s);
+
+  for (let i = 0; i < 3; i++) {
+    skyTop[i] = lerp(skyTop[i], skyTopTarget[i], s);
+    skyBot[i] = lerp(skyBot[i], skyBotTarget[i], s);
+  }
+
+  // Pack uniforms
+  const data = new Float32Array([
+    canvas.width, canvas.height, U.time, 0,
+    skyTop[0], skyTop[1], skyTop[2], 0,
+    skyBot[0], skyBot[1], skyBot[2], 0,
+    U.luminance, U.colorTempK, U.contrast, U.haze,
+    U.wetness, U.windLevel, U.windDir, U.rainLevel,
+    U.precipDensity, U.sunAlt, U.sunAz, U.heatDistort,
+  ]);
+  device.queue.writeBuffer(uniformBuf, 0, data);
+
+  const commandEncoder = device.createCommandEncoder();
+  const pass = commandEncoder.beginRenderPass({
+    colorAttachments: [{
+      view: ctx.getCurrentTexture().createView(),
+      loadOp: 'clear',
+      storeOp: 'store',
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+    }],
+  });
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(3); // fullscreen tri
+  pass.end();
+  device.queue.submit([commandEncoder.finish()]);
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ── Apply WorldState ─────────────────────────────────────
+function applyState(state) {
+  const { controls, states, engine } = state;
+  if (!controls) return;
+
+  const l = controls.lighting;
+  const a = controls.audio;
+  const atm = controls.atmosphere;
+  const v = controls.visual;
+
+  T.luminance     = l.exteriorLuminance;
+  T.colorTempK    = l.colorTempK;
+  T.contrast      = l.contrast;
+  T.haze          = atm.haze;
+  T.wetness       = atm.wetness;
+  T.windLevel     = a.windLevel;
+  T.rainLevel     = a.rainLevel;
+  T.precipDensity = v.precipDensity;
+  T.sunAlt        = v.sunAltitude;
+  T.sunAz         = v.sunAzimuth;
+  T.heatDistort   = v.heatDistortion;
+  T.windDir       = v.windDirection;
+
+  // Sky palette
+  const tod = states?.timeOfDay || 'day';
+  const pal = SKY[tod] || SKY.day;
+  skyTopTarget = pal[0].slice();
+  skyBotTarget = (pal[1] || pal[0]).slice();
+
+  // HUD
+  if (engine) {
+    timeEl.textContent = engine.simTime || '--';
+    locEl.textContent  = engine.location || '--';
+  }
+  if (states) {
+    todEl.textContent = states.timeOfDay || '--';
+    skyEl.textContent = states.sky || '--';
+  }
+  lumEl.textContent = l.exteriorLuminance.toFixed(2);
+}
+
+// ── WebSocket ────────────────────────────────────────────
+let ws = null, reconTimer = null;
+
+function connectWs() {
+  if (ws) return;
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsDot.className = 'dot ok';
+    wsLabel.textContent = 'connected';
+    if (reconTimer) { clearInterval(reconTimer); reconTimer = null; }
+  };
+
+  ws.onmessage = (e) => {
+    try { applyState(JSON.parse(e.data)); } catch (_) {}
+  };
+
+  ws.onclose = () => {
+    wsDot.className = 'dot err';
+    wsLabel.textContent = 'disconnected';
+    ws = null;
+    if (!reconTimer) reconTimer = setInterval(() => { if (!ws) connectWs(); }, 3000);
+  };
+  ws.onerror = () => ws.close();
+}
+
+connectWs();
+</script>
+</body>
+</html>

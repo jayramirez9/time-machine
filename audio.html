@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine — Audio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    background: #0a0a0a;
+    color: #999;
+    padding: 24px;
+    font-size: 13px;
+    max-width: 520px;
+  }
+  h1 { font-size: 14px; font-weight: 600; color: #ccc; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #555; margin-bottom: 20px; }
+
+  .status {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px; font-size: 11px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #333;
+  }
+  .dot.ok { background: #2a6; }
+  .dot.err { background: #a33; }
+
+  .info { font-size: 11px; color: #555; margin-bottom: 16px; }
+  .info span { color: #888; }
+
+  button {
+    font-family: inherit; font-size: 12px;
+    background: #1a1a1a; color: #aaa;
+    border: 1px solid #333; padding: 6px 16px; cursor: pointer;
+    margin-bottom: 20px;
+  }
+  button:hover { border-color: #555; color: #ccc; }
+  button.active { border-color: #2a6; color: #2a6; }
+
+  .section-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 1px; margin: 16px 0 8px;
+  }
+
+  .bus { margin-bottom: 10px; }
+  .bus-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 3px;
+  }
+  .bus-label { font-size: 11px; color: #666; }
+  .bus-value { font-size: 11px; color: #555; font-variant-numeric: tabular-nums; }
+  .meter-track {
+    height: 3px; background: #1a1a1a; border-radius: 1px; overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%; background: #333; width: 0%;
+    transition: width 0.6s ease;
+  }
+  .meter-fill.live { background: #2a6; }
+
+  .states {
+    font-size: 11px; color: #444; margin-top: 20px;
+    border-top: 1px solid #1a1a1a; padding-top: 12px;
+  }
+  .states div { margin-bottom: 3px; }
+  .states .val { color: #666; }
+</style>
+</head>
+<body>
+
+<h1>Audio</h1>
+<div class="subtitle">WebAudio ambient engine</div>
+
+<div class="status">
+  <div class="dot" id="wsDot"></div>
+  <span id="wsLabel">disconnected</span>
+</div>
+
+<div class="info">
+  <div>Location: <span id="loc">--</span></div>
+  <div>Sim time: <span id="simTime">--</span></div>
+</div>
+
+<button id="btn">Start</button>
+
+<div class="section-label">Buses</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">bed</span>
+    <span class="bus-value" id="bedVal">--</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="bedBar"></div></div>
+</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">wind</span>
+    <span class="bus-value" id="windVal">--</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="windBar"></div></div>
+</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">rain</span>
+    <span class="bus-value" id="rainVal">--</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="rainBar"></div></div>
+</div>
+
+<div class="bus">
+  <div class="bus-header">
+    <span class="bus-label">thunder</span>
+    <span class="bus-value" id="thunderVal">--</span>
+  </div>
+  <div class="meter-track"><div class="meter-fill" id="thunderBar"></div></div>
+</div>
+
+<div class="states" id="statesPanel"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────
+const WS_URL = `ws://${location.host}/stream`;
+const MASTER = 0.15;
+const RAMP = 0.4; // gain ramp time constant (seconds)
+
+// CC0 placeholder stems — swap for real assets
+const STEMS = {
+  bed:     'https://cdn.freesound.org/previews/787/787639_5674468-lq.mp3',
+  wind:    'https://cdn.freesound.org/previews/456/456058_2304582-lq.mp3',
+  rain:    'https://cdn.freesound.org/previews/401/401275_7586479-lq.mp3',
+  thunder: 'https://cdn.freesound.org/previews/360/360757_4284968-lq.mp3'
+};
+
+// ── Helpers ──────────────────────────────────────────────
+function dbToLin(db) { return db <= -60 ? 0 : Math.pow(10, db / 20); }
+function linToDb(lin) { return lin <= 0 ? -Infinity : 20 * Math.log10(lin); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ── State ────────────────────────────────────────────────
+let ctx = null, masterGain = null;
+const buses = {};
+let running = false, ws = null, reconTimer = null;
+
+// ── DOM ──────────────────────────────────────────────────
+const btn      = document.getElementById('btn');
+const wsDot    = document.getElementById('wsDot');
+const wsLabel  = document.getElementById('wsLabel');
+const locEl    = document.getElementById('loc');
+const timeEl   = document.getElementById('simTime');
+const statesEl = document.getElementById('statesPanel');
+
+const meterEls = {};
+for (const name of Object.keys(STEMS)) {
+  meterEls[name] = {
+    val:  document.getElementById(name + 'Val'),
+    bar:  document.getElementById(name + 'Bar')
+  };
+}
+
+// ── Audio graph ──────────────────────────────────────────
+function initAudio() {
+  ctx = new AudioContext();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = MASTER;
+  masterGain.connect(ctx.destination);
+
+  for (const [name, url] of Object.entries(STEMS)) {
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.loop = true;
+    audio.src = url;
+
+    const src  = ctx.createMediaElementSource(audio);
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    src.connect(gain);
+    gain.connect(masterGain);
+
+    buses[name] = { audio, gain, db: -Infinity };
+  }
+}
+
+function startAudio() {
+  if (!ctx) initAudio();
+  if (ctx.state === 'suspended') ctx.resume();
+  for (const b of Object.values(buses)) b.audio.play().catch(() => {});
+  running = true;
+  btn.textContent = 'Stop';
+  btn.classList.add('active');
+  refreshMeters();
+}
+
+function stopAudio() {
+  for (const b of Object.values(buses)) b.audio.pause();
+  running = false;
+  btn.textContent = 'Start';
+  btn.classList.remove('active');
+}
+
+btn.addEventListener('click', () => running ? stopAudio() : startAudio());
+
+// ── Parameter application ────────────────────────────────
+function setBusDb(name, db) {
+  const bus = buses[name];
+  if (!bus) return;
+  bus.gain.gain.setTargetAtTime(dbToLin(db), ctx.currentTime, RAMP);
+  bus.db = db;
+}
+
+// If routed DSP params exist, use them directly
+function applyRouted(dsp) {
+  const map = {
+    '/buses/ambience/gain':  'bed',
+    '/buses/wind_bed/gain':  'wind',
+    '/buses/rain_bed/gain':  'rain',
+    '/buses/thunder/gain':   'thunder'
+  };
+  for (const [param, name] of Object.entries(map)) {
+    if (param in dsp) setBusDb(name, dsp[param]);
+  }
+}
+
+// Fallback: derive levels from raw controls.audio
+function applyFallback(audio) {
+  setBusDb('wind', -60 + audio.windLevel * 60);
+  setBusDb('rain', -60 + audio.rainLevel * 60);
+  setBusDb('bed',  -40 + clamp((audio.baseNoiseFloorDb - 20) / 40, 0, 1) * 40);
+  setBusDb('thunder', -Infinity); // no routing data
+}
+
+// ── Meters ───────────────────────────────────────────────
+function refreshMeters() {
+  for (const [name, m] of Object.entries(meterEls)) {
+    const bus = buses[name];
+    if (!bus) continue;
+    const db = bus.db;
+    if (db <= -60) {
+      m.val.textContent = '-inf dB';
+      m.bar.style.width = '0%';
+    } else {
+      m.val.textContent = db.toFixed(1) + ' dB';
+      m.bar.style.width = clamp((db + 60) / 60 * 100, 0, 100) + '%';
+    }
+    m.bar.classList.toggle('live', running && db > -60);
+  }
+}
+
+// ── State display ────────────────────────────────────────
+function showStates(states) {
+  if (!states) return;
+  statesEl.innerHTML = Object.entries(states)
+    .map(([k, v]) => `<div>${k}: <span class="val">${v}</span></div>`)
+    .join('');
+}
+
+// ── WebSocket ────────────────────────────────────────────
+function connectWs() {
+  if (ws) return;
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsDot.className = 'dot ok';
+    wsLabel.textContent = 'connected';
+    if (reconTimer) { clearInterval(reconTimer); reconTimer = null; }
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const state = JSON.parse(e.data);
+      if (state.engine) {
+        timeEl.textContent = state.engine.simTime || '--';
+        locEl.textContent  = state.engine.location || '--';
+      }
+      showStates(state.states);
+      if (running && ctx) {
+        if (state.routed && state.routed.dsp) {
+          applyRouted(state.routed.dsp);
+        } else if (state.controls) {
+          applyFallback(state.controls.audio);
+        }
+        refreshMeters();
+      }
+    } catch (_) {}
+  };
+
+  ws.onclose = () => {
+    wsDot.className = 'dot err';
+    wsLabel.textContent = 'disconnected';
+    ws = null;
+    scheduleReconnect();
+  };
+  ws.onerror = () => ws.close();
+}
+
+function scheduleReconnect() {
+  if (reconTimer) return;
+  reconTimer = setInterval(() => { if (!ws) connectWs(); }, 3000);
+}
+
+// ── Init ─────────────────────────────────────────────────
+connectWs();
+refreshMeters();
+</script>
+</body>
+</html>

@@ -19,13 +19,15 @@
       "source": "controls.lighting.colorTempK",
       "endpoint": "lighting",
       "param": "colortemp",
-      "transform": { "type": "scale", "inputRange": [3200, 6500], "outputRange": [153, 500] }
+      "transform": { "type": "scale", "inputRange": [3200, 6500], "outputRange": [153, 500] },
+      "rateLimit": { "maxDelta": 20, "ema": 0.3 }
     },
     {
       "source": "controls.lighting.exteriorLuminance",
       "endpoint": "lighting",
       "param": "brightness",
-      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 254] }
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 254] },
+      "rateLimit": { "maxDelta": 15 }
     },
     {
       "source": "controls.lighting.contrast",
@@ -37,13 +39,15 @@
       "source": "controls.audio.windLevel",
       "endpoint": "dsp",
       "param": "/buses/wind_bed/gain",
-      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] }
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] },
+      "rateLimit": { "maxDelta": 6, "ema": 0.2 }
     },
     {
       "source": "controls.audio.rainLevel",
       "endpoint": "dsp",
       "param": "/buses/rain_bed/gain",
-      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] }
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-60, 0] },
+      "rateLimit": { "maxDelta": 6, "ema": 0.2 }
     },
     {
       "source": "controls.audio.baseNoiseFloorDb",
@@ -55,7 +59,8 @@
       "source": "controls.atmosphere.haze",
       "endpoint": "unreal",
       "param": "ExponentialHeightFog.FogDensity",
-      "transform": { "type": "curve", "gamma": 2.0, "outputRange": [0, 0.05] }
+      "transform": { "type": "curve", "gamma": 2.0, "outputRange": [0, 0.05] },
+      "rateLimit": { "maxDelta": 0.005, "ema": 0.25 }
     },
     {
       "source": "controls.atmosphere.wetness",
