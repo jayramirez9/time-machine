@@ -108,7 +108,13 @@ const results = await dispatch(
 // results: { unreal: { ok: true, transport: 'http', params }, dsp: { ok: true, ... } }
 ```
 
-Built-in transports (all stubbed, log only): `http`, `osc`, `log`.
+Built-in transports: `http` (stubbed), `osc` (stubbed), `log` (stubbed), `unreal` (live — writes to Unreal via Remote Control API).
+
+The `unreal` transport supports multiple actor dispatch types configured in the endpoint's `actors` map:
+- `rotation` — batches Pitch/Yaw/Roll into `SetActorRotation` calls (used for DirectionalLight sun position)
+- `property` — direct property write on a component (used for ExponentialHeightFog density)
+- `material_scalar` — writes `ScalarParameterValues` on a MaterialInstance (used for volumetric cloud coverage)
+- `call` — arbitrary function call on an actor
 
 ### Rate Limiter
 
