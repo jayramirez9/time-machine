@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine — Audio Engine</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    background: #0a0a0a;
+    color: #999;
+    padding: 24px;
+    font-size: 13px;
+    max-width: 640px;
+  }
+  h1 { font-size: 14px; font-weight: 600; color: #ccc; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #555; margin-bottom: 20px; }
+
+  .status {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 16px; font-size: 11px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #333;
+  }
+  .dot.ok { background: #2a6; }
+  .dot.err { background: #a33; }
+  .dot.loading { background: #a82; }
+
+  .info { font-size: 11px; color: #555; margin-bottom: 16px; }
+  .info span { color: #888; }
+
+  .controls {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+
+  button {
+    font-family: inherit; font-size: 12px;
+    background: #1a1a1a; color: #aaa;
+    border: 1px solid #333; padding: 6px 16px; cursor: pointer;
+  }
+  button:hover { border-color: #555; color: #ccc; }
+  button.active { border-color: #2a6; color: #2a6; }
+  button.panic { border-color: #a33; color: #a33; }
+  button.panic:hover { background: #1a0a0a; }
+  button.panic.engaged { background: #300; border-color: #f44; color: #f44; }
+
+  .mode-btn.selected { border-color: #28a; color: #28a; }
+
+  .section-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 1px; margin: 16px 0 8px;
+  }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .slider-row label { font-size: 11px; color: #666; min-width: 60px; }
+  .slider-row input[type=range] { flex: 1; accent-color: #2a6; }
+  .slider-row .val { font-size: 11px; color: #555; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .layer {
+    margin-bottom: 8px; padding: 8px 12px;
+    background: #111; border: 1px solid #1a1a1a; border-radius: 4px;
+  }
+  .layer-header {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .layer-name { font-size: 11px; color: #666; }
+  .layer-status { font-size: 10px; color: #444; font-variant-numeric: tabular-nums; }
+  .layer-meter {
+    height: 2px; background: #1a1a1a; margin-top: 6px; border-radius: 1px; overflow: hidden;
+  }
+  .layer-meter-fill {
+    height: 100%; background: #333; width: 0%;
+    transition: width 0.5s ease;
+  }
+  .layer-meter-fill.live { background: #2a6; }
+
+  .states {
+    font-size: 11px; color: #444; margin-top: 20px;
+    border-top: 1px solid #1a1a1a; padding-top: 12px;
+  }
+  .states div { margin-bottom: 3px; }
+  .states .val { color: #666; }
+
+  .event-log {
+    font-size: 10px; color: #444; margin-top: 12px;
+    max-height: 120px; overflow-y: auto;
+    border-top: 1px solid #1a1a1a; padding-top: 8px;
+  }
+  .event-log div { margin-bottom: 2px; }
+  .event-log .time { color: #555; }
+  .event-log .name { color: #28a; }
+</style>
+</head>
+<body>
+
+<h1>Audio Engine</h1>
+<div class="subtitle">5-layer environmental audio — PRD Section 13</div>
+
+<div class="status">
+  <div class="dot" id="wsDot"></div>
+  <span id="wsLabel">disconnected</span>
+  &nbsp;|&nbsp;
+  <div class="dot" id="profileDot"></div>
+  <span id="profileLabel">no profile</span>
+</div>
+
+<div class="info">
+  <div>Location: <span id="loc">--</span></div>
+  <div>Sim time: <span id="simTime">--</span></div>
+</div>
+
+<div class="controls">
+  <button id="btnStart">Start</button>
+  <button class="panic" id="btnPanic">Panic</button>
+  <span style="margin-left: 8px; font-size: 10px; color: #444;">Mode:</span>
+  <button class="mode-btn selected" data-mode="subtle">Subtle</button>
+  <button class="mode-btn" data-mode="present">Present</button>
+  <button class="mode-btn" data-mode="demo">Demo</button>
+</div>
+
+<div class="section-label">Master</div>
+<div class="slider-row">
+  <label>Level</label>
+  <input type="range" id="masterSlider" min="0" max="100" value="60">
+  <span class="val" id="masterVal">60%</span>
+</div>
+
+<div class="section-label">Layers</div>
+<div class="layer" id="layerBed">
+  <div class="layer-header">
+    <span class="layer-name">1 Base Bed</span>
+    <span class="layer-status" id="bedStatus">--</span>
+  </div>
+  <div class="layer-meter"><div class="layer-meter-fill" id="bedMeter"></div></div>
+</div>
+<div class="layer" id="layerDir">
+  <div class="layer-header">
+    <span class="layer-name">2 Directional Beds</span>
+    <span class="layer-status" id="dirStatus">--</span>
+  </div>
+  <div class="layer-meter"><div class="layer-meter-fill" id="dirMeter"></div></div>
+</div>
+<div class="layer" id="layerEvents">
+  <div class="layer-header">
+    <span class="layer-name">3 Micro-Events</span>
+    <span class="layer-status" id="eventsStatus">--</span>
+  </div>
+  <div class="layer-meter"><div class="layer-meter-fill" id="eventsMeter"></div></div>
+</div>
+<div class="layer" id="layerWeather">
+  <div class="layer-header">
+    <span class="layer-name">4 Weather</span>
+    <span class="layer-status" id="weatherStatus">--</span>
+  </div>
+  <div class="layer-meter"><div class="layer-meter-fill" id="weatherMeter"></div></div>
+</div>
+<div class="layer" id="layerOcclusion">
+  <div class="layer-header">
+    <span class="layer-name">5 Occlusion</span>
+    <span class="layer-status" id="occlusionStatus">stub</span>
+  </div>
+  <div class="layer-meter"><div class="layer-meter-fill" id="occlusionMeter"></div></div>
+</div>
+
+<div class="states" id="statesPanel"></div>
+
+<div class="section-label">Event Log</div>
+<div class="event-log" id="eventLog"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  Time Machine Audio Engine — 5-layer PRD-compliant soundscape
+// ═══════════════════════════════════════════════════════════════
+
+const WS_URL = `ws://${location.host}/stream`;
+const MASTER_MAX_GAIN = 0.25;   // Guardrail per PRD
+const RAMP = 0.4;               // Gain ramp time constant (sec)
+const PROFILE_ID = 'baton_rouge_suburb_1978';
+
+// ── Helpers ──────────────────────────────────────────────────
+function dbToLin(db) { return db <= -60 ? 0 : Math.pow(10, db / 20); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * clamp(t, 0, 1); }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── State ────────────────────────────────────────────────────
+let ctx = null;
+let masterGain = null;
+let profile = null;
+let buffers = {};       // label → AudioBuffer
+let running = false;
+let panicEngaged = false;
+let currentMode = 'subtle';
+let currentState = null;
+let ws = null;
+let reconTimer = null;
+let schedulerInterval = null;
+let lastUpdateTime = 0;
+
+// Layer instances
+let baseBedLayer = null;
+let directionalLayer = null;
+let weatherLayer = null;
+let microEventScheduler = null;
+
+// ── DOM refs ─────────────────────────────────────────────────
+const btnStart = document.getElementById('btnStart');
+const btnPanic = document.getElementById('btnPanic');
+const masterSlider = document.getElementById('masterSlider');
+const masterValEl = document.getElementById('masterVal');
+const wsDot = document.getElementById('wsDot');
+const wsLabel = document.getElementById('wsLabel');
+const profileDot = document.getElementById('profileDot');
+const profileLabel = document.getElementById('profileLabel');
+const locEl = document.getElementById('loc');
+const timeEl = document.getElementById('simTime');
+const statesEl = document.getElementById('statesPanel');
+const eventLogEl = document.getElementById('eventLog');
+
+const layerMeters = {
+  bed:       { status: document.getElementById('bedStatus'),       meter: document.getElementById('bedMeter') },
+  dir:       { status: document.getElementById('dirStatus'),       meter: document.getElementById('dirMeter') },
+  events:    { status: document.getElementById('eventsStatus'),    meter: document.getElementById('eventsMeter') },
+  weather:   { status: document.getElementById('weatherStatus'),   meter: document.getElementById('weatherMeter') },
+  occlusion: { status: document.getElementById('occlusionStatus'), meter: document.getElementById('occlusionMeter') }
+};
+
+// ── Event log ────────────────────────────────────────────────
+const eventLogLines = [];
+function logEvent(name, detail) {
+  const time = new Date().toLocaleTimeString('en', { hour12: false });
+  eventLogLines.unshift({ time, name, detail });
+  if (eventLogLines.length > 50) eventLogLines.length = 50;
+  eventLogEl.innerHTML = eventLogLines.slice(0, 15).map(e =>
+    `<div><span class="time">${e.time}</span> <span class="name">${e.name}</span> ${e.detail || ''}</div>`
+  ).join('');
+}
+
+// ── Profile loader ───────────────────────────────────────────
+async function loadProfile(id) {
+  profileDot.className = 'dot loading';
+  profileLabel.textContent = 'loading...';
+
+  try {
+    const res = await fetch(`/audio-profiles/${id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    profile = await res.json();
+    profileLabel.textContent = profile.name || id;
+
+    // Collect all audio URLs from profile
+    const urls = new Map();
+    function collectSources(sources) {
+      if (!sources) return;
+      for (const s of sources) {
+        if (s.url && s.label) urls.set(s.label, s.url);
+      }
+    }
+
+    // Base beds
+    collectSources(profile.beds?.base?.sources);
+    // Directional beds
+    for (const dir of Object.values(profile.beds?.directional || {})) {
+      collectSources(dir.sources);
+    }
+    // Weather
+    collectSources(profile.weather?.wind?.sources);
+    collectSources(profile.weather?.rain?.sources);
+    collectSources(profile.weather?.thunder?.sources);
+    // Micro-events
+    for (const evt of (profile.microEvents || [])) {
+      collectSources(evt.sources);
+    }
+
+    // Decode all buffers
+    if (!ctx) initAudioContext();
+    let loaded = 0;
+    const total = urls.size;
+    profileLabel.textContent = `loading 0/${total}...`;
+
+    const entries = [...urls.entries()];
+    // Load in parallel batches of 4
+    for (let i = 0; i < entries.length; i += 4) {
+      const batch = entries.slice(i, i + 4);
+      await Promise.all(batch.map(async ([label, url]) => {
+        try {
+          const resp = await fetch(url);
+          const arrayBuf = await resp.arrayBuffer();
+          buffers[label] = await ctx.decodeAudioData(arrayBuf);
+        } catch (e) {
+          console.warn(`[AudioEngine] Failed to decode ${label}: ${e.message}`);
+        }
+        loaded++;
+        profileLabel.textContent = `loading ${loaded}/${total}...`;
+      }));
+    }
+
+    profileDot.className = 'dot ok';
+    profileLabel.textContent = `${profile.name} (${loaded}/${total})`;
+    logEvent('profile', `loaded ${id} — ${loaded}/${total} assets`);
+  } catch (e) {
+    profileDot.className = 'dot err';
+    profileLabel.textContent = `error: ${e.message}`;
+    console.error('[AudioEngine] Profile load failed:', e);
+  }
+}
+
+// ── AudioContext init ────────────────────────────────────────
+function initAudioContext() {
+  ctx = new AudioContext();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = (masterSlider.value / 100) * MASTER_MAX_GAIN;
+  masterGain.connect(ctx.destination);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LAYER 1: Base Bed — Crossfade-rotating broadband ambience
+// ═══════════════════════════════════════════════════════════════
+
+class BaseBedLayer {
+  constructor(ctx, masterGain, profile, buffers) {
+    this.ctx = ctx;
+    this.output = ctx.createGain();
+    this.output.gain.value = dbToLin(profile.beds?.base?.gainDb ?? -12);
+    this.output.connect(masterGain);
+
+    this.sources = (profile.beds?.base?.sources || []).map(s => s.label);
+    this.crossfadeSec = profile.beds?.base?.crossfadeSec ?? 10;
+    this.buffers = buffers;
+
+    this.currentIdx = 0;
+    this.nodeA = null;
+    this.gainA = null;
+    this.nodeB = null;
+    this.gainB = null;
+    this.crossfading = false;
+    this.startedAt = 0;
+    this.currentDuration = 0;
+
+    // LFO for breathing
+    this.lfo = ctx.createGain();
+    this.lfo.gain.value = 1;
+    this.lfo.connect(this.output);
+    this._lfoPhase = Math.random() * Math.PI * 2;
+  }
+
+  start() {
+    if (this.sources.length === 0) return;
+    this._startSource('A');
+  }
+
+  _getNextIdx() {
+    if (this.sources.length <= 1) return 0;
+    let next;
+    do { next = Math.floor(Math.random() * this.sources.length); } while (next === this.currentIdx);
+    return next;
+  }
+
+  _startSource(slot) {
+    const label = this.sources[this.currentIdx];
+    const buf = this.buffers[label];
+    if (!buf) return;
+
+    const node = this.ctx.createBufferSource();
+    node.buffer = buf;
+    node.loop = true;  // Loop individual buffers for base bed continuity
+    const gain = this.ctx.createGain();
+    gain.gain.value = (slot === 'A') ? 1 : 0;
+    node.connect(gain);
+    gain.connect(this.lfo);
+
+    // Start at random offset for variety
+    const offset = Math.random() * buf.duration;
+    node.start(0, offset);
+
+    if (slot === 'A') {
+      this.nodeA = node;
+      this.gainA = gain;
+    } else {
+      this.nodeB = node;
+      this.gainB = gain;
+    }
+
+    this.startedAt = this.ctx.currentTime;
+    this.currentDuration = buf.duration;
+  }
+
+  update(worldState, dt) {
+    if (!worldState) return;
+
+    // Derive gain from baseNoiseFloorDb
+    const noiseDb = worldState.controls?.audio?.baseNoiseFloorDb ?? 30;
+    const targetGain = dbToLin(clamp(noiseDb - 30, -30, 0));
+    this.output.gain.setTargetAtTime(targetGain, this.ctx.currentTime, RAMP);
+
+    // LFO breathing (subtle 1-2 dB modulation, 20s period)
+    this._lfoPhase += dt * (2 * Math.PI / 20);
+    const lfoVal = 1 + 0.1 * Math.sin(this._lfoPhase);
+    this.lfo.gain.setTargetAtTime(lfoVal, this.ctx.currentTime, 0.5);
+
+    // Trigger crossfade when nodeA has been playing for 80% of duration
+    if (this.nodeA && !this.crossfading && this.sources.length > 1) {
+      const elapsed = this.ctx.currentTime - this.startedAt;
+      if (elapsed > Math.max(30, this.currentDuration * 0.8)) {
+        this._beginCrossfade();
+      }
+    }
+  }
+
+  _beginCrossfade() {
+    this.crossfading = true;
+    this.currentIdx = this._getNextIdx();
+    this._startSource('B');
+
+    const now = this.ctx.currentTime;
+    const dur = this.crossfadeSec;
+
+    // Fade A out, B in
+    this.gainA.gain.setValueAtTime(this.gainA.gain.value, now);
+    this.gainA.gain.linearRampToValueAtTime(0, now + dur);
+    this.gainB.gain.setValueAtTime(0, now);
+    this.gainB.gain.linearRampToValueAtTime(1, now + dur);
+
+    // After crossfade, swap
+    setTimeout(() => {
+      try { this.nodeA.stop(); } catch (_) {}
+      this.nodeA = this.nodeB;
+      this.gainA = this.gainB;
+      this.nodeB = null;
+      this.gainB = null;
+      this.crossfading = false;
+      this.startedAt = this.ctx.currentTime;
+    }, dur * 1000 + 100);
+
+    logEvent('bed-xfade', this.sources[this.currentIdx]);
+  }
+
+  getLevel() {
+    return this.output.gain.value;
+  }
+
+  panic() {
+    this.output.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+  }
+
+  resume() {
+    // Will restore on next update()
+  }
+
+  dispose() {
+    try { this.nodeA?.stop(); } catch (_) {}
+    try { this.nodeB?.stop(); } catch (_) {}
+    this.output.disconnect();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LAYER 2: Directional Beds — N/E/S/W anchored sources
+// ═══════════════════════════════════════════════════════════════
+
+class DirectionalBedsLayer {
+  constructor(ctx, masterGain, profile, buffers) {
+    this.ctx = ctx;
+    this.output = ctx.createGain();
+    this.output.gain.value = dbToLin(profile.mix?.layerGains?.directionalBeds ?? -3);
+    this.output.connect(masterGain);
+
+    this.directions = {};
+    const dirConfig = profile.beds?.directional || {};
+    const panMap = { N: 0, E: 1, S: 0, W: -1 };
+
+    for (const [dir, config] of Object.entries(dirConfig)) {
+      const labels = (config.sources || []).map(s => s.label);
+      if (labels.length === 0) continue;
+
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = panMap[dir] ?? 0;
+      const gain = ctx.createGain();
+      gain.gain.value = dbToLin(config.gainDb ?? -18);
+      gain.connect(panner);
+      panner.connect(this.output);
+
+      this.directions[dir] = {
+        labels,
+        panner,
+        gain,
+        node: null,
+        currentIdx: 0
+      };
+    }
+
+    this.buffers = buffers;
+  }
+
+  start() {
+    for (const [dir, d] of Object.entries(this.directions)) {
+      this._startDirection(dir);
+    }
+  }
+
+  _startDirection(dir) {
+    const d = this.directions[dir];
+    if (!d || d.labels.length === 0) return;
+
+    const label = d.labels[d.currentIdx % d.labels.length];
+    const buf = this.buffers[label];
+    if (!buf) return;
+
+    const node = this.ctx.createBufferSource();
+    node.buffer = buf;
+    node.loop = true;
+    node.start(0, Math.random() * buf.duration);
+    node.connect(d.gain);
+    d.node = node;
+  }
+
+  update(worldState, dt) {
+    if (!worldState) return;
+    const activity = worldState.controls?.audio?.activityLevel ?? 0.5;
+    // Modulate directional bed volume by activity level
+    const targetGain = dbToLin(-3) * clamp(activity * 2, 0.2, 1);
+    this.output.gain.setTargetAtTime(targetGain, this.ctx.currentTime, RAMP * 2);
+  }
+
+  getLevel() {
+    return this.output.gain.value;
+  }
+
+  panic() {
+    this.output.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+  }
+
+  resume() {}
+
+  dispose() {
+    for (const d of Object.values(this.directions)) {
+      try { d.node?.stop(); } catch (_) {}
+    }
+    this.output.disconnect();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LAYER 3: Micro-Event Scheduler
+// ═══════════════════════════════════════════════════════════════
+
+class MicroEventScheduler {
+  constructor(ctx, masterGain, profile, buffers) {
+    this.ctx = ctx;
+    this.output = ctx.createGain();
+    this.output.gain.value = dbToLin(profile.mix?.layerGains?.microEvents ?? -2);
+    this.output.connect(masterGain);
+
+    this.buffers = buffers;
+    this.pools = (profile.microEvents || []).map(evt => ({
+      ...evt,
+      // Bag-draw anti-repetition
+      bag: [...(evt.sources || []).map(s => s.label)],
+      bagOriginal: (evt.sources || []).map(s => s.label),
+      lastFiredAt: 0,
+      cooldownSec: evt.avgCooldownSec || 30
+    }));
+
+    this.scheduling = profile.scheduling || {};
+    this.maxConcurrent = this.scheduling.maxConcurrentEvents ?? 3;
+    this.globalCooldownSec = this.scheduling.globalCooldownSec ?? 2;
+    this.lastGlobalFire = 0;
+    this.activeSources = 0;
+    this.densityMultiplier = this.scheduling.densityMultipliers?.subtle ?? 0.5;
+  }
+
+  setMode(mode) {
+    const mults = this.scheduling.densityMultipliers || { subtle: 0.5, present: 1.0, demo: 2.0 };
+    this.densityMultiplier = mults[mode] ?? 1.0;
+  }
+
+  tick(worldState) {
+    if (!worldState || this.activeSources >= this.maxConcurrent) return;
+
+    const now = this.ctx.currentTime;
+    const timePhase = worldState.controls?.audio?.timeOfDayPhase ?? 0.5;
+    const activity = worldState.controls?.audio?.activityLevel ?? 0.5;
+
+    // Global cooldown
+    if (now - this.lastGlobalFire < this.globalCooldownSec) return;
+
+    for (const pool of this.pools) {
+      // Cooldown check
+      if (now - pool.lastFiredAt < pool.cooldownSec / this.densityMultiplier) continue;
+
+      // Time-of-day constraint
+      const tod = pool.timeOfDay;
+      if (tod) {
+        const inPrimary = timePhase >= tod.min && timePhase <= tod.max;
+        const inSecondary = pool.secondaryWindow &&
+          timePhase >= pool.secondaryWindow.min && timePhase <= pool.secondaryWindow.max;
+        if (!inPrimary && !inSecondary) continue;
+      }
+
+      // Activity range
+      if (pool.activityRange) {
+        if (activity < pool.activityRange[0] || activity > pool.activityRange[1]) continue;
+      }
+
+      // Probability roll
+      const dt = 0.1; // scheduler tick interval
+      const prob = (1 / pool.cooldownSec) * this.densityMultiplier * dt;
+      if (Math.random() > prob) continue;
+
+      // Fire!
+      this._fire(pool);
+      break; // One event per tick
+    }
+  }
+
+  _fire(pool) {
+    // Bag draw
+    if (pool.bag.length === 0) {
+      pool.bag = [...pool.bagOriginal];
+      // Shuffle
+      for (let i = pool.bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool.bag[i], pool.bag[j]] = [pool.bag[j], pool.bag[i]];
+      }
+    }
+
+    const label = pool.bag.pop();
+    const buf = this.buffers[label];
+    if (!buf) return;
+
+    const node = this.ctx.createBufferSource();
+    node.buffer = buf;
+
+    // Random gain variation ±3dB
+    const gain = this.ctx.createGain();
+    const baseDb = pool.gainDb ?? -18;
+    const varDb = baseDb + (Math.random() - 0.5) * 6;
+    gain.gain.value = dbToLin(varDb);
+
+    // Pan
+    const panner = this.ctx.createStereoPanner();
+    const basePan = pool.pan ?? 0;
+    panner.pan.value = clamp(basePan + (Math.random() - 0.5) * 0.2, -1, 1);
+
+    node.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.output);
+
+    node.start();
+    this.activeSources++;
+    pool.lastFiredAt = this.ctx.currentTime;
+    this.lastGlobalFire = this.ctx.currentTime;
+
+    node.onended = () => {
+      this.activeSources = Math.max(0, this.activeSources - 1);
+      gain.disconnect();
+      panner.disconnect();
+    };
+
+    logEvent('micro', `${pool.id} → ${label}`);
+  }
+
+  getLevel() {
+    return this.output.gain.value;
+  }
+
+  panic() {
+    this.output.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+  }
+
+  resume() {}
+
+  dispose() {
+    this.output.disconnect();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LAYER 4: Weather — Wind, Rain, Thunder
+// ═══════════════════════════════════════════════════════════════
+
+class WeatherLayer {
+  constructor(ctx, masterGain, profile, buffers) {
+    this.ctx = ctx;
+    this.output = ctx.createGain();
+    this.output.gain.value = 1;
+    this.output.connect(masterGain);
+
+    this.buffers = buffers;
+
+    // Wind sub-layer
+    this.windGain = ctx.createGain();
+    this.windGain.gain.value = 0;
+    this.windGain.connect(this.output);
+    this.windNode = null;
+
+    // Gust overlay with bandpass filter
+    this.gustGain = ctx.createGain();
+    this.gustGain.gain.value = 0;
+    this.gustFilter = ctx.createBiquadFilter();
+    this.gustFilter.type = 'bandpass';
+    this.gustFilter.frequency.value = 600;
+    this.gustFilter.Q.value = 0.7;
+    this.gustGain.connect(this.gustFilter);
+    this.gustFilter.connect(this.output);
+    this.gustNode = null;
+    this._gustSweepPhase = Math.random() * Math.PI * 2;
+
+    // Rain sub-layer with highpass filter
+    this.rainGain = ctx.createGain();
+    this.rainGain.gain.value = 0;
+    this.rainFilter = ctx.createBiquadFilter();
+    this.rainFilter.type = 'highpass';
+    this.rainFilter.frequency.value = 200;
+    this.rainGain.connect(this.rainFilter);
+    this.rainFilter.connect(this.output);
+    this.rainNode = null;
+
+    // Thunder (one-shots managed by micro-event style trigger)
+    this.thunderSources = (profile.weather?.thunder?.sources || []).map(s => s.label);
+    this.thunderCooldown = profile.weather?.thunder?.cooldownRange || [60, 180];
+    this.lastThunderAt = 0;
+
+    this.windLabels = (profile.weather?.wind?.sources || []).map(s => s.label);
+    this.rainLabels = (profile.weather?.rain?.sources || []).map(s => s.label);
+    this.gustConfig = profile.weather?.wind || {};
+  }
+
+  start() {
+    // Start wind base loop
+    if (this.windLabels.length > 0) {
+      const buf = this.buffers[this.windLabels[0]];
+      if (buf) {
+        this.windNode = this.ctx.createBufferSource();
+        this.windNode.buffer = buf;
+        this.windNode.loop = true;
+        this.windNode.start(0, Math.random() * buf.duration);
+        this.windNode.connect(this.windGain);
+      }
+    }
+
+    // Start gust overlay
+    if (this.windLabels.length > 1) {
+      const buf = this.buffers[this.windLabels[1]];
+      if (buf) {
+        this.gustNode = this.ctx.createBufferSource();
+        this.gustNode.buffer = buf;
+        this.gustNode.loop = true;
+        this.gustNode.start(0, Math.random() * buf.duration);
+        this.gustNode.connect(this.gustGain);
+      }
+    }
+
+    // Start rain loop
+    if (this.rainLabels.length > 0) {
+      const buf = this.buffers[this.rainLabels[0]];
+      if (buf) {
+        this.rainNode = this.ctx.createBufferSource();
+        this.rainNode.buffer = buf;
+        this.rainNode.loop = true;
+        this.rainNode.start(0, Math.random() * buf.duration);
+        this.rainNode.connect(this.rainGain);
+      }
+    }
+  }
+
+  update(worldState, dt) {
+    if (!worldState) return;
+    const audio = worldState.controls?.audio;
+    if (!audio) return;
+
+    const now = this.ctx.currentTime;
+
+    // Wind gain from windLevel
+    const windTarget = dbToLin(-60 + audio.windLevel * 60);
+    this.windGain.gain.setTargetAtTime(windTarget, now, RAMP);
+
+    // Gust gain from gustiness
+    const gustTarget = dbToLin(-60 + audio.gustiness * 50);
+    this.gustGain.gain.setTargetAtTime(gustTarget, now, RAMP);
+
+    // Gust filter sweep
+    const gustRange = this.gustConfig.gustFilterRange || [200, 2000];
+    const sweepPeriod = this.gustConfig.gustSweepPeriod || [8, 20];
+    const period = lerp(sweepPeriod[0], sweepPeriod[1], 0.5);
+    this._gustSweepPhase += dt * (2 * Math.PI / period);
+    const sweepT = (Math.sin(this._gustSweepPhase) + 1) / 2;
+    const freq = lerp(gustRange[0], gustRange[1], sweepT);
+    this.gustFilter.frequency.setTargetAtTime(freq, now, 0.2);
+
+    // Rain gain from rainLevel
+    const rainTarget = dbToLin(-60 + audio.rainLevel * 60);
+    this.rainGain.gain.setTargetAtTime(rainTarget, now, RAMP);
+
+    // Rain filter: light rain = only high freq, heavy = full spectrum
+    const hpFreq = lerp(2000, 200, audio.rainLevel);
+    this.rainFilter.frequency.setTargetAtTime(hpFreq, now, RAMP);
+
+    // Thunder trigger
+    if (audio.thunderProb > 0) {
+      const timeSinceLast = now - this.lastThunderAt;
+      const cooldown = lerp(this.thunderCooldown[1], this.thunderCooldown[0], audio.thunderProb);
+      if (timeSinceLast > cooldown && Math.random() < audio.thunderProb * dt * 0.1) {
+        this._fireThunder();
+      }
+    }
+  }
+
+  _fireThunder() {
+    if (this.thunderSources.length === 0) return;
+    const label = pick(this.thunderSources);
+    const buf = this.buffers[label];
+    if (!buf) return;
+
+    const node = this.ctx.createBufferSource();
+    node.buffer = buf;
+    const gain = this.ctx.createGain();
+    gain.gain.value = dbToLin(-6 + Math.random() * -6); // -6 to -12 dB
+    node.connect(gain);
+    gain.connect(this.output);
+    node.start();
+    this.lastThunderAt = this.ctx.currentTime;
+    node.onended = () => gain.disconnect();
+    logEvent('thunder', label);
+  }
+
+  getLevel() {
+    return Math.max(this.windGain.gain.value, this.rainGain.gain.value);
+  }
+
+  panic() {
+    const now = this.ctx.currentTime;
+    this.windGain.gain.setTargetAtTime(0, now, 0.3);
+    this.gustGain.gain.setTargetAtTime(0, now, 0.3);
+    this.rainGain.gain.setTargetAtTime(0, now, 0.3);
+  }
+
+  resume() {}
+
+  dispose() {
+    try { this.windNode?.stop(); } catch (_) {}
+    try { this.gustNode?.stop(); } catch (_) {}
+    try { this.rainNode?.stop(); } catch (_) {}
+    this.output.disconnect();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ENGINE LIFECYCLE
+// ═══════════════════════════════════════════════════════════════
+
+async function startEngine() {
+  if (!profile) await loadProfile(PROFILE_ID);
+  if (!ctx) initAudioContext();
+  if (ctx.state === 'suspended') await ctx.resume();
+
+  // Create layers
+  baseBedLayer = new BaseBedLayer(ctx, masterGain, profile, buffers);
+  directionalLayer = new DirectionalBedsLayer(ctx, masterGain, profile, buffers);
+  microEventScheduler = new MicroEventScheduler(ctx, masterGain, profile, buffers);
+  weatherLayer = new WeatherLayer(ctx, masterGain, profile, buffers);
+
+  microEventScheduler.setMode(currentMode);
+
+  // Start all layers
+  baseBedLayer.start();
+  directionalLayer.start();
+  weatherLayer.start();
+
+  // Start scheduler (100ms tick)
+  schedulerInterval = setInterval(() => {
+    if (!running || panicEngaged || !currentState) return;
+    microEventScheduler.tick(currentState);
+  }, 100);
+
+  running = true;
+  btnStart.textContent = 'Stop';
+  btnStart.classList.add('active');
+  logEvent('engine', 'started');
+  updateMeters();
+}
+
+function stopEngine() {
+  running = false;
+  if (schedulerInterval) {
+    clearInterval(schedulerInterval);
+    schedulerInterval = null;
+  }
+
+  baseBedLayer?.dispose();
+  directionalLayer?.dispose();
+  microEventScheduler?.dispose();
+  weatherLayer?.dispose();
+
+  baseBedLayer = null;
+  directionalLayer = null;
+  microEventScheduler = null;
+  weatherLayer = null;
+
+  btnStart.textContent = 'Start';
+  btnStart.classList.remove('active');
+  logEvent('engine', 'stopped');
+}
+
+// ── Update loop (driven by WebSocket messages) ───────────────
+function onWorldState(state) {
+  currentState = state;
+
+  if (state.engine) {
+    timeEl.textContent = state.engine.simTime || '--';
+    locEl.textContent = state.engine.location || '--';
+  }
+  showStates(state.states);
+
+  if (!running || panicEngaged) return;
+
+  const now = performance.now() / 1000;
+  const dt = lastUpdateTime > 0 ? now - lastUpdateTime : 0.1;
+  lastUpdateTime = now;
+
+  baseBedLayer?.update(state, dt);
+  directionalLayer?.update(state, dt);
+  weatherLayer?.update(state, dt);
+
+  updateMeters();
+}
+
+function updateMeters() {
+  function setMeter(key, level) {
+    const m = layerMeters[key];
+    if (!m) return;
+    const pct = clamp(level * 400, 0, 100); // scale for visibility
+    m.meter.style.width = pct + '%';
+    m.meter.classList.toggle('live', running && level > 0.001);
+    m.status.textContent = level > 0.001 ? (20 * Math.log10(level)).toFixed(1) + ' dB' : '--';
+  }
+
+  setMeter('bed', baseBedLayer?.getLevel() ?? 0);
+  setMeter('dir', directionalLayer?.getLevel() ?? 0);
+  setMeter('events', microEventScheduler?.getLevel() ?? 0);
+  setMeter('weather', weatherLayer?.getLevel() ?? 0);
+}
+
+function showStates(states) {
+  if (!states) return;
+  const audio = currentState?.controls?.audio;
+  let html = Object.entries(states)
+    .map(([k, v]) => `<div>${k}: <span class="val">${v}</span></div>`)
+    .join('');
+  if (audio) {
+    html += `<div style="margin-top:6px;border-top:1px solid #1a1a1a;padding-top:6px;">`;
+    html += `gustiness: <span class="val">${(audio.gustiness ?? 0).toFixed(2)}</span> `;
+    html += `thunder: <span class="val">${(audio.thunderProb ?? 0).toFixed(2)}</span> `;
+    html += `activity: <span class="val">${(audio.activityLevel ?? 0).toFixed(2)}</span> `;
+    html += `phase: <span class="val">${(audio.timeOfDayPhase ?? 0).toFixed(3)}</span>`;
+    html += `</div>`;
+  }
+  statesEl.innerHTML = html;
+}
+
+// ── Panic ────────────────────────────────────────────────────
+function engagePanic() {
+  panicEngaged = true;
+  btnPanic.classList.add('engaged');
+  baseBedLayer?.panic();
+  directionalLayer?.panic();
+  microEventScheduler?.panic();
+  weatherLayer?.panic();
+  logEvent('PANIC', 'engaged');
+}
+
+function releasePanic() {
+  panicEngaged = false;
+  btnPanic.classList.remove('engaged');
+  // Layers will restore on next update()
+  logEvent('PANIC', 'released');
+}
+
+// ── Controls ─────────────────────────────────────────────────
+btnStart.addEventListener('click', () => running ? stopEngine() : startEngine());
+
+btnPanic.addEventListener('mousedown', engagePanic);
+btnPanic.addEventListener('mouseup', releasePanic);
+btnPanic.addEventListener('mouseleave', () => { if (panicEngaged) releasePanic(); });
+
+masterSlider.addEventListener('input', () => {
+  const pct = masterSlider.value;
+  masterValEl.textContent = pct + '%';
+  if (masterGain) {
+    masterGain.gain.setTargetAtTime((pct / 100) * MASTER_MAX_GAIN, ctx.currentTime, 0.1);
+  }
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    currentMode = btn.dataset.mode;
+    microEventScheduler?.setMode(currentMode);
+    logEvent('mode', currentMode);
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); if (!panicEngaged) engagePanic(); }
+  if (e.key === '1') document.querySelector('[data-mode="subtle"]').click();
+  if (e.key === '2') document.querySelector('[data-mode="present"]').click();
+  if (e.key === '3') document.querySelector('[data-mode="demo"]').click();
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' && panicEngaged) releasePanic();
+});
+
+// ── WebSocket ────────────────────────────────────────────────
+function connectWs() {
+  if (ws) return;
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsDot.className = 'dot ok';
+    wsLabel.textContent = 'connected';
+    if (reconTimer) { clearInterval(reconTimer); reconTimer = null; }
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const state = JSON.parse(e.data);
+      onWorldState(state);
+    } catch (_) {}
+  };
+
+  ws.onclose = () => {
+    wsDot.className = 'dot err';
+    wsLabel.textContent = 'disconnected';
+    ws = null;
+    scheduleReconnect();
+  };
+  ws.onerror = () => ws.close();
+}
+
+function scheduleReconnect() {
+  if (reconTimer) return;
+  reconTimer = setInterval(() => { if (!ws) connectWs(); }, 3000);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+connectWs();
+loadProfile(PROFILE_ID);
+</script>
+</body>
+</html>

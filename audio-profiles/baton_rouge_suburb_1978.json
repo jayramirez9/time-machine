@@ -1,0 +1,181 @@
+{
+  "id": "baton_rouge_suburb_1978",
+  "name": "Baton Rouge Suburb — Summer 1978",
+  "description": "Residential suburban neighborhood. Cicadas, birds, distant dogs, occasional car on a residential road to the east. Screen doors, lawnmowers on weekend mornings.",
+
+  "beds": {
+    "base": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/787/787639_5674468-lq.mp3", "label": "suburban-ambient-1" },
+        { "url": "https://cdn.freesound.org/previews/462/462087_7037-lq.mp3", "label": "suburban-ambient-2" },
+        { "url": "https://cdn.freesound.org/previews/365/365447_5865489-lq.mp3", "label": "suburban-ambient-3" }
+      ],
+      "crossfadeSec": 10,
+      "gainDb": -12
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/530/530071_7037-lq.mp3", "label": "neighborhood-north" }
+        ],
+        "gainDb": -18,
+        "description": "Neighbor's yard, trees"
+      },
+      "E": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/366/366151_4502835-lq.mp3", "label": "residential-road-east" }
+        ],
+        "gainDb": -15,
+        "description": "Residential road — occasional car pass-by"
+      },
+      "S": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/462/462087_7037-lq.mp3", "label": "backyard-south" }
+        ],
+        "gainDb": -18,
+        "description": "Backyard, open field beyond"
+      },
+      "W": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/365/365447_5865489-lq.mp3", "label": "neighborhood-west" }
+        ],
+        "gainDb": -20,
+        "description": "Quiet side, more houses"
+      }
+    }
+  },
+
+  "weather": {
+    "wind": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/456/456058_2304582-lq.mp3", "label": "wind-base" },
+        { "url": "https://cdn.freesound.org/previews/382/382735_7157625-lq.mp3", "label": "wind-gust-overlay" }
+      ],
+      "gustFilterRange": [200, 2000],
+      "gustSweepPeriod": [8, 20]
+    },
+    "rain": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/401/401275_7586479-lq.mp3", "label": "rain-texture-1" },
+        { "url": "https://cdn.freesound.org/previews/243/243627_87098-lq.mp3", "label": "rain-texture-2" }
+      ]
+    },
+    "thunder": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/360/360757_4284968-lq.mp3", "label": "thunder-roll-1" },
+        { "url": "https://cdn.freesound.org/previews/362/362205_5121236-lq.mp3", "label": "thunder-crack-1" }
+      ],
+      "cooldownRange": [60, 180]
+    }
+  },
+
+  "microEvents": [
+    {
+      "id": "cicada_chorus",
+      "description": "Summer cicada buzz, rises and falls",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/400/400875_7586479-lq.mp3", "label": "cicada-1" },
+        { "url": "https://cdn.freesound.org/previews/514/514447_4393181-lq.mp3", "label": "cicada-2" }
+      ],
+      "avgCooldownSec": 15,
+      "gainDb": -14,
+      "pan": 0,
+      "direction": "S",
+      "timeOfDay": { "min": 0.3, "max": 0.85 },
+      "activityRange": [0, 1]
+    },
+    {
+      "id": "bird_song",
+      "description": "Songbird calls — mockingbirds, cardinals",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/434/434666_1738537-lq.mp3", "label": "bird-1" },
+        { "url": "https://cdn.freesound.org/previews/345/345852_3649203-lq.mp3", "label": "bird-2" },
+        { "url": "https://cdn.freesound.org/previews/321/321967_2615119-lq.mp3", "label": "bird-3" }
+      ],
+      "avgCooldownSec": 8,
+      "gainDb": -16,
+      "pan": 0.3,
+      "direction": "N",
+      "timeOfDay": { "min": 0.2, "max": 0.45 },
+      "activityRange": [0.2, 1]
+    },
+    {
+      "id": "distant_dog",
+      "description": "Dog barking a few houses away",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/328/328730_230356-lq.mp3", "label": "dog-bark-1" },
+        { "url": "https://cdn.freesound.org/previews/415/415209_7865706-lq.mp3", "label": "dog-bark-2" }
+      ],
+      "avgCooldownSec": 45,
+      "gainDb": -22,
+      "pan": -0.4,
+      "direction": "W",
+      "timeOfDay": { "min": 0.25, "max": 0.9 },
+      "activityRange": [0.1, 1]
+    },
+    {
+      "id": "car_passby",
+      "description": "Car passing on the residential road to the east",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/460/460501_5121236-lq.mp3", "label": "car-pass-1" },
+        { "url": "https://cdn.freesound.org/previews/344/344207_1711706-lq.mp3", "label": "car-pass-2" }
+      ],
+      "avgCooldownSec": 30,
+      "gainDb": -18,
+      "pan": 0.6,
+      "direction": "E",
+      "timeOfDay": { "min": 0.25, "max": 0.9 },
+      "activityRange": [0.3, 1]
+    },
+    {
+      "id": "screen_door",
+      "description": "Screen door slam — neighbor",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/108/108616_945474-lq.mp3", "label": "screen-door-1" }
+      ],
+      "avgCooldownSec": 120,
+      "gainDb": -24,
+      "pan": -0.2,
+      "direction": "W",
+      "timeOfDay": { "min": 0.3, "max": 0.85 },
+      "activityRange": [0.4, 1]
+    },
+    {
+      "id": "night_crickets",
+      "description": "Cricket chorus after dusk",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/364/364014_145629-lq.mp3", "label": "crickets-1" },
+        { "url": "https://cdn.freesound.org/previews/523/523765_10261584-lq.mp3", "label": "crickets-2" }
+      ],
+      "avgCooldownSec": 10,
+      "gainDb": -12,
+      "pan": 0,
+      "direction": null,
+      "timeOfDay": { "min": 0.8, "max": 1.0 },
+      "secondaryWindow": { "min": 0, "max": 0.2 },
+      "activityRange": [0, 1]
+    }
+  ],
+
+  "mix": {
+    "masterGainDb": -6,
+    "layerGains": {
+      "baseBed": 0,
+      "directionalBeds": -3,
+      "microEvents": -2,
+      "weather": 0,
+      "occlusion": 0
+    },
+    "reverbSend": 0.15
+  },
+
+  "scheduling": {
+    "maxConcurrentEvents": 3,
+    "globalCooldownSec": 2,
+    "densityMultipliers": {
+      "subtle": 0.5,
+      "present": 1.0,
+      "demo": 2.0
+    }
+  }
+}

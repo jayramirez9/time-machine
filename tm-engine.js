@@ -207,6 +207,41 @@ ws.onmessage = (e) => {
       `);
     } else if (req.method === 'GET' && (req.url === '/audio' || req.url === '/audio/')) {
       serveHtml(res, path.join(__dirname, 'audio.html'));
+    } else if (req.method === 'GET' && (req.url === '/audio-engine' || req.url === '/audio-engine/')) {
+      serveHtml(res, path.join(__dirname, 'audio-engine.html'));
+    } else if (req.method === 'GET' && req.url.startsWith('/audio-profiles/')) {
+      const profileId = req.url.replace('/audio-profiles/', '').replace(/\.json$/, '').replace(/\/$/, '');
+      const filePath = path.join(__dirname, 'audio-profiles', profileId + '.json');
+      fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+          res.statusCode = 404;
+          res.end('Profile not found');
+          return;
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.end(data);
+      });
+    } else if (req.method === 'GET' && req.url.startsWith('/audio-assets/')) {
+      const assetPath = req.url.replace('/audio-assets/', '');
+      const filePath = path.join(__dirname, 'audio-assets', assetPath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.mp3': 'audio/mpeg',
+        '.ogg': 'audio/ogg',
+        '.wav': 'audio/wav',
+        '.flac': 'audio/flac',
+        '.m4a': 'audio/mp4'
+      };
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.statusCode = 404;
+          res.end('Asset not found');
+          return;
+        }
+        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.end(data);
+      });
     } else if (req.method === 'GET' && (req.url === '/viz' || req.url === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {
@@ -342,6 +377,7 @@ async function main() {
     console.log(`[Server] Status:    http://localhost:${args.port}/status`);
     console.log(`[Server] Dashboard: http://localhost:${args.port}/`);
     console.log(`[Server] Audio:     http://localhost:${args.port}/audio`);
+    console.log(`[Server] Audio v2:  http://localhost:${args.port}/audio-engine`);
     console.log(`[Server] Viz:       http://localhost:${args.port}/viz`);
     console.log('');
   });
