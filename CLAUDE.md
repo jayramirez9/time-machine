@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Product Vision
+
+See **PRD.md** for the full Time Machine Experience Bible — the product constitution, non-negotiables, and system requirements. All implementation decisions must align with that document.
+
 ## Project Overview
 
 Weather Engine is a weather state generator for environmental simulation systems. By default, it fetches real weather data from the Open-Meteo API, with historical data available back to 1940. A mock provider is also available for offline use, testing, or deterministic simulation environments.
@@ -172,7 +176,10 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 | `GET /status` | Engine status (uptime, clients, sim time) |
 | `GET /` | Browser dashboard with live updates |
 | `WebSocket /` or `/stream` | Push updates every 5 seconds |
-| `GET /audio` | WebAudio browser client |
+| `GET /audio` | Legacy WebAudio browser client |
+| `GET /audio-engine` | Full 5-layer audio engine (PRD Section 13) |
+| `GET /audio-profiles/:id` | Audio profile JSON |
+| `GET /audio-assets/*` | Audio asset files (MP3, WAV, etc.) |
 | `GET /viz` | WebGPU browser client |
 
 ### Flags
@@ -201,6 +208,7 @@ This is a Node.js ES modules project:
 - **lib/rateLimiter.js** - Per-parameter change-rate clamping with optional EMA smoothing. Exports `createRateLimiter()`
 - **lib/stateLog.js** - JSONL state logger, writes daily files to `logs/`. Exports `createStateLog()`
 - **tm-replay.js** - Replay CLI for feeding logged state through the rate limiter and reporting violations
+- **lib/timezone.js** - Zero-dependency timezone utilities using `Intl.DateTimeFormat`. Exports `localToUtc()`, `getLocalHour()`, `getLocalMinutes()`, `formatLocalISO()`, `getLocalDateStr()`
 - **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
 
 ### Weather Providers
@@ -213,24 +221,36 @@ This is a Node.js ES modules project:
 - **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`)
 
 ### Browser Clients
-- **audio.html** - WebAudio ambient engine with 4 looping stems (bed, wind, rain, thunder). Served at `/audio`
+- **audio.html** - Legacy WebAudio ambient engine with 4 looping stems (bed, wind, rain, thunder). Served at `/audio`
+- **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13). Served at `/audio-engine`. Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion (stub)
 - **viz.html** - WebGPU fullscreen renderer with sky, sun, clouds, rain, haze, heat distortion. Served at `/viz`
 
-Both connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.
+All clients connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.
+
+### Audio Profiles
+- **audio-profiles/*.json** - AudioProfile presets defining all sound assets and scheduling rules for a locale/era. Served at `/audio-profiles/:id`. Each profile defines: bed sources, directional sources (N/E/S/W), weather sources (wind/rain/thunder), micro-event pools with cooldowns and time-of-day constraints, mix settings, and scheduling config.
+
+### Extended Audio Controls (WorldState)
+The world state compiler (`lib/worldStateCompiler.js`) now produces extended audio controls beyond the original 3:
+- `gustiness` (0-1) — wind gust intensity derived from wind speed classification
+- `thunderProb` (0-1) — probability of thunder events, derived from rain level
+- `activityLevel` (0-1) — locale activity modulated by time of day
+- `timeOfDayPhase` (0-1) — continuous day position (0=midnight, 0.5=noon)
+- `snowLevel` (0-1) — snow audio level, separate from rain
+- `windDirection` (degrees) — duplicated from visual for audio independence
 
 The world state output is designed to be self-sufficient: renderers can ignore raw weather data and drive entirely from `states` + `controls`.
 
-## Known Limitations
+### Timezone Handling
 
-### Timezone Handling (TODO)
+All date interpretation is timezone-aware. When a user specifies "07-04-1978" for Baton Rouge, the system geocodes first to get the IANA timezone (`America/Chicago`), then interprets the date as 3pm Central Time — not server-local time.
 
-Dates are currently interpreted in the **machine's local timezone**, not the target location's timezone. This means `07-04-1978` for Baton Rouge will be 3pm in whatever timezone the server runs in (e.g., UTC on cloud deployments), not 3pm Central Time.
+The flow: `geocode(location)` → `localToUtc(year, month, day, hour, minute, timezone)` → UTC Date for API calls.
 
-**Current workaround:** Works correctly when the machine's timezone matches the target location.
+**`lib/timezone.js`** provides zero-dependency utilities using built-in `Intl.DateTimeFormat`:
+- `localToUtc()` — wall-clock time at a location → UTC Date
+- `getLocalHour()` / `getLocalMinutes()` — UTC Date → local time components
+- `formatLocalISO()` — UTC Date → ISO string in local time
+- `getLocalDateStr()` — UTC Date → YYYY-MM-DD in local time
 
-**Proper fix (not yet implemented):**
-1. Geocode first to get location's timezone (Open-Meteo returns this)
-2. Interpret user's date/time as being in that timezone
-3. Convert to UTC for API calls
-
-The weather response now includes `timezone` and `timezoneAbbr` fields to support this fix.
+All functions gracefully fall back to machine-local when timezone is null.
