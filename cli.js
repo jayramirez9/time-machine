@@ -10,6 +10,8 @@ import { getWeather, getMockWeather } from './lib/index.js';
 import { getWeatherTimeline } from './lib/weatherTimeline.js';
 import { compileWorldState } from './lib/worldStateCompiler.js';
 import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
+import { geocode } from './lib/openmeteo.js';
+import { localToUtc } from './lib/timezone.js';
 
 function parseArgs(args) {
   const parsed = {
@@ -102,40 +104,40 @@ Examples:
 }
 
 /**
- * Parse date string into Date object
+ * Parse date string into raw components for timezone-aware Date construction.
+ * Does NOT create a Date — the caller must geocode first to get the timezone,
+ * then use localToUtc() to create the correct UTC Date.
  *
- * INTENDED BEHAVIOR: User input time represents local time at the target location.
- * When a user asks for "July 4, 1978 at 3pm in Baton Rouge", they mean 3pm Central
- * Time, not 3pm UTC or 3pm in the server's timezone.
- *
- * TODO: TIMEZONE CORRECTNESS
- * Currently, dates are interpreted in the machine's local timezone, not the
- * target location's timezone. This means "07-04-1978" for Baton Rouge will be
- * 3pm in whatever timezone the server runs in (e.g., UTC on cloud), not 3pm
- * Central Time.
- *
- * Proper fix requires:
- * 1. Geocode first to get location's timezone (Open-Meteo returns this)
- * 2. Interpret user's date/time as being in that timezone
- * 3. Convert to UTC for API calls
- *
- * For now, this works correctly only when the machine's timezone matches the
- * target location's timezone.
+ * @param {string|null} dateStr - Date string in MM-DD-YYYY format, or null for "now"
+ * @returns {{ year: number, month: number, day: number, hour: number, minute: number } | null}
+ *   null means "use current time"
  */
-function parseDate(dateStr) {
-  if (!dateStr) return new Date();
+function parseDateComponents(dateStr) {
+  if (!dateStr) return null; // "now"
 
-  // Try MM-DD-YYYY format first (defaults to 3pm when no time provided)
-  // WARNING: 15:00 is in machine-local time, not target location time
+  // MM-DD-YYYY format → default to 3pm local at target location
   const mmddyyyyMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (mmddyyyyMatch) {
     const [, month, day, year] = mmddyyyyMatch;
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 15, 0, 0);
+    return { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: 15, minute: 0 };
   }
 
-  // Fall back to standard Date parsing
-  // WARNING: ISO strings without Z or offset are parsed as local time
-  return new Date(dateStr);
+  // Try ISO-like string
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate(), hour: d.getHours(), minute: d.getMinutes() };
+  }
+
+  return null;
+}
+
+/**
+ * Resolve date components + timezone into a UTC Date.
+ * If components are null, returns "now".
+ */
+function resolveDate(components, timezone) {
+  if (!components) return new Date();
+  return localToUtc(components.year, components.month, components.day, components.hour, components.minute, timezone);
 }
 
 function formatWeather(weather) {
@@ -229,14 +231,7 @@ async function interactiveModeTTY() {
 
   rl.close();
 
-  const date = parseDate(dateInput.trim() || null);
-
-  if (isNaN(date.getTime())) {
-    console.error('Error: Invalid date format');
-    process.exit(1);
-  }
-
-  return { location: location.trim(), date };
+  return { location: location.trim(), dateComponents: parseDateComponents(dateInput.trim() || null) };
 }
 
 async function interactiveModePiped() {
@@ -250,14 +245,7 @@ async function interactiveModePiped() {
     process.exit(1);
   }
 
-  const date = parseDate(dateInput || null);
-
-  if (isNaN(date.getTime())) {
-    console.error('Error: Invalid date format');
-    process.exit(1);
-  }
-
-  return { location, date };
+  return { location, dateComponents: parseDateComponents(dateInput || null) };
 }
 
 function formatTimeline(timeline) {
@@ -286,14 +274,26 @@ function formatTimeline(timeline) {
   return lines.join('\n');
 }
 
-async function outputWeather(location, date, useMock = false, mode = 'raw', locale = DEFAULT_LOCALE) {
+async function outputWeather(location, dateComponents, useMock = false, mode = 'raw', locale = DEFAULT_LOCALE) {
+  // Geocode first to get timezone (skip for mock — use machine-local)
+  let geo = null;
+  let timezone = null;
+  if (!useMock) {
+    geo = await geocode(location);
+    timezone = geo.timezone;
+  }
+
+  // Resolve date using location's timezone
+  const date = resolveDate(dateComponents, timezone);
+
   if (mode === 'timeline') {
     const timeline = await getWeatherTimeline({
       location,
       centerDate: date,
       windowHours: 6,
       intervalMinutes: 15,
-      useMock
+      useMock,
+      geo
     });
     console.log(formatTimeline(timeline));
     return;
@@ -305,7 +305,8 @@ async function outputWeather(location, date, useMock = false, mode = 'raw', loca
       centerDate: date,
       windowHours: 6,
       intervalMinutes: 15,
-      useMock
+      useMock,
+      geo
     });
     const localePreset = LOCALES[locale] || LOCALES[DEFAULT_LOCALE];
     const worldState = compileWorldState({
@@ -318,7 +319,7 @@ async function outputWeather(location, date, useMock = false, mode = 'raw', loca
   }
 
   const weatherFn = useMock ? getMockWeather : getWeather;
-  const weather = await weatherFn({ location, date });
+  const weather = await weatherFn({ location, date, geo });
   console.log(formatWeather(weather));
 }
 
@@ -339,28 +340,22 @@ async function main() {
     process.exit(1);
   }
 
-  let location, date;
+  let location, dateComponents;
 
   try {
     if (args.location) {
       // Direct mode with flags
       location = args.location;
-      date = parseDate(args.date);
-
-      if (isNaN(date.getTime())) {
-        console.error('Error: Invalid date format');
-        console.error('Use MM-DD-YYYY format, e.g., "06-15-2024"');
-        process.exit(1);
-      }
-      await outputWeather(location, date, args.mock, args.mode, args.locale);
+      dateComponents = parseDateComponents(args.date);
+      await outputWeather(location, dateComponents, args.mock, args.mode, args.locale);
     } else if (process.stdin.isTTY) {
       // Interactive TTY mode
       const input = await interactiveModeTTY();
-      await outputWeather(input.location, input.date, args.mock, args.mode, args.locale);
+      await outputWeather(input.location, input.dateComponents, args.mock, args.mode, args.locale);
     } else {
       // Piped input mode
       const input = await interactiveModePiped();
-      await outputWeather(input.location, input.date, args.mock, args.mode, args.locale);
+      await outputWeather(input.location, input.dateComponents, args.mock, args.mode, args.locale);
     }
   } catch (error) {
     console.error(`Error: ${error.message}`);
