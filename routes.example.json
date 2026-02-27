@@ -1,8 +1,38 @@
 {
   "endpoints": {
     "unreal": {
-      "transport": "http",
-      "url": "http://localhost:8080/remote/preset/WorldWeather"
+      "transport": "unreal",
+      "host": "http://localhost:30010",
+      "actors": {
+        "Cloud_GlobalCoverage": {
+          "type": "material_scalar",
+          "objectPath": "/Engine/EngineSky/VolumetricClouds/m_SimpleVolumetricCloud_Inst.m_SimpleVolumetricCloud_Inst",
+          "parameterName": "Cloud_GlobalCoverage",
+          "expressionGUID": { "A": 1427867580, "B": 1329756787, "C": -1312457547, "D": 1586639353 }
+        },
+        "StormClouds": {
+          "type": "material_scalar",
+          "objectPath": "/Engine/EngineSky/VolumetricClouds/m_SimpleVolumetricCloud_Inst.m_SimpleVolumetricCloud_Inst",
+          "parameterName": "StormClouds",
+          "expressionGUID": { "A": 0, "B": 0, "C": 0, "D": 0 }
+        },
+        "DirectionalLight.Elevation": {
+          "type": "rotation",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "component": "Pitch"
+        },
+        "DirectionalLight.Azimuth": {
+          "type": "rotation",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "component": "Yaw"
+        },
+        "ExponentialHeightFog.FogDensity": {
+          "type": "property",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.ExponentialHeightFog_UAID_A85E45CFE40401D200_1470382763",
+          "componentPath": "HeightFogComponent0",
+          "propertyName": "FogDensity"
+        }
+      }
     },
     "dsp": {
       "transport": "osc",
@@ -54,6 +84,13 @@
       "endpoint": "dsp",
       "param": "/buses/ambience/gain",
       "transform": { "type": "scale", "inputRange": [20, 60], "outputRange": [-40, 0] }
+    },
+    {
+      "source": "controls.atmosphere.cloudDensity",
+      "endpoint": "unreal",
+      "param": "Cloud_GlobalCoverage",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-0.5, 1.0] },
+      "rateLimit": { "maxDelta": 0.1, "ema": 0.3 }
     },
     {
       "source": "controls.atmosphere.haze",
