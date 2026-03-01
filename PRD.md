@@ -4,9 +4,9 @@ PRD + Brand Constitution for the Time Machine Platform
 
 ## Version
 
-v1.0 — Experience Bible / Product Requirements Document
+v2.0 — Experience Bible / Product Requirements Document
 Owner: Henhouse Holdings / Time Machine
-Status: North Star + v1 build specification
+Status: North Star + v2 build specification (Historical Environment Reconstruction)
 
 ## 1) What This Is
 
@@ -29,7 +29,11 @@ The platform supports:
 
 The best expression of Time Machine is a fully immersive, historically accurate "Google Street View you can inhabit."
 
-You can step into any time and place in history and navigate the world naturally—walk alleys, cross plazas, look down streets—and every cue agrees:
+You can step into any time and place in history and navigate the world naturally — walk alleys, cross plazas, look down streets — and every cue agrees. The weather is what actually happened that day. The buildings are what actually stood there. The sounds are what you would actually have heard. The world is assembled from archival truth, not artistic interpretation.
+
+An AI research layer scours historical archives — weather records, fire insurance maps, photographs, ornithological surveys, newspaper archives, published music catalogs — and assembles a complete environment profile for any Place × Time coordinate. Every fact is cited. Every gap is acknowledged. The system knows what it knows and what it doesn't.
+
+Every cue agrees:
 
 * Period-accurate lighting
 * Authentic weather for that place/time
@@ -151,16 +155,18 @@ A content pipeline that supports growth while enforcing accuracy constraints.
 
 Time Machine is a set of coordinated systems:
 
-1. World State Engine
-2. Visual Rendering System (Windows)
-3. Environmental Audio System
-4. Synchronization + Timing System
-5. Calibration System (Visual + Audio)
-6. Preset / Content System (Versioned)
-7. Operator UX + Health + Recovery
-8. Telemetry + Diagnostics
+1. **World State Engine** — Authoritative simulation state (weather, time, atmosphere, controls)
+2. **Visual Rendering System** (Windows) — Unreal Engine driving multi-window photoreal output
+3. **Environmental Audio System** — 5-layer spatially-aware soundscape engine
+4. **Synchronization + Timing System** — Master clock discipline across all nodes
+5. **Calibration System** (Visual + Audio) — Repeatable setup for venues
+6. **Environment Profile System** — Place × Time data bundles (weather, soundscape, urban form, ecology, culture)
+7. **Environment Router** — Config-driven mapping from WorldState to downstream renderers
+8. **Agent Research Layer** — AI agents that assemble Environment Profiles from archival sources
+9. **Operator UX + Health + Recovery** — Non-technical operation, monitoring, graceful degradation
+10. **Telemetry + Diagnostics** — State logging, replay, soak testing
 
-Everything hangs off WorldState.
+Everything hangs off WorldState. Everything upstream of WorldState is research and data. Everything downstream is rendering and output.
 
 ## 11) World State Engine
 
@@ -362,12 +368,64 @@ If coherence degrades:
 * Auto-restart subsystems
 * Return to scene only when coherence is restored
 
-## 17) Architecture (Recommended v1)
+## 17) Architecture
 
-### Rendering
+### The Full Stack
 
-* Unreal Engine as the renderer (best path to photoreal real-time skies/lighting/atmosphere).
-* Multi-node rendering recommended for multi-window scaling.
+Time Machine is a layered system. Each layer can be built and tested independently, and each layer makes the experience more real.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    RENDERERS (Output)                    │
+│  Unreal (visual) │ Audio Engine │ DSP │ Lighting │ OSC  │
+└──────────────────────┬──────────────────────────────────┘
+                       │ Environment Router (routes.json)
+┌──────────────────────┴──────────────────────────────────┐
+│                 WORLD STATE ENGINE                       │
+│  WorldState = states + controls + metadata               │
+│  One simulation clock. One authoritative truth.          │
+└──────────────────────┬──────────────────────────────────┘
+                       │ compileWorldState()
+┌──────────────────────┴──────────────────────────────────┐
+│              ENVIRONMENT PROFILE (Place × Time)          │
+│  Weather │ Soundscape │ Urban Form │ Culture │ Ecology   │
+│  Each dimension is a data layer that feeds WorldState    │
+└──────────────────────┬──────────────────────────────────┘
+                       │ Research + Curation
+┌──────────────────────┴──────────────────────────────────┐
+│               AGENT LAYER (Assembly)                     │
+│  Autonomous agents that scour archives, cross-reference  │
+│  sources, and assemble Place×Time profiles               │
+└──────────────────────┬──────────────────────────────────┘
+                       │ Historical sources
+┌──────────────────────┴──────────────────────────────────┐
+│                  DATA SOURCES                            │
+│  NOAA │ Open-Meteo │ Sanborn Maps │ NYPL │ LOC │        │
+│  Audubon │ Census │ Photo Archives │ Sheet Music         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Core Principle: Everything Hangs Off WorldState
+
+WorldState is the single source of truth for every renderer. It doesn't care whether its inputs come from a live API, a 1940s weather archive, an 1884 NOAA daily observation reconstructed into hourly curves, or a hand-curated preset. The downstream pipeline is identical.
+
+This means every new capability — pre-1940 weather, historical soundscapes, period-accurate urban geometry — plugs into the same architecture. We never rebuild the engine. We feed it richer inputs.
+
+### Environment Profiles (Place × Time)
+
+An Environment Profile is the complete description of a place at a moment in history. It replaces the simpler "locale preset" concept as the system matures. A profile contains:
+
+| Layer | What It Describes | Example: NYC 1884 |
+|-------|-------------------|-------------------|
+| **Weather** | Hourly atmospheric conditions | NOAA Central Park daily obs → interpolated hourly |
+| **Soundscape** | Audio profile: beds, directional, micro-events, weather sounds | Horse hooves on cobblestone, barrel organs, house sparrows |
+| **Urban Form** | Physical environment: buildings, streets, infrastructure | Sanborn maps → block massing, brownstone facades, gas lamps |
+| **Ecology** | Flora and fauna present at that place/time/season | Audubon records → species pools with seasonal/diurnal weights |
+| **Culture** | Music, language, commerce, social patterns | Published song catalogs, slang dictionaries, newspaper archives |
+| **Materials** | Surface types that affect sound and visual character | Cobblestone, dirt, granite flagstone, wood plank, brick |
+| **Infrastructure** | Technology present: lighting type, transport, utilities | Gas street lamps (electric only on Broadway below 14th), elevated railway, horse-drawn carriages |
+
+Each layer has a **confidence rating** and an explicit **known compromises** manifest, honoring the "Silence Over Wrongness" law.
 
 ### Topology
 
@@ -382,6 +440,12 @@ If coherence degrades:
    * Generates/mixes soundscape from WorldState
    * Outputs multi-channel to room zones
    * Enforces non-looping logic and layer fallbacks
+
+### Rendering
+
+* Unreal Engine as the renderer (best path to photoreal real-time skies/lighting/atmosphere).
+* Multi-node rendering recommended for multi-window scaling.
+* Scene geometry sourced from Environment Profile urban form layer.
 
 ### Sync
 
@@ -443,46 +507,245 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 **Risk: Mac hardware ceilings**
 * Prototype on Mac; define production hardware baseline that can hit realism targets.
 
-## 21) Roadmap (Phases)
+## 21) Roadmap (From Today to the Dream State)
 
-### Phase 0 — Prototype
+This roadmap is grounded in what exists today and builds toward the full vision in concrete steps. Each phase delivers a usable product. Each phase makes the next one possible.
 
-* 2-4 windows
-* Basic sky/time-of-day + coherent weather
-* 4-zone directional audio bed
-* Operator preset switcher
+### What Exists Today (Baseline)
 
-### Phase 1 — MVP
+Working and tested:
+* Weather Engine with real-time + historical weather (Open-Meteo, 1940+)
+* WorldState compiler producing states + controls for lighting, audio, atmosphere, visual
+* Runtime engine with tick loop, timeline caching, state smoothing, publish cycle
+* Environment Router mapping WorldState fields to downstream endpoints
+* Rate limiter with EMA smoothing preventing transition pops
+* Unreal integration: sun position (DirectionalLight), cloud coverage (VolumetricCloud material), fog density (ExponentialHeightFog) — all driven live from weather data
+* 5-layer browser audio engine (base bed, directional, micro-events, weather, occlusion stub)
+* Audio profile system (JSON-defined soundscape presets per locale/era)
+* Daemon with HTTP/WebSocket transport, browser dashboard
+* State logging (JSONL) and replay tool for soak testing
+* Locale preset system (`baton_rouge_suburb`, `nyc_city`)
+* One complete audio profile: `baton_rouge_suburb_1978`
 
-* Calibration tools (visual + audio)
-* 10 presets (curated)
-* Health dashboard + recovery system
-* Preset versioning + offline support
+In progress:
+* Niagara rain particle system (placed, user parameter exposed, wiring to weather engine)
 
-### Phase 2 — Presence Upgrade
+---
 
-* Optional head tracking sweet spot
-* Glass occlusion modes
-* Higher-fidelity weather/audio coupling (wind/rain surfaces, thunder model)
+### Phase 0 — Complete the Weather Loop *(Current)*
 
-### Phase 3 — Scale
+**Goal:** One location, one era, full weather→visual+audio loop running end-to-end in Unreal.
 
-* More venue profiles (repeatable installation)
-* Content pipeline at volume
-* Remote monitoring and updates
-* Fleet-ready packaging
+| Step | Task | Status |
+|------|------|--------|
+| 0.1 | Sun position driving DirectionalLight | Done |
+| 0.2 | Cloud coverage driving VolumetricCloud material | Done |
+| 0.3 | Fog density driving ExponentialHeightFog | Done |
+| 0.4 | Rain particles (Niagara) driven by precipDensity | In Progress |
+| 0.5 | Ground wetness material parameter | Not Started |
+| 0.6 | Heat distortion post-process | Not Started |
+| 0.7 | Wind effect on vegetation/particles | Not Started |
+| 0.8 | Full 24-hour soak test: Baton Rouge, July 4 1978 | Not Started |
 
-## 22) What We Decide Next (So This Becomes Buildable)
+**Exit Criteria:** Run the daemon for 24 simulated hours. Sun rises and sets. Clouds form and clear. Rain starts and stops with visible particles. Fog rolls in. No pops, no discontinuities. Logged state replays clean.
 
-To lock v1, we must freeze two physical specs:
+---
+
+### Phase 1 — Audio-Visual Coherence
+
+**Goal:** Sound and picture agree. Weather you see is weather you hear.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 1.1 | Wire audio engine to daemon WebSocket | Browser audio engine receives WorldState push, drives all 5 layers |
+| 1.2 | Rain surface audio | Rain-on-roof, rain-on-asphalt audio assets matched to precipDensity |
+| 1.3 | Wind audio coherence | Wind audio level + gustiness + direction matched to visual wind |
+| 1.4 | Thunder model | Lightning flash (visual) → thunder delay (audio) using distance model |
+| 1.5 | Second audio profile | `nyc_city_1978` — validates the profile system works for different locales |
+| 1.6 | Transition soak test | Verify weather transitions (clear→rain→clear) sound and look coherent |
+
+**Exit Criteria:** Close your eyes and the audio tells you the same story as the visuals. Open them and nothing contradicts. 30-minute session with no repetition noticed.
+
+---
+
+### Phase 2 — Multi-Window + Spatial Audio
+
+**Goal:** The room becomes a portal. Multiple windows, directional audio, spatial coherence.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 2.1 | Multi-camera Unreal scene | 4 cameras (N/E/S/W) rendering the same world |
+| 2.2 | Exposure/color matching across cameras | Same WorldState drives identical tone mapping |
+| 2.3 | 4-zone speaker mapping | Audio engine outputs to N/E/S/W speaker zones |
+| 2.4 | Directional audio beds | Road-to-east feels east. Trees-to-north feel north |
+| 2.5 | Window physics stub | "Glass closed" EQ filtering on audio |
+| 2.6 | Operator preset switcher | Select Place×Time from a menu. System configures everything |
+| 2.7 | Calibration flow v1 | Cardinal mapping, color alignment, speaker verification |
+
+**Exit Criteria:** Stand in the room. North window shows north. East speaker plays east traffic. Weather wraps around you coherently.
+
+---
+
+### Phase 3 — Historical Depth (Pre-1940 Weather)
+
+**Goal:** Break the 1940 barrier. Reach back to the 1800s with real weather data.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 3.1 | NOAA historical provider | New weather provider for pre-1940 daily observations (GHCN-Daily) |
+| 3.2 | Daily→hourly interpolation | Reconstruct hourly curves from daily high/low/precip using solar position and diurnal models |
+| 3.3 | Confidence metadata | Pre-1940 data gets lower confidence scores; WorldState consumers can react accordingly |
+| 3.4 | 1884 NYC weather test | Pull actual weather for every day of 1884 in New York City |
+| 3.5 | Provider fallback chain | `openmeteo (1940+)` → `noaa_archive (1800s+)` → `mock` — automatic selection by date |
+
+**Exit Criteria:** `./cli.js -l "New York, NY" -d "06-15-1884"` returns real weather. The WorldState pipeline handles it identically to modern data.
+
+---
+
+### Phase 4 — Era-Specific Soundscapes
+
+**Goal:** You hear 1884, not 2024 with old buildings.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 4.1 | Locale preset: `nyc_1884` | New locale with era-appropriate parameters (no cars, high horse traffic, gas lamps) |
+| 4.2 | Audio profile: `nyc_manhattan_1884` | Full profile: horse hooves on cobblestone, barrel organs, church bells, harbor sounds, species-correct birds |
+| 4.3 | Surface material system | Locale defines ground surface types → swaps weather audio (rain-on-cobblestone vs rain-on-asphalt) |
+| 4.4 | Ecology data model | Species pools keyed to location + month + time-of-day with source citations |
+| 4.5 | Cultural audio layer | Period music (barrel organ tunes, brass band in park), street vendor calls, era-correct church bells |
+| 4.6 | Infrastructure sounds | Elevated railway (steam, 6th/9th Ave), horse-drawn carriages, work whistles |
+| 4.7 | Agent-assisted profile research | AI agent cross-references Audubon records, historical ecology papers, period newspapers to populate species pools and cultural audio metadata |
+
+**Exit Criteria:** Play NYC 1884 with eyes closed. No cars. No airplanes. No electrical hum. Horse hooves on stone. Church bells on the quarter hour. Sparrows, not starlings (starlings weren't introduced until 1890). Every sound has a citation.
+
+---
+
+### Phase 5 — Historical Urban Form
+
+**Goal:** The 3D world looks like 1884, not just sounds like it.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 5.1 | Sanborn map ingestion | Agent extracts building footprints, heights, materials, use-types from digitized Sanborn fire insurance maps (LOC archive) |
+| 5.2 | Block massing generation | Procedural generation of building volumes from Sanborn data — correct footprints, correct heights, correct lot lines |
+| 5.3 | Era-appropriate street layout | Cobblestone streets, dirt side streets, granite sidewalks, no asphalt. Gas lamp placement. Horse watering troughs. |
+| 5.4 | Architectural style library | Procedural facade system: Brownstone rowhouse, Italianate commercial, Cast-iron front, Federal, Greek Revival — applied based on Sanborn material data + neighborhood + date |
+| 5.5 | Hero building modeling | Key landmarks modeled from historical photos: Trinity Church, the Equitable Building, Brooklyn Bridge (1 year old in 1884), City Hall, Grand Central Depot |
+| 5.6 | Historical photo → texture pipeline | AI-assisted: reference photo of a specific building → diffuse/normal/roughness texture maps for Unreal materials |
+| 5.7 | Street-level props | Gas lamp posts, horse hitching posts, awnings, period signage — procedurally placed based on street type and neighborhood |
+
+**Exit Criteria:** Fly through the Unreal scene. Building heights match Sanborn data. Materials match the era. Hero buildings are recognizable from period photos. Streets are cobblestone where they should be. No anachronistic materials (no steel-and-glass, no asphalt, no electric lights south of 14th Street).
+
+---
+
+### Phase 6 — The Agent Layer
+
+**Goal:** AI agents autonomously research and assemble Place×Time profiles.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 6.1 | Profile schema specification | Formal JSON schema for Environment Profiles: all layers, all fields, confidence ratings, source citations |
+| 6.2 | Weather research agent | Given a place + date range, finds the best available weather data source (Open-Meteo, NOAA GHCN, reconstructed) and produces a weather provider config |
+| 6.3 | Ecology research agent | Given a place + date, queries historical biodiversity records (Audubon, eBird historical, natural history surveys) and produces species pools with seasonal/diurnal weights |
+| 6.4 | Urban form research agent | Given a place + date, locates Sanborn maps, historical atlases, census records, and produces a GIS-compatible urban form dataset |
+| 6.5 | Cultural research agent | Given a place + date, researches period music, language/slang, commerce, social customs, and produces a cultural metadata bundle |
+| 6.6 | Photo archive agent | Given a place + date, scours digitized photo archives (NYPL, LOC, Museum of City of NY, stereograph collections) and produces a tagged reference image set with location + angle metadata |
+| 6.7 | Profile assembler | Orchestrator agent that invokes specialist agents and assembles a complete Environment Profile with confidence ratings and known compromises |
+| 6.8 | Accuracy manifest generator | Auto-generates the Accuracy Manifest (Section 14.5) from agent research, listing sources, confidence, and gaps |
+
+**Exit Criteria:** Tell the system "NYC, June 15, 1884." An agent pipeline produces a complete Environment Profile — weather, soundscape, urban form metadata, cultural context, reference photos — with source citations for every claim. A human reviews it, approves it, and the system can run it.
+
+---
+
+### Phase 7 — Living Street View
+
+**Goal:** The full dream. Walk through a historically accurate 3D reconstruction driven by real weather, real soundscapes, real culture.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 7.1 | Walkable city blocks | Navigable street-level experience in Unreal — walk, look around, enter plazas |
+| 7.2 | Acoustic environment modeling | Reverb/reflection characteristics per street width, building height, surface material |
+| 7.3 | Dynamic population | Procedural pedestrians, horse carriages, street vendors — density driven by time-of-day and weather |
+| 7.4 | Period-accurate lighting transitions | Gas lamps lit at dusk (a lamplighter NPC), sunrise through building canyons, candlelight in windows at night |
+| 7.5 | Interactive audio anchoring | Sound sources anchored to world position — walk toward the harbor and harbor sounds grow, walk into a park and bird density increases |
+| 7.6 | Multi-era support | Same city block, different year. 1884 → 1920 → 1955 → 1978 → today. Watch the city transform. |
+| 7.7 | Narrative mode integration | Scripted time-lapse: sunrise to sunset, season to season, decade to decade — maintaining coherence throughout |
+
+**Exit Criteria:** Step into 1884 Manhattan. Walk down Broadway. The sun is where it actually was that day. The weather is what actually happened. Trinity Church towers over everything because nothing taller exists yet. You hear horse hooves on cobblestone, a barrel organ on the corner, sparrows in the trees, and the distant whistle of the elevated railway. A gas lamplighter begins his rounds as the sun sets. It is raining because it actually rained that day, and the rain sounds like rain on cobblestone, not rain on asphalt. Nothing is wrong. Nothing is anachronistic. You are there.
+
+---
+
+### Milestone Map
+
+```
+TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 ─── Phase 4 ─── Phase 5 ─── Phase 6 ─── Phase 7
+          Weather      Audio+       Multi-       Pre-1940     Era          Urban        Agent        Living
+          Loop         Visual       Window       Weather      Soundscapes  Form         Layer        Street
+          (Unreal)     Coherence    + Spatial                                                        View
+          ▲                                      ▲                                     ▲
+          YOU ARE                                 1884 weather                          Autonomous
+          HERE                                   becomes real                          research
+```
+
+Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 5-6 makes it visual. Phase 7 is the dream state.
+
+## 22) The Agent-Driven Research Model
+
+The ambition of Time Machine — absolute historical accuracy at arbitrary Place×Time coordinates — is impossible for humans to achieve manually at scale. The volume of archival research required for a single city block in a single year would take a historian months.
+
+AI agents change this equation. The research model works like this:
+
+### How Agents Build a World
+
+1. **A human says:** "NYC, 1884"
+2. **The Weather Agent** queries NOAA GHCN-Daily for Central Park station records. Finds daily high/low/precip for every day of 1884. Reconstructs hourly curves using solar position models. Outputs a weather provider config.
+3. **The Ecology Agent** queries historical ornithological surveys of the NYC region. Cross-references Audubon Society records, early Central Park bird censuses, and seasonal migration data. Outputs species pools: house sparrow (year-round, high frequency), American robin (spring-fall, dawn-weighted), chimney swift (summer, dusk), etc.
+4. **The Urban Form Agent** locates the Robinson Atlas of NYC (1885) and Sanborn fire insurance maps. Extracts block-level building footprints, heights, materials, use-types. Cross-references with city records for street surface types. Outputs a GIS dataset.
+5. **The Cultural Agent** researches 1884 NYC: published song catalogs (what a barrel organ would play), newspaper archives (street vendor calls, social customs), infrastructure records (which streets had gas lamps, the elevated railway schedule, horse car routes). Outputs cultural metadata.
+6. **The Photo Agent** searches NYPL Digital Collections, Library of Congress, Museum of the City of New York. Finds stereographs of Broadway, photos of Trinity Church, illustrations of the elevated railway. Tags each with location, date, viewing angle. Outputs a reference image set.
+7. **The Assembler** combines all agent outputs into a single Environment Profile. Generates the Accuracy Manifest: what's verified, what's interpolated, what's missing. A human reviews and approves.
+
+### The Accuracy Contract
+
+Every fact in an Environment Profile must have:
+* A **source citation** (archive, database, publication)
+* A **confidence level** (verified, likely, interpolated, assumed)
+* A **known compromise** entry if accuracy is uncertain
+
+The system will never fabricate. If the agent can't find what birds were in Manhattan in June 1884, the profile says "ecology: low confidence, defaulting to modern regional species minus post-1884 introductions." The Silence Over Wrongness law applies to agents too.
+
+### Skinning the World from Photos
+
+The most ambitious agent capability: using historical photographs to texture 3D buildings.
+
+The pipeline:
+1. Agent finds a photograph of a specific building (e.g., the Equitable Building at 120 Broadway, photographed 1870s-1880s)
+2. Photo is tagged with building ID, camera angle, approximate date
+3. AI texture extraction produces diffuse/normal/roughness maps from the photo
+4. Maps are applied to the corresponding building geometry (from Sanborn footprint data)
+5. For buildings without specific photos, the architectural style library provides era-appropriate procedural textures based on Sanborn material data (brick, brownstone, cast iron, wood frame)
+
+This is the "Google Street View skinned with history" concept. Modern photogrammetry gives us the geometry. Historical photos give us the surfaces. AI bridges the gap.
+
+## 23) What We Decide Next (So This Becomes Buildable)
+
+### Immediate (Phase 0 Completion)
+
+1. Finish Niagara rain particle wiring to weather engine
+2. Full 24-hour soak test of Baton Rouge 1978
+3. Document all Unreal actor paths and dispatch types
+
+### Near-Term Architecture Decisions
 
 1. Canonical window layout (count, size, placement, cardinal mapping)
 2. Canonical speaker topology (4-zone vs 8-zone + subwoofer)
+3. Audio engine deployment model (browser WebAudio vs. native DSP vs. hybrid)
 
-Pick those, and this Bible becomes an executable v1 spec with:
+### Research Spikes (Can Start Anytime)
 
-* venue coordinate system definition
-* calibration tolerances
-* recommended node topology
-* minimum audio variation pool sizes and cooldown rules
-* acceptance tests (the "no bullshit" checklist)
+1. **NOAA GHCN-Daily feasibility:** Can we get usable hourly reconstructions from daily observations for 1884 NYC?
+2. **Sanborn map parsing:** What's the realistic pipeline from scanned Sanborn pages to GIS building footprints?
+3. **Historical ecology data:** How complete are pre-1900 species records for major US cities?
+4. **AI texture generation:** Current state of the art for photo→PBR texture extraction from a single historical image?
+
+Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.
