@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
 import { DEFAULT_LOCALE } from './lib/localePresets.js';
+import { getApiKey as getVCKey } from './lib/visualcrossing.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,7 +37,8 @@ function parseArgs(args) {
     routesConfigPath: null,
     quiet: false,
     overnight: false,
-    mock: false
+    mock: false,
+    provider: 'auto'
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -60,6 +62,8 @@ function parseArgs(args) {
       parsed.quiet = true;
     } else if (arg === '--mock') {
       parsed.mock = true;
+    } else if (arg === '--provider') {
+      parsed.provider = args[++i];
     }
   }
 
@@ -263,6 +267,8 @@ async function main() {
   console.log(`[Engine] Initializing...`);
   console.log(`[Engine] Location: ${args.location}`);
   console.log(`[Engine] Time scale: ${args.timescale}x`);
+  const providerName = args.mock ? 'mock' : args.provider === 'visualcrossing' ? 'Visual Crossing' : args.provider === 'openmeteo' ? 'Open-Meteo' : (getVCKey() ? 'Visual Crossing (auto)' : 'Open-Meteo (auto)');
+  console.log(`[Engine] Weather provider: ${providerName}`);
   if (quiet) console.log(`[Engine] Quiet mode — only violations will be printed`);
   if (args.overnight) console.log(`[Engine] Overnight soak mode — summary on exit`);
 
@@ -274,7 +280,8 @@ async function main() {
     publishEveryMs: args.publishEveryMs,
     localePreset: args.locale,
     routesConfigPath: args.routesConfigPath,
-    useMock: args.mock
+    useMock: args.mock,
+    provider: args.provider
   });
 
   console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);

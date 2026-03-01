@@ -8,7 +8,7 @@ See **PRD.md** for the full Time Machine Experience Bible — the product consti
 
 ## Project Overview
 
-Weather Engine is a weather state generator for environmental simulation systems. By default, it fetches real weather data from the Open-Meteo API, with historical data available back to 1940. A mock provider is also available for offline use, testing, or deterministic simulation environments.
+Weather Engine is a weather state generator for environmental simulation systems. It supports multiple weather providers: **Visual Crossing** (paid, no rate limits, data back to ~1970) and **Open-Meteo** (free, historical data back to 1940). Provider selection is automatic — Visual Crossing is preferred when `VISUALCROSSING_API_KEY` is set, with Open-Meteo as fallback. A mock provider is also available for offline use, testing, or deterministic simulation environments.
 
 ## Commands
 
@@ -18,7 +18,19 @@ Run the CLI directly (no build step required):
 ./cli.js -l "New York, NY" -d "06-15-2024"  # Direct mode with flags
 ./cli.js -l "London, UK" -d "01-01-1950"    # Historical data (back to 1940)
 ./cli.js -l "Paris, France" --mock          # Use mock provider (offline)
+./cli.js -l "Baton Rouge, LA" -d "04-06-1983" --provider visualcrossing  # Force Visual Crossing
+./cli.js -l "Baton Rouge, LA" -d "04-06-1983" --provider openmeteo      # Force Open-Meteo
 ```
+
+### Weather Providers
+
+Set environment variables for paid providers:
+```bash
+export VISUALCROSSING_API_KEY="your-key"    # Visual Crossing ($35/mo, no rate limits)
+export FREESOUND_API_KEY="your-key"         # Freesound (free, for audio asset fetching)
+```
+
+Provider auto-selection: `--provider auto` (default) uses Visual Crossing if key is set, else Open-Meteo. Use `--provider visualcrossing` or `--provider openmeteo` to force a specific provider.
 
 ### Output Modes
 
@@ -221,11 +233,12 @@ This is a Node.js ES modules project:
 - **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
 
 ### Weather Providers
-- **lib/openmeteo.js** - Open-Meteo API provider with geocoding, forecast (last 92 days + 16 days ahead), and historical archive (1940+). Includes confidence/resolution metadata based on data age.
+- **lib/visualcrossing.js** - Visual Crossing API provider (paid, $35/mo). No rate limits, hourly data back to ~1970. Requires `VISUALCROSSING_API_KEY` env var. Same `getWeather()` interface as openmeteo.js. Includes API response caching.
+- **lib/openmeteo.js** - Open-Meteo API provider with geocoding, forecast (last 92 days + 16 days ahead), and historical archive (1940+). Free, rate-limited. Includes confidence/resolution metadata based on data age.
 - **lib/weather.js** - Mock weather provider for offline use and testing
 
 ### World State Pipeline
-- **lib/weatherTimeline.js** - Fetches surrounding hours and interpolates to configurable intervals (default: 6hr window, 15min intervals)
+- **lib/weatherTimeline.js** - Fetches surrounding hours and interpolates to configurable intervals (default: 6hr window, 15min intervals). Auto-selects provider: Visual Crossing (if key set) > Open-Meteo > Mock. Falls back to Open-Meteo if primary provider fails.
 - **lib/worldStateCompiler.js** - Compiles timeline into renderer-independent world state with categorical states and normalized controls (lighting, audio, atmosphere, visual)
 - **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`)
 
@@ -238,6 +251,10 @@ All clients connect to the daemon via WebSocket at `/stream` and smoothly interp
 
 ### Audio Profiles
 - **audio-profiles/*.json** - AudioProfile presets defining all sound assets and scheduling rules for a locale/era. Served at `/audio-profiles/:id`. Each profile defines: bed sources, directional sources (N/E/S/W), weather sources (wind/rain/thunder), micro-event pools with cooldowns and time-of-day constraints, mix settings, and scheduling config.
+- **audio-assets/{profile_id}/** - Downloaded audio files (MP3) served at `/audio-assets/*`. Gitignored (large binaries). Regenerate with `tools/freesound-fetch.js`.
+
+### Tools
+- **tools/freesound-fetch.js** - Freesound API asset fetcher. Searches for sounds matching each label in an audio profile, downloads HQ MP3 previews, updates the profile JSON to use local URLs, and writes an ATTRIBUTION.md. Requires `FREESOUND_API_KEY` env var. Usage: `FREESOUND_API_KEY=xxx ./tools/freesound-fetch.js audio-profiles/baton_rouge_suburb_1978.json`
 
 ### Extended Audio Controls (WorldState)
 The world state compiler (`lib/worldStateCompiler.js`) now produces extended audio controls beyond the original 3:

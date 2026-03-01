@@ -3,3 +3,4 @@ node_modules/
 .mcp.json
 tm-engine.log
 logs/
+audio-assets/

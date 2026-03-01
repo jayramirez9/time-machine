@@ -7,6 +7,7 @@
 
 import readline from 'readline';
 import { getWeather, getMockWeather } from './lib/index.js';
+import { getWeather as getWeatherVC, getApiKey as getVCKey } from './lib/visualcrossing.js';
 import { getWeatherTimeline } from './lib/weatherTimeline.js';
 import { compileWorldState } from './lib/worldStateCompiler.js';
 import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
@@ -20,7 +21,8 @@ function parseArgs(args) {
     help: false,
     mock: false,
     mode: 'raw',
-    locale: DEFAULT_LOCALE
+    locale: DEFAULT_LOCALE,
+    provider: 'auto'
   };
 
   const errors = [];
@@ -48,6 +50,16 @@ function parseArgs(args) {
       }
     } else if (arg === '--mock' || arg === '-m') {
       parsed.mock = true;
+    } else if (arg === '--provider') {
+      const value = args[++i];
+      if (!value || value.startsWith('-')) {
+        errors.push('--provider requires a value: auto, visualcrossing, or openmeteo');
+        i--;
+      } else if (!['auto', 'visualcrossing', 'openmeteo'].includes(value)) {
+        errors.push(`Invalid provider "${value}". Must be: auto, visualcrossing, or openmeteo`);
+      } else {
+        parsed.provider = value;
+      }
     } else if (arg === '--mode') {
       const value = args[++i];
       if (!value || value.startsWith('-')) {
@@ -274,7 +286,7 @@ function formatTimeline(timeline) {
   return lines.join('\n');
 }
 
-async function outputWeather(location, dateComponents, useMock = false, mode = 'raw', locale = DEFAULT_LOCALE) {
+async function outputWeather(location, dateComponents, useMock = false, mode = 'raw', locale = DEFAULT_LOCALE, provider = 'auto') {
   // Geocode first to get timezone (skip for mock — use machine-local)
   let geo = null;
   let timezone = null;
@@ -293,7 +305,8 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
       windowHours: 6,
       intervalMinutes: 15,
       useMock,
-      geo
+      geo,
+      provider
     });
     console.log(formatTimeline(timeline));
     return;
@@ -306,7 +319,8 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
       windowHours: 6,
       intervalMinutes: 15,
       useMock,
-      geo
+      geo,
+      provider
     });
     const localePreset = LOCALES[locale] || LOCALES[DEFAULT_LOCALE];
     const worldState = compileWorldState({
@@ -318,7 +332,14 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
     return;
   }
 
-  const weatherFn = useMock ? getMockWeather : getWeather;
+  let weatherFn;
+  if (useMock) {
+    weatherFn = getMockWeather;
+  } else if (provider === 'visualcrossing' || (provider === 'auto' && getVCKey())) {
+    weatherFn = getWeatherVC;
+  } else {
+    weatherFn = getWeather;
+  }
   const weather = await weatherFn({ location, date, geo });
   console.log(formatWeather(weather));
 }
@@ -347,7 +368,7 @@ async function main() {
       // Direct mode with flags
       location = args.location;
       dateComponents = parseDateComponents(args.date);
-      await outputWeather(location, dateComponents, args.mock, args.mode, args.locale);
+      await outputWeather(location, dateComponents, args.mock, args.mode, args.locale, args.provider);
     } else if (process.stdin.isTTY) {
       // Interactive TTY mode
       const input = await interactiveModeTTY();
