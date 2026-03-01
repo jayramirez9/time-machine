@@ -21,38 +21,41 @@ const API_BASE = 'https://freesound.org/apiv2';
 const API_KEY = process.env.FREESOUND_API_KEY;
 
 // Search strategy: map label patterns to Freesound search queries + duration filters
+// Each entry has a primary query and fallback queries (tried in order if primary returns nothing)
 const SEARCH_MAP = [
-  { pattern: /suburban-ambient/, query: 'suburban neighborhood ambient outdoor', duration: [10, 60] },
-  { pattern: /neighborhood/, query: 'neighborhood outdoor ambient birds', duration: [10, 60] },
-  { pattern: /backyard/, query: 'backyard outdoor ambient summer', duration: [10, 60] },
-  { pattern: /residential-road/, query: 'residential road traffic distant cars', duration: [5, 30] },
-  { pattern: /wind-gust/, query: 'wind gust outdoor strong', duration: [5, 15] },
-  { pattern: /wind-base/, query: 'wind outdoor sustained breeze', duration: [8, 30] },
-  { pattern: /rain-texture/, query: 'rain outdoor ambience steady', duration: [10, 60] },
-  { pattern: /thunder-roll/, query: 'thunder roll distant rumble', duration: [5, 15] },
-  { pattern: /thunder-crack/, query: 'thunder crack close loud', duration: [3, 10] },
-  { pattern: /cicada/, query: 'cicada buzz summer insects', duration: [3, 15] },
-  { pattern: /bird/, query: 'bird song outdoor songbird', duration: [2, 10] },
-  { pattern: /dog-bark/, query: 'dog bark distant outdoor', duration: [1, 5] },
-  { pattern: /car-pass/, query: 'car passing residential road drive by', duration: [3, 10] },
-  { pattern: /screen-door/, query: 'screen door slam close', duration: [1, 3] },
-  { pattern: /cricket/, query: 'crickets night outdoor chorus', duration: [5, 20] },
+  { pattern: /suburban-ambient/, queries: ['suburban ambient', 'neighborhood ambience', 'quiet outdoor'], duration: [10, 120] },
+  { pattern: /neighborhood/, queries: ['neighborhood ambient', 'outdoor ambience', 'suburban sounds'], duration: [10, 120] },
+  { pattern: /backyard/, queries: ['backyard ambient', 'garden outdoor', 'outdoor quiet ambient'], duration: [10, 120] },
+  { pattern: /residential-road/, queries: ['car road ambient', 'traffic residential', 'road ambience'], duration: [5, 60] },
+  { pattern: /wind-gust/, queries: ['wind gust', 'gust wind', 'strong wind'], duration: [3, 30] },
+  { pattern: /wind-base/, queries: ['wind ambient', 'wind blowing', 'breeze outdoor'], duration: [5, 60] },
+  { pattern: /rain-texture/, queries: ['rain ambient', 'rain outdoor', 'rainfall'], duration: [10, 120] },
+  { pattern: /thunder-roll/, queries: ['thunder distant', 'thunder rolling', 'thunder rumble'], duration: [3, 20] },
+  { pattern: /thunder-crack/, queries: ['thunder crack', 'thunder close', 'thunderclap'], duration: [1, 15] },
+  { pattern: /cicada/, queries: ['cicada', 'cicadas summer', 'insect buzz'], duration: [3, 30] },
+  { pattern: /bird/, queries: ['bird song', 'birdsong', 'birds singing outdoor'], duration: [2, 30] },
+  { pattern: /dog-bark/, queries: ['dog bark', 'dog barking distant', 'barking dog'], duration: [1, 10] },
+  { pattern: /car-pass/, queries: ['car passing', 'car drive by', 'car pass road'], duration: [2, 15] },
+  { pattern: /screen-door/, queries: ['screen door', 'door slam', 'door close'], duration: [0.5, 5] },
+  { pattern: /cricket/, queries: ['cricket night', 'crickets', 'cricket chirp'], duration: [3, 30] },
 ];
 
-function getSearchQuery(label) {
+function getSearchQueries(label) {
   for (const entry of SEARCH_MAP) {
     if (entry.pattern.test(label)) {
-      return { query: entry.query, duration: entry.duration };
+      return { queries: entry.queries, duration: entry.duration };
     }
   }
   // Fallback: use the label itself as query
-  return { query: label.replace(/-/g, ' '), duration: [1, 60] };
+  return { queries: [label.replace(/-/g, ' ')], duration: [1, 60] };
 }
 
 async function searchFreesound(query, duration) {
-  const filter = `license:("Attribution" OR "Creative Commons 0") duration:[${duration[0]} TO ${duration[1]}]`;
+  // Filter by duration only; license filtering done post-search since
+  // Freesound license filter values can be fragile across API versions
+  const filter = `duration:[${duration[0]} TO ${duration[1]}]`;
   const fields = 'id,name,previews,license,username,duration,avg_rating,num_ratings';
-  const url = `${API_BASE}/search/text/?query=${encodeURIComponent(query)}&filter=${encodeURIComponent(filter)}&fields=${fields}&sort=rating_desc&page_size=5&token=${API_KEY}`;
+  const url = `${API_BASE}/search/text/?query=${encodeURIComponent(query)}&filter=${encodeURIComponent(filter)}&fields=${fields}&sort=rating_desc&page_size=15&token=${API_KEY}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -160,24 +163,47 @@ async function main() {
 
   for (const { ref, section } of sources) {
     const label = ref.label;
-    const { query, duration } = getSearchQuery(label);
+    const { queries, duration } = getSearchQueries(label);
+
+    // Skip if already pointing to a local URL (from a previous run)
+    if (ref.url && ref.url.startsWith('/audio-assets/')) {
+      const destPath = path.join(PROJECT_ROOT, ref.url);
+      if (fs.existsSync(destPath)) {
+        process.stdout.write(`  ${label.padEnd(25)} `);
+        console.log(`CACHED (already downloaded)`);
+        downloaded++;
+        continue;
+      }
+    }
 
     process.stdout.write(`  ${label.padEnd(25)} `);
 
     try {
-      // Rate limit: max 60 req/min, add small delay
-      await new Promise(r => setTimeout(r, 300));
-
-      const results = await searchFreesound(query, duration);
+      // Try each query in order until we find results
+      let results = [];
+      let usedQuery = queries[0];
+      for (const q of queries) {
+        await new Promise(r => setTimeout(r, 300));
+        results = await searchFreesound(q, duration);
+        usedQuery = q;
+        if (results.length > 0) break;
+      }
 
       if (results.length === 0) {
-        console.log(`SKIP (no results for "${query}")`);
+        console.log(`SKIP (no results for any of: ${queries.join(', ')})`);
         failed++;
         continue;
       }
 
-      // Pick the top-rated result
-      const sound = results[0];
+      // Pick the top-rated result with a compatible license (CC0 or CC-BY)
+      const sound = results.find(r =>
+        r.license && (
+          r.license.includes('Creative Commons 0') ||
+          r.license.includes('publicdomain') ||
+          r.license.includes('Attribution') ||
+          r.license.includes('/by/')
+        )
+      ) || results[0]; // fall back to any if none match
       const previewUrl = sound.previews?.['preview-hq-mp3'];
 
       if (!previewUrl) {
