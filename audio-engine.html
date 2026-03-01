@@ -180,7 +180,8 @@
 const WS_URL = `ws://${location.host}/stream`;
 const MASTER_MAX_GAIN = 0.25;   // Guardrail per PRD
 const RAMP = 0.4;               // Gain ramp time constant (sec)
-const PROFILE_ID = 'baton_rouge_suburb_1978';
+const DEFAULT_PROFILE_ID = 'baton_rouge_suburb_1978';
+const SPEED_OF_SOUND_KM_S = 0.343; // km per second
 
 // ── Helpers ──────────────────────────────────────────────────
 function dbToLin(db) { return db <= -60 ? 0 : Math.pow(10, db / 20); }
@@ -557,6 +558,7 @@ let running = false;
 let panicEngaged = false;
 let currentMode = 'subtle';
 let currentState = null;
+let currentProfileId = null;   // Track loaded profile ID for dynamic switching
 let ws = null;
 let reconTimer = null;
 let schedulerInterval = null;
@@ -1081,10 +1083,13 @@ class WeatherLayer {
 
     this.buffers = buffers;
 
-    // Wind sub-layer
+    // Wind sub-layer with stereo panning based on wind direction
+    this.windPanner = ctx.createStereoPanner();
+    this.windPanner.pan.value = 0;
+    this.windPanner.connect(this.output);
     this.windGain = ctx.createGain();
     this.windGain.gain.value = 0;
-    this.windGain.connect(this.output);
+    this.windGain.connect(this.windPanner);
     this.windNode = null;
 
     // Gust overlay with bandpass filter + stereo panner
@@ -1102,15 +1107,24 @@ class WeatherLayer {
     this.gustNode = null;
     this._gustSweepPhase = Math.random() * Math.PI * 2;
 
-    // Rain sub-layer with highpass filter
-    this.rainGain = ctx.createGain();
-    this.rainGain.gain.value = 0;
-    this.rainFilter = ctx.createBiquadFilter();
-    this.rainFilter.type = 'highpass';
-    this.rainFilter.frequency.value = 200;
-    this.rainGain.connect(this.rainFilter);
-    this.rainFilter.connect(this.output);
-    this.rainNode = null;
+    // Rain sub-layers: light texture (high-freq) + heavy texture (full spectrum)
+    this.rainLightGain = ctx.createGain();
+    this.rainLightGain.gain.value = 0;
+    this.rainLightFilter = ctx.createBiquadFilter();
+    this.rainLightFilter.type = 'highpass';
+    this.rainLightFilter.frequency.value = 1200;
+    this.rainLightGain.connect(this.rainLightFilter);
+    this.rainLightFilter.connect(this.output);
+    this.rainLightNode = null;
+
+    this.rainHeavyGain = ctx.createGain();
+    this.rainHeavyGain.gain.value = 0;
+    this.rainHeavyFilter = ctx.createBiquadFilter();
+    this.rainHeavyFilter.type = 'highpass';
+    this.rainHeavyFilter.frequency.value = 80;
+    this.rainHeavyGain.connect(this.rainHeavyFilter);
+    this.rainHeavyFilter.connect(this.output);
+    this.rainHeavyNode = null;
 
     // Snow sub-layer with lowpass filter (muffled character)
     this.snowGain = ctx.createGain();
@@ -1160,15 +1174,25 @@ class WeatherLayer {
       }
     }
 
-    // Start rain loop
+    // Start rain loops: light texture (first source) + heavy texture (second source or fallback)
     if (this.rainLabels.length > 0) {
-      const buf = this.buffers[this.rainLabels[0]];
-      if (buf) {
-        this.rainNode = this.ctx.createBufferSource();
-        this.rainNode.buffer = buf;
-        this.rainNode.loop = true;
-        this.rainNode.start(0, Math.random() * buf.duration);
-        this.rainNode.connect(this.rainGain);
+      const lightBuf = this.buffers[this.rainLabels[0]];
+      if (lightBuf) {
+        this.rainLightNode = this.ctx.createBufferSource();
+        this.rainLightNode.buffer = lightBuf;
+        this.rainLightNode.loop = true;
+        this.rainLightNode.start(0, Math.random() * lightBuf.duration);
+        this.rainLightNode.connect(this.rainLightGain);
+      }
+    }
+    if (this.rainLabels.length > 1) {
+      const heavyBuf = this.buffers[this.rainLabels[1]];
+      if (heavyBuf) {
+        this.rainHeavyNode = this.ctx.createBufferSource();
+        this.rainHeavyNode.buffer = heavyBuf;
+        this.rainHeavyNode.loop = true;
+        this.rainHeavyNode.start(0, Math.random() * heavyBuf.duration);
+        this.rainHeavyNode.connect(this.rainHeavyGain);
       }
     }
 
@@ -1199,6 +1223,13 @@ class WeatherLayer {
     const windTarget = dbToLin(-60 + audio.windLevel * 60);
     this.windGain.gain.setTargetAtTime(windTarget, now, RAMP);
 
+    // Wind direction panning: convert degrees to stereo pan (-1 to 1)
+    // 0°=N (center), 90°=E (+1), 180°=S (center), 270°=W (-1)
+    const windDirRad = ((audio.windDirection ?? 0) * Math.PI) / 180;
+    const windPan = clamp(Math.sin(windDirRad), -1, 1);
+    this.windPanner.pan.setTargetAtTime(windPan, now, RAMP * 2);
+    this.gustPanner.pan.setTargetAtTime(windPan * 0.8, now, RAMP * 2); // gusts slightly less directional
+
     // Gust gain from gustiness
     const gustTarget = dbToLin(-60 + audio.gustiness * 50);
     this.gustGain.gain.setTargetAtTime(gustTarget, now, RAMP);
@@ -1218,13 +1249,15 @@ class WeatherLayer {
     const gustPan = clamp(Math.sin(windDir * Math.PI / 180) * 0.7, -0.7, 0.7);
     this.gustPanner.pan.setTargetAtTime(gustPan, now, RAMP);
 
-    // Rain gain from rainLevel
-    const rainTarget = dbToLin(-60 + audio.rainLevel * 60);
-    this.rainGain.gain.setTargetAtTime(rainTarget, now, RAMP);
-
-    // Rain filter: light rain = only high freq, heavy = full spectrum
-    const hpFreq = lerp(2000, 200, audio.rainLevel);
-    this.rainFilter.frequency.setTargetAtTime(hpFreq, now, RAMP);
+    // Rain intensity layering: light rain = light texture only, heavy = both
+    const rainLevel = audio.rainLevel ?? 0;
+    // Light texture: present at all rain levels, fades as heavy takes over
+    const lightTarget = dbToLin(-60 + rainLevel * 55) * lerp(1.0, 0.4, rainLevel);
+    this.rainLightGain.gain.setTargetAtTime(lightTarget, now, RAMP);
+    // Heavy texture: fades in above 30% rain intensity
+    const heavyBlend = clamp((rainLevel - 0.3) / 0.7, 0, 1);
+    const heavyTarget = dbToLin(-60 + rainLevel * 60) * heavyBlend;
+    this.rainHeavyGain.gain.setTargetAtTime(heavyTarget, now, RAMP);
 
     // Snow gain from snowLevel (softer than rain: max -12dB vs rain's 0dB)
     const snowTarget = dbToLin(-60 + (audio.snowLevel ?? 0) * 48);
@@ -1233,7 +1266,7 @@ class WeatherLayer {
     const lpFreq = lerp(800, 2000, audio.snowLevel ?? 0);
     this.snowFilter.frequency.setTargetAtTime(lpFreq, now, RAMP);
 
-    // Thunder trigger
+    // Thunder trigger with distance model
     if (audio.thunderProb > 0) {
       const timeSinceLast = now - this.lastThunderAt;
       const cooldown = lerp(this.thunderCooldown[1], this.thunderCooldown[0], audio.thunderProb);
@@ -1249,27 +1282,46 @@ class WeatherLayer {
     const buf = this.buffers[label];
     if (!buf) return;
 
-    const node = this.ctx.createBufferSource();
-    node.buffer = buf;
-    const gain = this.ctx.createGain();
-    gain.gain.value = dbToLin(-6 + Math.random() * -6); // -6 to -12 dB
-    node.connect(gain);
-    gain.connect(this.output);
-    node.start();
+    // Distance model: 1-15 km, determines delay and attenuation
+    const distanceKm = 1 + Math.random() * 14;
+    const delaySec = distanceKm / SPEED_OF_SOUND_KM_S;
+    // Attenuation: inverse square, referenced to 1 km
+    const attenDb = -20 * Math.log10(distanceKm);
+    const baseDb = -6 + Math.random() * -6; // -6 to -12 dB
+
     this.lastThunderAt = this.ctx.currentTime;
-    node.onended = () => gain.disconnect();
-    logEvent('thunder', label);
+
+    // Log lightning flash immediately (visual clients can use this)
+    logEvent('lightning', `flash at ${distanceKm.toFixed(1)}km — thunder in ${delaySec.toFixed(1)}s`);
+
+    // Schedule thunder after propagation delay
+    setTimeout(() => {
+      const node = this.ctx.createBufferSource();
+      node.buffer = buf;
+      const gain = this.ctx.createGain();
+      gain.gain.value = dbToLin(baseDb + attenDb);
+      // Pan thunder slightly based on random bearing
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = clamp((Math.random() - 0.5) * 1.2, -1, 1);
+      node.connect(gain);
+      gain.connect(panner);
+      panner.connect(this.output);
+      node.start();
+      node.onended = () => { gain.disconnect(); panner.disconnect(); };
+      logEvent('thunder', `${label} (${distanceKm.toFixed(1)}km, ${(baseDb + attenDb).toFixed(0)}dB)`);
+    }, delaySec * 1000);
   }
 
   getLevel() {
-    return Math.max(this.windGain.gain.value, this.rainGain.gain.value, this.snowGain.gain.value);
+    return Math.max(this.windGain.gain.value, this.rainLightGain.gain.value, this.rainHeavyGain.gain.value, this.snowGain.gain.value);
   }
 
   panic() {
     const now = this.ctx.currentTime;
     this.windGain.gain.setTargetAtTime(0, now, 0.3);
     this.gustGain.gain.setTargetAtTime(0, now, 0.3);
-    this.rainGain.gain.setTargetAtTime(0, now, 0.3);
+    this.rainLightGain.gain.setTargetAtTime(0, now, 0.3);
+    this.rainHeavyGain.gain.setTargetAtTime(0, now, 0.3);
     this.snowGain.gain.setTargetAtTime(0, now, 0.3);
   }
 
@@ -1278,7 +1330,8 @@ class WeatherLayer {
   dispose() {
     try { this.windNode?.stop(); } catch (_) {}
     try { this.gustNode?.stop(); } catch (_) {}
-    try { this.rainNode?.stop(); } catch (_) {}
+    try { this.rainLightNode?.stop(); } catch (_) {}
+    try { this.rainHeavyNode?.stop(); } catch (_) {}
     try { this.snowNode?.stop(); } catch (_) {}
     this.output.disconnect();
   }
@@ -1289,7 +1342,7 @@ class WeatherLayer {
 // ═══════════════════════════════════════════════════════════════
 
 async function startEngine() {
-  if (!profile) await loadProfile(PROFILE_ID);
+  if (!profile) await loadProfile(currentProfileId || DEFAULT_PROFILE_ID);
   if (!ctx) initAudioContext();
   if (ctx.state === 'suspended') await ctx.resume();
 
@@ -1342,12 +1395,26 @@ function stopEngine() {
 }
 
 // ── Update loop (driven by WebSocket messages) ───────────────
-function onWorldState(state) {
+async function onWorldState(state) {
   currentState = state;
 
   if (state.engine) {
     timeEl.textContent = state.engine.simTime || '--';
     locEl.textContent = state.engine.location || '--';
+
+    // Dynamic profile switching: reload if server reports a different profile
+    const serverProfileId = state.engine.audioProfileId;
+    if (serverProfileId && serverProfileId !== currentProfileId) {
+      currentProfileId = serverProfileId;
+      if (running) {
+        stopEngine();
+        await loadProfile(currentProfileId);
+        await startEngine();
+      } else {
+        await loadProfile(currentProfileId);
+      }
+      return; // state will update on next message after reload
+    }
   }
   showStates(state.states);
 
@@ -1487,7 +1554,7 @@ function scheduleReconnect() {
 
 // ── Init ─────────────────────────────────────────────────────
 connectWs();
-loadProfile(PROFILE_ID);
+loadProfile(DEFAULT_PROFILE_ID).then(() => { currentProfileId = DEFAULT_PROFILE_ID; });
 </script>
 </body>
 </html>

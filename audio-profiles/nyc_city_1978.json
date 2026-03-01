@@ -1,0 +1,205 @@
+{
+  "id": "nyc_city_1978",
+  "name": "New York City — Summer 1978",
+  "description": "Dense urban Manhattan block. Constant traffic drone, taxi horns, distant sirens, bus air brakes, pigeons, subway rumble underfoot. Construction during daytime. Steam vents. A/C window units humming.",
+
+  "beds": {
+    "base": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/573/573577_7037-lq.mp3", "label": "city-ambient-1" },
+        { "url": "https://cdn.freesound.org/previews/462/462629_9497060-lq.mp3", "label": "city-ambient-2" },
+        { "url": "https://cdn.freesound.org/previews/380/380245_2050105-lq.mp3", "label": "city-ambient-3" }
+      ],
+      "crossfadeSec": 12,
+      "gainDb": -8
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/366/366151_4502835-lq.mp3", "label": "uptown-traffic-north" }
+        ],
+        "gainDb": -12,
+        "description": "Uptown avenue traffic — steady flow, bus rumble"
+      },
+      "E": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/344/344207_1711706-lq.mp3", "label": "crossstreet-east" }
+        ],
+        "gainDb": -14,
+        "description": "Cross-street traffic — stop-and-go, more honking"
+      },
+      "S": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/460/460501_5121236-lq.mp3", "label": "downtown-traffic-south" }
+        ],
+        "gainDb": -12,
+        "description": "Downtown avenue traffic — heavier, more taxis"
+      },
+      "W": {
+        "sources": [
+          { "url": "https://cdn.freesound.org/previews/530/530071_7037-lq.mp3", "label": "sidestreet-west" }
+        ],
+        "gainDb": -16,
+        "description": "Side street — quieter, dumpsters, loading dock"
+      }
+    }
+  },
+
+  "weather": {
+    "wind": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/456/456058_2304582-lq.mp3", "label": "urban-wind-base" },
+        { "url": "https://cdn.freesound.org/previews/382/382735_7157625-lq.mp3", "label": "urban-wind-gust" }
+      ],
+      "gustFilterRange": [300, 2500],
+      "gustSweepPeriod": [6, 15]
+    },
+    "rain": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/401/401275_7586479-lq.mp3", "label": "rain-on-asphalt" },
+        { "url": "https://cdn.freesound.org/previews/243/243627_87098-lq.mp3", "label": "rain-heavy-urban" }
+      ]
+    },
+    "thunder": {
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/360/360757_4284968-lq.mp3", "label": "thunder-urban-roll-1" },
+        { "url": "https://cdn.freesound.org/previews/362/362205_5121236-lq.mp3", "label": "thunder-urban-crack-1" }
+      ],
+      "cooldownRange": [45, 120]
+    }
+  },
+
+  "microEvents": [
+    {
+      "id": "taxi_horn",
+      "description": "Taxi horn blast — short, aggressive",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/415/415209_7865706-lq.mp3", "label": "taxi-horn-1" },
+        { "url": "https://cdn.freesound.org/previews/328/328730_230356-lq.mp3", "label": "taxi-horn-2" }
+      ],
+      "avgCooldownSec": 12,
+      "gainDb": -16,
+      "pan": 0.5,
+      "direction": "E",
+      "timeOfDay": { "min": 0.25, "max": 0.92 },
+      "activityRange": [0.3, 1]
+    },
+    {
+      "id": "distant_siren",
+      "description": "Emergency siren — ambulance or fire truck, fading in and out",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/321/321967_2615119-lq.mp3", "label": "siren-distant-1" },
+        { "url": "https://cdn.freesound.org/previews/345/345852_3649203-lq.mp3", "label": "siren-distant-2" }
+      ],
+      "avgCooldownSec": 60,
+      "gainDb": -20,
+      "pan": -0.3,
+      "direction": "S",
+      "timeOfDay": { "min": 0, "max": 1 },
+      "activityRange": [0.1, 1]
+    },
+    {
+      "id": "pigeon_coo",
+      "description": "Pigeons cooing and fluttering on a ledge",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/434/434666_1738537-lq.mp3", "label": "pigeon-1" },
+        { "url": "https://cdn.freesound.org/previews/400/400875_7586479-lq.mp3", "label": "pigeon-2" }
+      ],
+      "avgCooldownSec": 20,
+      "gainDb": -22,
+      "pan": 0.2,
+      "direction": "N",
+      "timeOfDay": { "min": 0.22, "max": 0.85 },
+      "activityRange": [0, 1]
+    },
+    {
+      "id": "bus_airbrake",
+      "description": "City bus air brake hiss at a stop",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/108/108616_945474-lq.mp3", "label": "bus-brake-1" }
+      ],
+      "avgCooldownSec": 40,
+      "gainDb": -18,
+      "pan": 0.7,
+      "direction": "N",
+      "timeOfDay": { "min": 0.22, "max": 0.92 },
+      "activityRange": [0.3, 1]
+    },
+    {
+      "id": "construction",
+      "description": "Distant construction — jackhammer or steel on steel",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/514/514447_4393181-lq.mp3", "label": "construction-1" }
+      ],
+      "avgCooldownSec": 25,
+      "gainDb": -20,
+      "pan": -0.6,
+      "direction": "W",
+      "timeOfDay": { "min": 0.3, "max": 0.7 },
+      "activityRange": [0.5, 1]
+    },
+    {
+      "id": "subway_rumble",
+      "description": "Subway passing underground — felt more than heard",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/364/364014_145629-lq.mp3", "label": "subway-rumble-1" },
+        { "url": "https://cdn.freesound.org/previews/523/523765_10261584-lq.mp3", "label": "subway-rumble-2" }
+      ],
+      "avgCooldownSec": 90,
+      "gainDb": -26,
+      "pan": 0,
+      "direction": null,
+      "timeOfDay": { "min": 0.2, "max": 0.96 },
+      "activityRange": [0, 1]
+    },
+    {
+      "id": "pedestrian_chatter",
+      "description": "Brief snippet of passing pedestrian conversation",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/365/365447_5865489-lq.mp3", "label": "chatter-1" }
+      ],
+      "avgCooldownSec": 18,
+      "gainDb": -24,
+      "pan": -0.4,
+      "direction": "S",
+      "timeOfDay": { "min": 0.3, "max": 0.88 },
+      "activityRange": [0.4, 1]
+    },
+    {
+      "id": "night_traffic_lull",
+      "description": "Late-night isolated car pass with wet tires on asphalt",
+      "sources": [
+        { "url": "https://cdn.freesound.org/previews/462/462087_7037-lq.mp3", "label": "night-car-1" }
+      ],
+      "avgCooldownSec": 30,
+      "gainDb": -20,
+      "pan": 0.3,
+      "direction": "N",
+      "timeOfDay": { "min": 0.88, "max": 1.0 },
+      "secondaryWindow": { "min": 0, "max": 0.22 },
+      "activityRange": [0, 0.4]
+    }
+  ],
+
+  "mix": {
+    "masterGainDb": -4,
+    "layerGains": {
+      "baseBed": 0,
+      "directionalBeds": -2,
+      "microEvents": -3,
+      "weather": -1,
+      "occlusion": 0
+    },
+    "reverbSend": 0.08
+  },
+
+  "scheduling": {
+    "maxConcurrentEvents": 4,
+    "globalCooldownSec": 1.5,
+    "densityMultipliers": {
+      "subtle": 0.6,
+      "present": 1.0,
+      "demo": 2.5
+    }
+  }
+}
