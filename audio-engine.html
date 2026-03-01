@@ -325,6 +325,23 @@ const ProceduralAudio = {
     return this._makeBuffer(ctx, data);
   },
 
+  // Snow: soft, muffled ambience — narrower band, lower energy than rain
+  snow(ctx, dur = 12) {
+    this._seed = 350;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 2000);
+    this._highpass(data, 100);
+    // Very gentle amplitude modulation — snow is steady
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      data[i] *= 0.7 + 0.3 * Math.sin(t * 0.2);
+    }
+    this._normalize(data, 0.35);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
   // Thunder: low-frequency burst with long decay and crackle
   thunder(ctx, dur = 8) {
     this._seed = 400;
@@ -517,6 +534,7 @@ const ProceduralAudio = {
     if (l.includes('wind-gust'))                           return this.windGust(ctx);
     if (l.includes('wind'))                                return this.wind(ctx);
     if (l.includes('rain'))                                return this.rain(ctx);
+    if (l.includes('snow'))                                return this.snow(ctx);
     if (l.includes('thunder-roll'))                        return this.thunder(ctx, 10);
     if (l.includes('thunder'))                             return this.thunder(ctx);
     if (l.includes('cicada'))                              return this.cicada(ctx);
@@ -612,6 +630,7 @@ async function loadProfile(id) {
     // Weather
     collectSources(profile.weather?.wind?.sources);
     collectSources(profile.weather?.rain?.sources);
+    collectSources(profile.weather?.snow?.sources);
     collectSources(profile.weather?.thunder?.sources);
     // Micro-events
     for (const evt of (profile.microEvents || [])) {
@@ -822,6 +841,7 @@ class DirectionalBedsLayer {
     this.directions = {};
     const dirConfig = profile.beds?.directional || {};
     const panMap = { N: 0, E: 1, S: 0, W: -1 };
+    const facingAngle = { N: 0, E: 90, S: 180, W: 270 };
 
     for (const [dir, config] of Object.entries(dirConfig)) {
       const labels = (config.sources || []).map(s => s.label);
@@ -839,7 +859,9 @@ class DirectionalBedsLayer {
         panner,
         gain,
         node: null,
-        currentIdx: 0
+        currentIdx: 0,
+        facingAngle: facingAngle[dir] ?? 0,
+        baseGainDb: config.gainDb ?? -18
       };
     }
 
@@ -870,10 +892,27 @@ class DirectionalBedsLayer {
 
   update(worldState, dt) {
     if (!worldState) return;
-    const activity = worldState.controls?.audio?.activityLevel ?? 0.5;
-    // Modulate directional bed volume by activity level
-    const targetGain = dbToLin(-3) * clamp(activity * 2, 0.2, 1);
-    this.output.gain.setTargetAtTime(targetGain, this.ctx.currentTime, RAMP * 2);
+    const audio = worldState.controls?.audio;
+    if (!audio) return;
+
+    const activity = audio.activityLevel ?? 0.5;
+    const windDir = audio.windDirection ?? 0;
+    const now = this.ctx.currentTime;
+
+    // Layer-level gain from activity (existing behavior)
+    const layerGain = dbToLin(-3) * clamp(activity * 2, 0.2, 1);
+    this.output.gain.setTargetAtTime(layerGain, now, RAMP * 2);
+
+    // Per-direction gain modulation from wind direction
+    // Wind FROM a direction carries sound from that side toward listener
+    const DEG2RAD = Math.PI / 180;
+    const MOD_DB = 3; // ±3dB modulation range
+    for (const d of Object.values(this.directions)) {
+      const angleDiff = (windDir - d.facingAngle) * DEG2RAD;
+      const modDb = Math.cos(angleDiff) * MOD_DB;
+      const targetGain = dbToLin(d.baseGainDb + modDb);
+      d.gain.gain.setTargetAtTime(targetGain, now, RAMP);
+    }
   }
 
   getLevel() {
@@ -1048,15 +1087,18 @@ class WeatherLayer {
     this.windGain.connect(this.output);
     this.windNode = null;
 
-    // Gust overlay with bandpass filter
+    // Gust overlay with bandpass filter + stereo panner
     this.gustGain = ctx.createGain();
     this.gustGain.gain.value = 0;
     this.gustFilter = ctx.createBiquadFilter();
     this.gustFilter.type = 'bandpass';
     this.gustFilter.frequency.value = 600;
     this.gustFilter.Q.value = 0.7;
+    this.gustPanner = ctx.createStereoPanner();
+    this.gustPanner.pan.value = 0;
     this.gustGain.connect(this.gustFilter);
-    this.gustFilter.connect(this.output);
+    this.gustFilter.connect(this.gustPanner);
+    this.gustPanner.connect(this.output);
     this.gustNode = null;
     this._gustSweepPhase = Math.random() * Math.PI * 2;
 
@@ -1070,6 +1112,17 @@ class WeatherLayer {
     this.rainFilter.connect(this.output);
     this.rainNode = null;
 
+    // Snow sub-layer with lowpass filter (muffled character)
+    this.snowGain = ctx.createGain();
+    this.snowGain.gain.value = 0;
+    this.snowFilter = ctx.createBiquadFilter();
+    this.snowFilter.type = 'lowpass';
+    this.snowFilter.frequency.value = 1500;
+    this.snowFilter.Q.value = 0.5;
+    this.snowGain.connect(this.snowFilter);
+    this.snowFilter.connect(this.output);
+    this.snowNode = null;
+
     // Thunder (one-shots managed by micro-event style trigger)
     this.thunderSources = (profile.weather?.thunder?.sources || []).map(s => s.label);
     this.thunderCooldown = profile.weather?.thunder?.cooldownRange || [60, 180];
@@ -1077,6 +1130,8 @@ class WeatherLayer {
 
     this.windLabels = (profile.weather?.wind?.sources || []).map(s => s.label);
     this.rainLabels = (profile.weather?.rain?.sources || []).map(s => s.label);
+    this.snowLabels = (profile.weather?.snow?.sources || []).map(s => s.label);
+    if (this.snowLabels.length === 0) this.snowLabels = ['snow-ambience'];
     this.gustConfig = profile.weather?.wind || {};
   }
 
@@ -1116,6 +1171,21 @@ class WeatherLayer {
         this.rainNode.connect(this.rainGain);
       }
     }
+
+    // Start snow loop (procedural fallback if no asset)
+    if (this.snowLabels.length > 0) {
+      if (!this.buffers[this.snowLabels[0]]) {
+        try { this.buffers[this.snowLabels[0]] = ProceduralAudio.generateForLabel(this.ctx, this.snowLabels[0]); } catch (_) {}
+      }
+      const buf = this.buffers[this.snowLabels[0]];
+      if (buf) {
+        this.snowNode = this.ctx.createBufferSource();
+        this.snowNode.buffer = buf;
+        this.snowNode.loop = true;
+        this.snowNode.start(0, Math.random() * buf.duration);
+        this.snowNode.connect(this.snowGain);
+      }
+    }
   }
 
   update(worldState, dt) {
@@ -1142,6 +1212,12 @@ class WeatherLayer {
     const freq = lerp(gustRange[0], gustRange[1], sweepT);
     this.gustFilter.frequency.setTargetAtTime(freq, now, 0.2);
 
+    // Gust stereo panning from wind direction
+    // East wind (90°) → pan right, West (270°) → pan left
+    const windDir = audio.windDirection ?? 0;
+    const gustPan = clamp(Math.sin(windDir * Math.PI / 180) * 0.7, -0.7, 0.7);
+    this.gustPanner.pan.setTargetAtTime(gustPan, now, RAMP);
+
     // Rain gain from rainLevel
     const rainTarget = dbToLin(-60 + audio.rainLevel * 60);
     this.rainGain.gain.setTargetAtTime(rainTarget, now, RAMP);
@@ -1149,6 +1225,13 @@ class WeatherLayer {
     // Rain filter: light rain = only high freq, heavy = full spectrum
     const hpFreq = lerp(2000, 200, audio.rainLevel);
     this.rainFilter.frequency.setTargetAtTime(hpFreq, now, RAMP);
+
+    // Snow gain from snowLevel (softer than rain: max -12dB vs rain's 0dB)
+    const snowTarget = dbToLin(-60 + (audio.snowLevel ?? 0) * 48);
+    this.snowGain.gain.setTargetAtTime(snowTarget, now, RAMP);
+    // Snow filter: heavier snow = more low-end pass-through
+    const lpFreq = lerp(800, 2000, audio.snowLevel ?? 0);
+    this.snowFilter.frequency.setTargetAtTime(lpFreq, now, RAMP);
 
     // Thunder trigger
     if (audio.thunderProb > 0) {
@@ -1179,7 +1262,7 @@ class WeatherLayer {
   }
 
   getLevel() {
-    return Math.max(this.windGain.gain.value, this.rainGain.gain.value);
+    return Math.max(this.windGain.gain.value, this.rainGain.gain.value, this.snowGain.gain.value);
   }
 
   panic() {
@@ -1187,6 +1270,7 @@ class WeatherLayer {
     this.windGain.gain.setTargetAtTime(0, now, 0.3);
     this.gustGain.gain.setTargetAtTime(0, now, 0.3);
     this.rainGain.gain.setTargetAtTime(0, now, 0.3);
+    this.snowGain.gain.setTargetAtTime(0, now, 0.3);
   }
 
   resume() {}
@@ -1195,6 +1279,7 @@ class WeatherLayer {
     try { this.windNode?.stop(); } catch (_) {}
     try { this.gustNode?.stop(); } catch (_) {}
     try { this.rainNode?.stop(); } catch (_) {}
+    try { this.snowNode?.stop(); } catch (_) {}
     this.output.disconnect();
   }
 }
@@ -1305,6 +1390,8 @@ function showStates(states) {
     html += `<div style="margin-top:6px;border-top:1px solid #1a1a1a;padding-top:6px;">`;
     html += `gustiness: <span class="val">${(audio.gustiness ?? 0).toFixed(2)}</span> `;
     html += `thunder: <span class="val">${(audio.thunderProb ?? 0).toFixed(2)}</span> `;
+    html += `snow: <span class="val">${(audio.snowLevel ?? 0).toFixed(2)}</span> `;
+    html += `windDir: <span class="val">${(audio.windDirection ?? 0).toFixed(0)}&deg;</span><br>`;
     html += `activity: <span class="val">${(audio.activityLevel ?? 0).toFixed(2)}</span> `;
     html += `phase: <span class="val">${(audio.timeOfDayPhase ?? 0).toFixed(3)}</span>`;
     html += `</div>`;

@@ -151,6 +151,17 @@
         60,
         180
       ]
+    },
+    "snow": {
+      "sources": [
+        {
+          "url": "/audio-assets/baton_rouge_suburb_1978/snow-ambience.mp3",
+          "label": "snow-ambience",
+          "freesoundId": null,
+          "license": "procedural",
+          "attribution": "Procedural synthesis fallback"
+        }
+      ]
     }
   },
   "microEvents": [
