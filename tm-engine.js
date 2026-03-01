@@ -35,7 +35,8 @@ function parseArgs(args) {
     publishEveryMs: 5000,
     routesConfigPath: null,
     quiet: false,
-    overnight: false
+    overnight: false,
+    mock: false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -57,6 +58,8 @@ function parseArgs(args) {
     } else if (arg === '--overnight') {
       parsed.overnight = true;
       parsed.quiet = true;
+    } else if (arg === '--mock') {
+      parsed.mock = true;
     }
   }
 
@@ -270,7 +273,8 @@ async function main() {
     tickMs: args.tickMs,
     publishEveryMs: args.publishEveryMs,
     localePreset: args.locale,
-    routesConfigPath: args.routesConfigPath
+    routesConfigPath: args.routesConfigPath,
+    useMock: args.mock
   });
 
   console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);
