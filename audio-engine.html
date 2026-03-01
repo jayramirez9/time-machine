@@ -188,6 +188,348 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function lerp(a, b, t) { return a + (b - a) * clamp(t, 0, 1); }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// ── Procedural Audio Synthesis ──────────────────────────────
+// Generates AudioBuffers when CDN assets fail to load
+const ProceduralAudio = {
+  _sr: 44100,
+
+  // Seeded PRNG for determinism
+  _seed: 42,
+  _rand() {
+    this._seed = (this._seed * 1664525 + 1013904223) & 0x7FFFFFFF;
+    return this._seed / 0x7FFFFFFF;
+  },
+  _whiteNoise(n) {
+    const out = new Float32Array(n);
+    for (let i = 0; i < n; i++) out[i] = this._rand() * 2 - 1;
+    return out;
+  },
+
+  // Simple 1-pole lowpass filter applied in-place
+  _lowpass(buf, cutoff) {
+    const rc = 1 / (2 * Math.PI * cutoff);
+    const dt = 1 / this._sr;
+    const a = dt / (rc + dt);
+    let y = 0;
+    for (let i = 0; i < buf.length; i++) {
+      y += a * (buf[i] - y);
+      buf[i] = y;
+    }
+    return buf;
+  },
+
+  // Simple 1-pole highpass filter applied in-place
+  _highpass(buf, cutoff) {
+    const rc = 1 / (2 * Math.PI * cutoff);
+    const dt = 1 / this._sr;
+    const a = rc / (rc + dt);
+    let prev = 0, y = 0;
+    for (let i = 0; i < buf.length; i++) {
+      y = a * (y + buf[i] - prev);
+      prev = buf[i];
+      buf[i] = y;
+    }
+    return buf;
+  },
+
+  // Normalize buffer to peak amplitude
+  _normalize(buf, peak = 0.8) {
+    let max = 0;
+    for (let i = 0; i < buf.length; i++) max = Math.max(max, Math.abs(buf[i]));
+    if (max > 0) {
+      const scale = peak / max;
+      for (let i = 0; i < buf.length; i++) buf[i] *= scale;
+    }
+    return buf;
+  },
+
+  // Apply fade-in/fade-out for seamless looping
+  _fadeEdges(buf, fadeSamples = 2205) {
+    const n = Math.min(fadeSamples, buf.length / 4);
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      buf[i] *= t;
+      buf[buf.length - 1 - i] *= t;
+    }
+    return buf;
+  },
+
+  // ─── Generator functions by sound type ────────────────────
+
+  // Suburban ambient bed: very low-passed noise + gentle modulation
+  suburban(ctx, dur = 15) {
+    this._seed = 42;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 400);
+    // Add slow amplitude modulation for "breathing"
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      data[i] *= 0.6 + 0.4 * Math.sin(t * 0.3);
+    }
+    this._normalize(data, 0.5);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Wind: bandpass-filtered noise with slow amplitude sweep
+  wind(ctx, dur = 12) {
+    this._seed = 100;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 1200);
+    this._highpass(data, 80);
+    // Slow whoosh modulation
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      data[i] *= 0.5 + 0.5 * Math.sin(t * 0.4 + Math.sin(t * 0.07) * 2);
+    }
+    this._normalize(data, 0.7);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Wind gust overlay: more aggressive bandpass with faster modulation
+  windGust(ctx, dur = 10) {
+    this._seed = 200;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 2000);
+    this._highpass(data, 200);
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      // Irregular gust bursts
+      const env = Math.pow(Math.max(0, Math.sin(t * 0.8 + Math.sin(t * 0.2) * 3)), 2);
+      data[i] *= env;
+    }
+    this._normalize(data, 0.6);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Rain: dense high-frequency noise with subtle amplitude texture
+  rain(ctx, dur = 12) {
+    this._seed = 300;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._highpass(data, 800);
+    this._lowpass(data, 8000);
+    // Rapid micro-modulation for raindrop texture
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      const drops = 0.7 + 0.3 * Math.sin(t * 40) * Math.sin(t * 13.7);
+      data[i] *= drops * (0.8 + 0.2 * Math.sin(t * 0.5));
+    }
+    this._normalize(data, 0.6);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Thunder: low-frequency burst with long decay and crackle
+  thunder(ctx, dur = 8) {
+    this._seed = 400;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 200);
+    // Envelope: sharp attack, long exponential decay with rumble
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      const attack = Math.min(1, t * 20);
+      const decay = Math.exp(-t * 0.6);
+      // Sub-rumble modulation
+      const rumble = 1 + 0.3 * Math.sin(t * 8) * Math.sin(t * 3.1);
+      data[i] *= attack * decay * rumble;
+    }
+    // Layer in some mid-frequency crackle
+    this._seed = 401;
+    const crackle = this._whiteNoise(n);
+    this._lowpass(crackle, 3000);
+    this._highpass(crackle, 500);
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      const cEnv = Math.exp(-t * 2) * 0.15;
+      data[i] += crackle[i] * cEnv;
+    }
+    this._normalize(data, 0.9);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Cicada: oscillator buzz with amplitude envelope
+  cicada(ctx, dur = 6) {
+    const n = this._sr * dur;
+    const data = new Float32Array(n);
+    const freq = 4200 + (this._rand() * 600); // 4200-4800 Hz
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      // Buzzing tone with harmonics
+      const osc = Math.sin(t * freq * 2 * Math.PI) * 0.5
+                + Math.sin(t * freq * 4 * Math.PI) * 0.25
+                + Math.sin(t * freq * 6 * Math.PI) * 0.12;
+      // Characteristic rise-sustain-fall envelope
+      const env = Math.sin(Math.PI * t / dur) * (0.8 + 0.2 * Math.sin(t * 11));
+      data[i] = osc * env;
+    }
+    this._normalize(data, 0.5);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Bird chirp: FM synthesis short burst
+  bird(ctx, dur = 3) {
+    this._seed = 500 + Math.floor(this._rand() * 1000);
+    const n = this._sr * dur;
+    const data = new Float32Array(n);
+    // Generate 3-6 chirps
+    const numChirps = 3 + Math.floor(this._rand() * 4);
+    for (let c = 0; c < numChirps; c++) {
+      const startT = (c / numChirps) * dur * 0.8;
+      const chirpDur = 0.08 + this._rand() * 0.15;
+      const baseFreq = 2000 + this._rand() * 3000;
+      const freqSlide = (this._rand() - 0.5) * 2000;
+      const startSample = Math.floor(startT * this._sr);
+      const chirpSamples = Math.floor(chirpDur * this._sr);
+      for (let i = 0; i < chirpSamples && (startSample + i) < n; i++) {
+        const t = i / this._sr;
+        const freq = baseFreq + freqSlide * t / chirpDur;
+        const env = Math.sin(Math.PI * i / chirpSamples);
+        data[startSample + i] += Math.sin(t * freq * 2 * Math.PI) * env * 0.4;
+      }
+    }
+    this._normalize(data, 0.5);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Dog bark: short broadband burst
+  dog(ctx, dur = 2) {
+    this._seed = 700;
+    const n = this._sr * dur;
+    const data = new Float32Array(n);
+    const numBarks = 2 + Math.floor(this._rand() * 3);
+    for (let b = 0; b < numBarks; b++) {
+      const startT = b * 0.4 + this._rand() * 0.1;
+      const barkDur = 0.12 + this._rand() * 0.08;
+      const startSample = Math.floor(startT * this._sr);
+      const barkSamples = Math.floor(barkDur * this._sr);
+      for (let i = 0; i < barkSamples && (startSample + i) < n; i++) {
+        const t = i / this._sr;
+        const env = Math.sin(Math.PI * i / barkSamples);
+        const tone = Math.sin(t * 400 * 2 * Math.PI) * 0.3
+                   + Math.sin(t * 800 * 2 * Math.PI) * 0.2
+                   + (this._rand() * 2 - 1) * 0.3;
+        data[startSample + i] += tone * env;
+      }
+    }
+    this._lowpass(data, 3000);
+    this._normalize(data, 0.5);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Car pass-by: low-frequency whoosh with doppler-like pitch shift
+  car(ctx, dur = 5) {
+    this._seed = 800;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 600);
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      const pos = (t / dur) * 2 - 1; // -1 to 1
+      // Distance envelope: closest at center
+      const dist = 0.3 + Math.abs(pos);
+      const env = 1 / (dist * dist);
+      data[i] *= Math.min(1, env) * 0.5;
+      // Add engine tone
+      const engFreq = 120 + 20 * (1 - Math.abs(pos)); // subtle doppler
+      data[i] += Math.sin(t * engFreq * 2 * Math.PI) * env * 0.15;
+    }
+    this._normalize(data, 0.5);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Screen door slam: short broadband click + metallic ring
+  screenDoor(ctx, dur = 1.5) {
+    const n = this._sr * dur;
+    const data = new Float32Array(n);
+    // Impact click
+    this._seed = 900;
+    const click = this._whiteNoise(Math.floor(this._sr * 0.02));
+    for (let i = 0; i < click.length && i < n; i++) {
+      data[i] = click[i] * Math.exp(-i / (this._sr * 0.005));
+    }
+    // Metallic spring ring
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      const ring = Math.sin(t * 1200 * 2 * Math.PI) * 0.3
+                 + Math.sin(t * 2400 * 2 * Math.PI) * 0.15
+                 + Math.sin(t * 680 * 2 * Math.PI) * 0.1;
+      data[i] += ring * Math.exp(-t * 4);
+    }
+    this._normalize(data, 0.6);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Cricket chorus: rapid oscillator pulses
+  cricket(ctx, dur = 8) {
+    const n = this._sr * dur;
+    const data = new Float32Array(n);
+    this._seed = 1000;
+    const freq = 5500 + this._rand() * 500;
+    const pulseRate = 15 + this._rand() * 10; // pulses per second
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      // Pulsing envelope
+      const pulse = Math.pow(Math.max(0, Math.sin(t * pulseRate * Math.PI)), 8);
+      const tone = Math.sin(t * freq * 2 * Math.PI);
+      // Overall envelope — fade in/out
+      const env = Math.sin(Math.PI * t / dur);
+      data[i] = tone * pulse * env * 0.3;
+    }
+    this._normalize(data, 0.4);
+    return this._makeBuffer(ctx, data);
+  },
+
+  // Neighborhood ambient (variant of suburban with different seed/tone)
+  neighborhood(ctx, dur = 15) {
+    this._seed = 1100;
+    const n = this._sr * dur;
+    const data = this._whiteNoise(n);
+    this._lowpass(data, 500);
+    this._highpass(data, 40);
+    for (let i = 0; i < n; i++) {
+      const t = i / this._sr;
+      data[i] *= 0.5 + 0.5 * Math.sin(t * 0.2 + Math.sin(t * 0.05) * 1.5);
+    }
+    this._normalize(data, 0.4);
+    this._fadeEdges(data);
+    return this._makeBuffer(ctx, data);
+  },
+
+  _makeBuffer(ctx, data) {
+    const buf = ctx.createBuffer(1, data.length, this._sr);
+    buf.getChannelData(0).set(data);
+    return buf;
+  },
+
+  // Map label patterns to generator functions
+  generateForLabel(ctx, label) {
+    const l = label.toLowerCase();
+    if (l.includes('suburban') || l.includes('backyard'))  return this.suburban(ctx);
+    if (l.includes('neighborhood'))                        return this.neighborhood(ctx);
+    if (l.includes('road') || l.includes('residential-road')) return this.neighborhood(ctx, 12);
+    if (l.includes('wind-gust'))                           return this.windGust(ctx);
+    if (l.includes('wind'))                                return this.wind(ctx);
+    if (l.includes('rain'))                                return this.rain(ctx);
+    if (l.includes('thunder-roll'))                        return this.thunder(ctx, 10);
+    if (l.includes('thunder'))                             return this.thunder(ctx);
+    if (l.includes('cicada'))                              return this.cicada(ctx);
+    if (l.includes('bird'))                                return this.bird(ctx);
+    if (l.includes('dog'))                                 return this.dog(ctx);
+    if (l.includes('car'))                                 return this.car(ctx);
+    if (l.includes('screen-door'))                         return this.screenDoor(ctx);
+    if (l.includes('cricket'))                             return this.cricket(ctx);
+    // Fallback: generic ambient
+    return this.suburban(ctx, 10);
+  }
+};
+
 // ── State ────────────────────────────────────────────────────
 let ctx = null;
 let masterGain = null;
@@ -289,19 +631,27 @@ async function loadProfile(id) {
       await Promise.all(batch.map(async ([label, url]) => {
         try {
           const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           const arrayBuf = await resp.arrayBuffer();
           buffers[label] = await ctx.decodeAudioData(arrayBuf);
         } catch (e) {
-          console.warn(`[AudioEngine] Failed to decode ${label}: ${e.message}`);
+          console.warn(`[AudioEngine] CDN fetch failed for ${label}, generating procedural audio`);
+          try {
+            buffers[label] = ProceduralAudio.generateForLabel(ctx, label);
+          } catch (pe) {
+            console.warn(`[AudioEngine] Procedural fallback also failed for ${label}: ${pe.message}`);
+          }
         }
         loaded++;
         profileLabel.textContent = `loading ${loaded}/${total}...`;
       }));
     }
 
+    const cdnCount = Object.values(buffers).filter(b => b && b.duration > 20).length;
+    const procCount = Object.keys(buffers).length - cdnCount;
     profileDot.className = 'dot ok';
-    profileLabel.textContent = `${profile.name} (${loaded}/${total})`;
-    logEvent('profile', `loaded ${id} — ${loaded}/${total} assets`);
+    profileLabel.textContent = `${profile.name} (${Object.keys(buffers).length}/${total}${procCount > 0 ? ` · ${procCount} synth` : ''})`;
+    logEvent('profile', `loaded ${id} — ${Object.keys(buffers).length}/${total} assets${procCount > 0 ? ` (${procCount} procedural)` : ''}`);
   } catch (e) {
     profileDot.className = 'dot err';
     profileLabel.textContent = `error: ${e.message}`;
