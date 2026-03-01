@@ -18,19 +18,63 @@
         },
         "DirectionalLight.Elevation": {
           "type": "rotation",
-          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
           "component": "Pitch"
         },
         "DirectionalLight.Azimuth": {
           "type": "rotation",
-          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
           "component": "Yaw"
         },
         "ExponentialHeightFog.FogDensity": {
           "type": "property",
-          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.ExponentialHeightFog_UAID_A85E45CFE40401D200_1470382763",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.ExponentialHeightFog_UAID_A85E45CFE40401D200_1470382763",
           "componentPath": "HeightFogComponent0",
           "propertyName": "FogDensity"
+        },
+        "NiagaraPrecip.SpawnRate": {
+          "type": "niagara",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.NiagaraActor_UAID_F4D4887DE23481C302_1750174121",
+          "variableName": "SpawnRate"
+        },
+        "GroundWetness": {
+          "type": "landscape_scalar",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.Landscape_UAID_A85E45CFE404FBD100_1221515703",
+          "parameterName": "GroundWetness"
+        },
+        "HeatHaze.Intensity": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "SceneFringeIntensity"
+        },
+        "Wind.Strength": {
+          "type": "property",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.WindDirectionalSource_UAID_F4D4887DE23484C302_1767019651",
+          "componentPath": "WindDirectionalSourceComponent0",
+          "propertyName": "Strength"
+        },
+        "Wind.Speed": {
+          "type": "property",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.WindDirectionalSource_UAID_F4D4887DE23484C302_1767019651",
+          "componentPath": "WindDirectionalSourceComponent0",
+          "propertyName": "Speed"
+        },
+        "Wind.MinGustAmount": {
+          "type": "property",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.WindDirectionalSource_UAID_F4D4887DE23484C302_1767019651",
+          "componentPath": "WindDirectionalSourceComponent0",
+          "propertyName": "MinGustAmount"
+        },
+        "Wind.MaxGustAmount": {
+          "type": "property",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.WindDirectionalSource_UAID_F4D4887DE23484C302_1767019651",
+          "componentPath": "WindDirectionalSourceComponent0",
+          "propertyName": "MaxGustAmount"
+        },
+        "Wind.Direction": {
+          "type": "rotation",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.WindDirectionalSource_UAID_F4D4887DE23484C302_1767019651",
+          "component": "Yaw"
         }
       }
     },
@@ -57,7 +101,7 @@
       "endpoint": "lighting",
       "param": "brightness",
       "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 254] },
-      "rateLimit": { "maxDelta": 15 }
+      "rateLimit": { "maxDelta": 10, "ema": 0.25 }
     },
     {
       "source": "controls.lighting.contrast",
@@ -115,7 +159,8 @@
       "source": "controls.visual.heatDistortion",
       "endpoint": "unreal",
       "param": "HeatHaze.Intensity",
-      "transform": { "type": "threshold", "threshold": 0.1, "onValue": 1, "offValue": 0 }
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 5] },
+      "rateLimit": { "maxDelta": 0.5, "ema": 0.3 }
     },
     {
       "source": "controls.visual.sunAltitude",
@@ -127,6 +172,38 @@
       "source": "controls.visual.sunAzimuth",
       "endpoint": "unreal",
       "param": "DirectionalLight.Azimuth",
+      "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "controls.audio.windLevel",
+      "endpoint": "unreal",
+      "param": "Wind.Strength",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.1, "ema": 0.3 }
+    },
+    {
+      "source": "controls.audio.windLevel",
+      "endpoint": "unreal",
+      "param": "Wind.Speed",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 0.5] },
+      "rateLimit": { "maxDelta": 0.05, "ema": 0.3 }
+    },
+    {
+      "source": "controls.audio.gustiness",
+      "endpoint": "unreal",
+      "param": "Wind.MinGustAmount",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0, 0.5] }
+    },
+    {
+      "source": "controls.audio.gustiness",
+      "endpoint": "unreal",
+      "param": "Wind.MaxGustAmount",
+      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0.1, 1.0] }
+    },
+    {
+      "source": "controls.visual.windDirection",
+      "endpoint": "unreal",
+      "param": "Wind.Direction",
       "transform": { "type": "passthrough" }
     },
     {

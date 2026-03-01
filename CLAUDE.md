@@ -114,6 +114,9 @@ The `unreal` transport supports multiple actor dispatch types configured in the 
 - `rotation` — batches Pitch/Yaw/Roll into `SetActorRotation` calls (used for DirectionalLight sun position)
 - `property` — direct property write on a component (used for ExponentialHeightFog density)
 - `material_scalar` — writes `ScalarParameterValues` on a MaterialInstance (used for volumetric cloud coverage)
+- `niagara` — calls `SetVariableFloat` on a NiagaraComponent (used for precipitation particle spawn rate)
+- `landscape_scalar` — calls `SetLandscapeMaterialScalarParameterValue` on a Landscape actor (used for ground wetness)
+- `postprocess` — writes Settings struct properties on a PostProcessVolume with auto-override (used for heat haze)
 - `call` — arbitrary function call on an actor
 
 ### Rate Limiter

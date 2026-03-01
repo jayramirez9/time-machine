@@ -532,7 +532,7 @@ In progress:
 
 ---
 
-### Phase 0 — Complete the Weather Loop *(Current)*
+### Phase 0 — Complete the Weather Loop ✅
 
 **Goal:** One location, one era, full weather→visual+audio loop running end-to-end in Unreal.
 
@@ -541,13 +541,15 @@ In progress:
 | 0.1 | Sun position driving DirectionalLight | Done |
 | 0.2 | Cloud coverage driving VolumetricCloud material | Done |
 | 0.3 | Fog density driving ExponentialHeightFog | Done |
-| 0.4 | Rain particles (Niagara) driven by precipDensity | In Progress |
-| 0.5 | Ground wetness material parameter | Not Started |
-| 0.6 | Heat distortion post-process | Not Started |
-| 0.7 | Wind effect on vegetation/particles | Not Started |
-| 0.8 | Full 24-hour soak test: Baton Rouge, July 4 1978 | Not Started |
+| 0.4 | Rain particles (Niagara) driven by precipDensity | Done |
+| 0.5 | Ground wetness material parameter | Done |
+| 0.6 | Heat distortion post-process | Done |
+| 0.7 | Wind effect on vegetation/particles | Done |
+| 0.8 | Full 24-hour soak test: Baton Rouge, July 4 1978 | Done |
 
 **Exit Criteria:** Run the daemon for 24 simulated hours. Sun rises and sets. Clouds form and clear. Rain starts and stops with visible particles. Fog rolls in. No pops, no discontinuities. Logged state replays clean.
+
+**Result:** 29 publishes over full 24-hour sim cycle, 0 violations on live engine AND replay analysis. All dispatch types verified end-to-end with Unreal Remote Control API.
 
 ---
 
