@@ -197,8 +197,8 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 | `GET /status` | Engine status (uptime, clients, sim time) |
 | `GET /` | Browser dashboard with live updates |
 | `WebSocket /` or `/stream` | Push updates every 5 seconds |
-| `GET /audio` | Legacy WebAudio browser client |
 | `GET /audio-engine` | Full 5-layer audio engine (PRD Section 13) |
+| `GET /audio` | Alias for `/audio-engine` |
 | `GET /audio-profiles/:id` | Audio profile JSON |
 | `GET /audio-assets/*` | Audio asset files (MP3, WAV, etc.) |
 | `GET /viz` | WebGPU browser client |
@@ -230,7 +230,7 @@ This is a Node.js ES modules project:
 - **lib/stateLog.js** - JSONL state logger, writes daily files to `logs/`. Exports `createStateLog()`
 - **tm-replay.js** - Replay CLI for feeding logged state through the rate limiter and reporting violations
 - **lib/timezone.js** - Zero-dependency timezone utilities using `Intl.DateTimeFormat`. Exports `localToUtc()`, `getLocalHour()`, `getLocalMinutes()`, `formatLocalISO()`, `getLocalDateStr()`
-- **lib/index.js** - Library entry point; exports `getWeather()`, `getMockWeather()`, and `createWeatherEngine()` factory
+- **lib/math.js** - Shared interpolation utilities: `lerp()`, `lerpAngle()`
 
 ### Weather Providers
 - **lib/visualcrossing.js** - Visual Crossing API provider (paid, $35/mo). No rate limits, hourly data back to ~1970. Requires `VISUALCROSSING_API_KEY` env var. Same `getWeather()` interface as openmeteo.js. Includes API response caching.
@@ -243,8 +243,7 @@ This is a Node.js ES modules project:
 - **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`)
 
 ### Browser Clients
-- **audio.html** - Legacy WebAudio ambient engine with 4 looping stems (bed, wind, rain, thunder). Served at `/audio`
-- **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13). Served at `/audio-engine`. Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion (stub)
+- **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13). Served at `/audio-engine` (and `/audio`). Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion (stub)
 - **viz.html** - WebGPU fullscreen renderer with sky, sun, clouds, rain, haze, heat distortion. Served at `/viz`
 
 All clients connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.

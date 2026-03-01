@@ -2,7 +2,7 @@
   "name": "time-machine",
   "version": "1.0.0",
   "description": "Weather engine for environmental simulation systems",
-  "main": "lib/index.js",
+  "main": "lib/runtimeEngine.js",
   "bin": {
     "weather-engine": "./cli.js"
   },

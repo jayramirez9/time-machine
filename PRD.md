@@ -514,21 +514,19 @@ This roadmap is grounded in what exists today and builds toward the full vision 
 ### What Exists Today (Baseline)
 
 Working and tested:
-* Weather Engine with real-time + historical weather (Open-Meteo, 1940+)
+* Multi-provider weather pipeline: Visual Crossing (paid, ~1970+) with Open-Meteo (free, 1940+) as automatic fallback
 * WorldState compiler producing states + controls for lighting, audio, atmosphere, visual
 * Runtime engine with tick loop, timeline caching, state smoothing, publish cycle
 * Environment Router mapping WorldState fields to downstream endpoints
 * Rate limiter with EMA smoothing preventing transition pops
 * Unreal integration: sun position (DirectionalLight), cloud coverage (VolumetricCloud material), fog density (ExponentialHeightFog) — all driven live from weather data
-* 5-layer browser audio engine (base bed, directional, micro-events, weather, occlusion stub)
-* Audio profile system (JSON-defined soundscape presets per locale/era)
+* 5-layer browser audio engine (base bed, directional, micro-events, weather, occlusion stub) with procedural synthesis fallback
+* Audio profile system with Freesound-sourced assets (JSON-defined soundscape presets per locale/era)
+* Freesound API fetch tool for automated audio asset sourcing and attribution
 * Daemon with HTTP/WebSocket transport, browser dashboard
 * State logging (JSONL) and replay tool for soak testing
 * Locale preset system (`baton_rouge_suburb`, `nyc_city`)
-* One complete audio profile: `baton_rouge_suburb_1978`
-
-In progress:
-* Niagara rain particle system (placed, user parameter exposed, wiring to weather engine)
+* One complete audio profile with real audio: `baton_rouge_suburb_1978` (25 MP3 assets from Freesound)
 
 ---
 

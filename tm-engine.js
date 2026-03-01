@@ -212,9 +212,7 @@ ws.onmessage = (e) => {
 </body>
 </html>
       `);
-    } else if (req.method === 'GET' && (req.url === '/audio' || req.url === '/audio/')) {
-      serveHtml(res, path.join(__dirname, 'audio.html'));
-    } else if (req.method === 'GET' && (req.url === '/audio-engine' || req.url === '/audio-engine/')) {
+    } else if (req.method === 'GET' && (req.url === '/audio' || req.url === '/audio/' || req.url === '/audio-engine' || req.url === '/audio-engine/')) {
       serveHtml(res, path.join(__dirname, 'audio-engine.html'));
     } else if (req.method === 'GET' && req.url.startsWith('/audio-profiles/')) {
       const profileId = req.url.replace('/audio-profiles/', '').replace(/\.json$/, '').replace(/\/$/, '');
@@ -387,8 +385,7 @@ async function main() {
     console.log(`[Server] WebSocket: ws://localhost:${args.port}/ or /stream`);
     console.log(`[Server] Status:    http://localhost:${args.port}/status`);
     console.log(`[Server] Dashboard: http://localhost:${args.port}/`);
-    console.log(`[Server] Audio:     http://localhost:${args.port}/audio`);
-    console.log(`[Server] Audio v2:  http://localhost:${args.port}/audio-engine`);
+    console.log(`[Server] Audio:     http://localhost:${args.port}/audio-engine`);
     console.log(`[Server] Viz:       http://localhost:${args.port}/viz`);
     console.log('');
   });

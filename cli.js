@@ -6,9 +6,7 @@
  */
 
 import readline from 'readline';
-import { getWeather, getMockWeather } from './lib/index.js';
-import { getWeather as getWeatherVC, getApiKey as getVCKey } from './lib/visualcrossing.js';
-import { getWeatherTimeline } from './lib/weatherTimeline.js';
+import { getWeatherTimeline, selectProvider } from './lib/weatherTimeline.js';
 import { compileWorldState } from './lib/worldStateCompiler.js';
 import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
 import { geocode } from './lib/openmeteo.js';
@@ -89,29 +87,32 @@ function parseArgs(args) {
 
 function printHelp() {
   console.log(`
-Weather Engine - Environmental simulation weather state generator
+Time Machine CLI - Weather state generator for environmental simulation
 
 Usage:
-  weather-engine                              Interactive mode
-  weather-engine --location <loc> --date <d>  Direct mode
+  ./cli.js                                    Interactive mode
+  ./cli.js -l <location> -d <date>            Direct mode
 
 Options:
-  -l, --location  Location string (e.g., "New York, NY")
-  -d, --date      Date in MM-DD-YYYY format (e.g., "06-15-2024")
-                  Defaults to current date/time if not specified
-  -m, --mock      Use mock weather provider (offline/testing)
-  -h, --help      Show this help message
+  -l, --location   Location string (e.g., "New York, NY")
+  -d, --date       Date in MM-DD-YYYY format (e.g., "07-04-1978")
+                   Defaults to current date/time if not specified
+  --mode           Output mode: raw, timeline, or world (default: raw)
+  --locale         Locale preset for environment tuning (default: baton_rouge_suburb)
+  --provider       Weather provider: auto, visualcrossing, or openmeteo (default: auto)
+  -m, --mock       Use mock weather provider (offline/testing)
+  -h, --help       Show this help message
 
-Data Sources:
-  By default, uses Open-Meteo API for real weather data.
-  Historical data available from 1940 to present.
-  Use --mock for deterministic offline data.
+Weather Providers:
+  auto (default)   Visual Crossing if VISUALCROSSING_API_KEY is set, else Open-Meteo
+  visualcrossing   Paid API, hourly data back to ~1970 (requires API key)
+  openmeteo        Free API, historical data from 1940 to present
 
 Examples:
-  weather-engine
-  weather-engine -l "London, UK" -d "12-25-2024"
-  weather-engine -l "Tokyo, Japan" -d "01-01-1950"  # Historical data
-  weather-engine -l "Paris, France" --mock          # Mock data
+  ./cli.js -l "Baton Rouge, LA" -d "07-04-1978"               # Raw weather
+  ./cli.js -l "Baton Rouge, LA" -d "07-04-1978" --mode world   # World state for renderers
+  ./cli.js -l "New York, NY" -d "01-01-1950" --mode timeline   # 6-hour timeline
+  ./cli.js -l "Paris, France" --mock                           # Mock data (offline)
 `);
 }
 
@@ -332,14 +333,7 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
     return;
   }
 
-  let weatherFn;
-  if (useMock) {
-    weatherFn = getMockWeather;
-  } else if (provider === 'visualcrossing' || (provider === 'auto' && getVCKey())) {
-    weatherFn = getWeatherVC;
-  } else {
-    weatherFn = getWeather;
-  }
+  const { fn: weatherFn } = selectProvider(provider, useMock);
   const weather = await weatherFn({ location, date, geo });
   console.log(formatWeather(weather));
 }
