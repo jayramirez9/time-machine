@@ -47,7 +47,21 @@ Target spatial rendering configuration.
 | Field | Type | Description |
 |-------|------|-------------|
 | `order` | string | Target decode format: `HOA3`, `HOA4`, `Atmos7.1.4`, `stereo` |
-| `irProfile` | string | Convolution impulse response set ID for this environment |
+| `irProfile` | string \| object | Convolution impulse response config (see below) |
+
+#### `irProfile`
+
+Controls the convolution reverb impulse response. Can be a plain string (legacy, enables synthetic IR) or an object with file-based IR support:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | IR set identifier (e.g., `"nyc_brownstone_1884"`) |
+| `file` | string | IR audio file, relative to the profile's asset directory (e.g., `"ir-street-canyon.wav"`). Loaded via `fetch()` + `decodeAudioData()` at engine startup |
+| `fallback` | string | `"synthetic"` — fall back to algorithmic IR generation if file is missing or fails to decode |
+
+When `file` is present, the audio engine fetches the WAV from `/audio-assets/{profileId}/{file}`. If the fetch or decode fails, and `fallback` is `"synthetic"`, it generates a synthetic IR using the enclosure-aware algorithm. Legacy string format (e.g., `"nyc_brownstone_1884"`) is still supported and uses synthetic IR only.
+
+Generate IR files with: `./tools/elevenlabs-fetch.js <profile.json> --only ir`
 
 ### `assetGeneration`
 Metadata for the AI audio generation pipeline.

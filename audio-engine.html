@@ -291,14 +291,11 @@ function createDistanceFilter(audioCtx, distance) {
 }
 
 /**
- * Generate a synthetic convolution reverb for the environment.
- * Creates an impulse response modeled after the profile's irProfile/enclosure.
- * Returns { convolver, wet, dry, send } or null if no irProfile defined.
+ * Generate a synthetic IR buffer for use as a fallback.
+ * Models the profile's enclosure type with exponentially decaying noise
+ * and early reflections from building walls.
  */
-function createEnvironmentReverb(audioCtx, profile) {
-  const ir = profile?.spatialConfig?.irProfile;
-  if (!ir) return null;
-
+function createSyntheticIR(audioCtx, profile) {
   const sampleRate = audioCtx.sampleRate;
   const duration = 0.6; // short street canyon reverb
   const length = Math.floor(sampleRate * duration);
@@ -342,6 +339,51 @@ function createEnvironmentReverb(audioCtx, profile) {
     }
   }
 
+  return buffer;
+}
+
+/**
+ * Create convolution reverb for the environment.
+ * Attempts to load a real IR file from the profile's irProfile.file path.
+ * Falls back to synthetic IR generation if the file is missing or decode fails.
+ * Returns { convolver, wet, dry, send, reverbSend, irSource } or null if no irProfile defined.
+ */
+async function createEnvironmentReverb(audioCtx, profile) {
+  const ir = profile?.spatialConfig?.irProfile;
+  if (!ir) return null;
+
+  // Support both legacy string format and new object format
+  const irObj = typeof ir === 'string' ? { id: ir } : ir;
+  const profileId = profile.id;
+
+  let buffer = null;
+  let irSource = 'synthetic';
+
+  // Attempt to load real IR file if specified
+  if (irObj.file && profileId) {
+    const irUrl = `/audio-assets/${profileId}/${irObj.file}`;
+    try {
+      const resp = await fetch(irUrl);
+      if (resp.ok) {
+        const arrayBuf = await resp.arrayBuffer();
+        buffer = await audioCtx.decodeAudioData(arrayBuf);
+        irSource = 'file';
+        logEvent('reverb', `IR loaded from file: ${irUrl} (${buffer.duration.toFixed(2)}s, ${buffer.numberOfChannels}ch)`);
+      } else {
+        logEvent('reverb', `IR file not found (${resp.status}): ${irUrl}, using ${irObj.fallback || 'synthetic'} fallback`);
+      }
+    } catch (e) {
+      logEvent('reverb', `IR file decode failed: ${e.message}, using ${irObj.fallback || 'synthetic'} fallback`);
+    }
+  }
+
+  // Fall back to synthetic if no file loaded
+  if (!buffer) {
+    buffer = createSyntheticIR(audioCtx, profile);
+    irSource = 'synthetic';
+    logEvent('reverb', `IR: synthetic (enclosure: ${profile?.listener?.enclosure || 'street'})`);
+  }
+
   const convolver = audioCtx.createConvolver();
   convolver.buffer = buffer;
 
@@ -357,7 +399,7 @@ function createEnvironmentReverb(audioCtx, profile) {
   send.connect(convolver);
   convolver.connect(wet);
 
-  return { convolver, wet, dry, send, reverbSend };
+  return { convolver, wet, dry, send, reverbSend, irSource };
 }
 
 /** Surface material → reverb send gain multiplier */
@@ -1874,12 +1916,12 @@ async function startEngine() {
   configureListener(ctx, profile);
 
   // Set up environment convolution reverb (v2 profiles with irProfile)
-  reverbBus = createEnvironmentReverb(ctx, profile);
+  reverbBus = await createEnvironmentReverb(ctx, profile);
   if (reverbBus) {
     // Parallel send: masterGain → dry → destination (already connected)
     // Plus: masterGain → reverbBus.send → convolver → wet → destination
     reverbBus.wet.connect(ctx.destination);
-    logEvent('reverb', `IR: ${profile.spatialConfig.irProfile}, send: ${reverbBus.reverbSend}`);
+    logEvent('reverb', `IR: ${reverbBus.irSource}, send: ${reverbBus.reverbSend}`);
   }
 
   // Create layers

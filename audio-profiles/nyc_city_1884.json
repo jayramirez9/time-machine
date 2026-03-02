@@ -16,7 +16,11 @@
   },
   "spatialConfig": {
     "order": "HOA3",
-    "irProfile": "nyc_brownstone_1884"
+    "irProfile": {
+      "id": "nyc_brownstone_1884",
+      "file": "ir-street-canyon.wav",
+      "fallback": "synthetic"
+    }
   },
   "assetGeneration": {
     "status": "complete",

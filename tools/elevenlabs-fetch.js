@@ -13,6 +13,7 @@
  *   ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json --only micro
  *   ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json --only beds
  *   ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json --only weather
+ *   ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json --only ir
  *
  * Compared to freesound-fetch.js:
  *   - Generates audio from text prompts instead of searching a database
@@ -34,6 +35,42 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 const API_URL = 'https://api.elevenlabs.io/v1/sound-generation';
 const API_KEY = process.env.ELEVENLABS_API_KEY;
+
+// ── WAV utility ─────────────────────────────────────────────
+
+/**
+ * Wrap raw PCM samples in a WAV container.
+ * ElevenLabs pcm_44100 returns signed 16-bit LE mono samples with no header.
+ */
+function wrapPCMasWAV(pcmBuffer, sampleRate, channels, bitsPerSample) {
+  const byteRate = sampleRate * channels * (bitsPerSample / 8);
+  const blockAlign = channels * (bitsPerSample / 8);
+  const dataSize = pcmBuffer.length;
+  const headerSize = 44;
+  const wav = Buffer.alloc(headerSize + dataSize);
+
+  // RIFF header
+  wav.write('RIFF', 0);
+  wav.writeUInt32LE(36 + dataSize, 4);
+  wav.write('WAVE', 8);
+
+  // fmt  sub-chunk
+  wav.write('fmt ', 12);
+  wav.writeUInt32LE(16, 16);           // sub-chunk size
+  wav.writeUInt16LE(1, 20);            // PCM format
+  wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24);
+  wav.writeUInt32LE(byteRate, 28);
+  wav.writeUInt16LE(blockAlign, 32);
+  wav.writeUInt16LE(bitsPerSample, 34);
+
+  // data sub-chunk
+  wav.write('data', 36);
+  wav.writeUInt32LE(dataSize, 40);
+  pcmBuffer.copy(wav, headerSize);
+
+  return wav;
+}
 
 // ── Prompt engineering ──────────────────────────────────────
 
@@ -112,10 +149,54 @@ function getDuration(source, section) {
   return 6;
 }
 
+/**
+ * Build a prompt for impulse response generation.
+ * Describes the acoustic space so ElevenLabs produces a short reverb tail.
+ */
+function buildIRPrompt(profile) {
+  const era = profile.era;
+  const eraPrefix = era ? `${era.period || ''} era, circa ${era.year}.` : '';
+  const enclosure = profile.listener?.enclosure || 'street';
+  const elevation = profile.listener?.elevation || 0;
+
+  const enclosureDesc = {
+    open_window: `heard from an open window ${elevation}m above the street`,
+    porch: 'heard from a covered porch or stoop at street level',
+    street: 'heard at street level in the open air',
+    indoor: `heard from inside a room ${elevation}m above the street`,
+  };
+
+  const parts = [
+    eraPrefix,
+    'Short reverb impulse response of a narrow stone street between tall brick buildings.',
+    'Hard granite pavement, brick and brownstone walls on both sides, open sky above.',
+    enclosureDesc[enclosure] || enclosureDesc.street + '.',
+    'Single sharp clap or starter pistol recording capturing early reflections and short decay tail.',
+    'No background noise, no music, just the acoustic response of the space.',
+  ];
+
+  let prompt = parts.filter(Boolean).join(' ').trim();
+  if (prompt.length > 450) prompt = prompt.slice(0, 447) + '...';
+  return prompt;
+}
+
 // ── Source collection ────────────────────────────────────────
 
 function collectSources(profile, only) {
   const sources = [];
+
+  // IR: impulse response file
+  if ((!only || only === 'ir') && profile.spatialConfig?.irProfile) {
+    const irObj = typeof profile.spatialConfig.irProfile === 'string'
+      ? { id: profile.spatialConfig.irProfile }
+      : profile.spatialConfig.irProfile;
+    if (irObj.file) {
+      sources.push({
+        ref: { label: irObj.file.replace(/\.[^.]+$/, ''), _isIR: true, _irFile: irObj.file },
+        section: 'ir',
+      });
+    }
+  }
 
   // Beds: base
   if ((!only || only === 'beds') && profile.beds?.base?.sources) {
@@ -181,7 +262,7 @@ function collectSources(profile, only) {
 
 // ── ElevenLabs API ──────────────────────────────────────────
 
-async function generateSound(prompt, durationSec, loop = false) {
+async function generateSound(prompt, durationSec, loop = false, outputFormat = 'mp3_44100_128') {
   const body = {
     text: prompt,
     duration_seconds: durationSec,
@@ -193,7 +274,7 @@ async function generateSound(prompt, durationSec, loop = false) {
     body.loop = true;
   }
 
-  const response = await fetch(`${API_URL}?output_format=mp3_44100_128`, {
+  const response = await fetch(`${API_URL}?output_format=${outputFormat}`, {
     method: 'POST',
     headers: {
       'xi-api-key': API_KEY,
@@ -221,11 +302,11 @@ async function main() {
   const profilePath = args.find(a => !a.startsWith('--') && a !== only);
 
   if (!profilePath) {
-    console.error('Usage: elevenlabs-fetch.js <profile.json> [--dry-run] [--only beds|micro|weather] [--force]');
+    console.error('Usage: elevenlabs-fetch.js <profile.json> [--dry-run] [--only beds|micro|weather|ir] [--force]');
     process.exit(1);
   }
 
-  if (!API_KEY) {
+  if (!API_KEY && !dryRun) {
     console.error('Error: ELEVENLABS_API_KEY environment variable not set');
     console.error('Get a key at: https://elevenlabs.io/app/settings/api-keys');
     process.exit(1);
@@ -258,7 +339,8 @@ async function main() {
 
   for (const { ref, section } of sources) {
     const label = ref.label;
-    const filename = `${label}.mp3`;
+    const isIR = ref._isIR === true;
+    const filename = isIR ? ref._irFile : `${label}.mp3`;
     const destPath = path.join(assetDir, filename);
     const localUrl = `/audio-assets/${profileId}/${filename}`;
 
@@ -272,9 +354,9 @@ async function main() {
       continue;
     }
 
-    const prompt = buildPrompt(ref, section, profile);
-    const duration = getDuration(ref, section);
-    const loop = section.startsWith('beds.') || section.startsWith('weather.wind') || section.startsWith('weather.rain');
+    const prompt = isIR ? buildIRPrompt(profile) : buildPrompt(ref, section, profile);
+    const duration = isIR ? 2 : getDuration(ref, section);
+    const loop = !isIR && (section.startsWith('beds.') || section.startsWith('weather.wind') || section.startsWith('weather.rain'));
 
     if (dryRun) {
       console.log(`WOULD GENERATE (${duration}s${loop ? ', loop' : ''})`);
@@ -285,17 +367,23 @@ async function main() {
     }
 
     try {
-      const buffer = await generateSound(prompt, duration, loop);
-      fs.writeFileSync(destPath, buffer);
-      console.log(`OK  ${Math.round(buffer.length / 1024)}KB  (${duration}s${loop ? ', loop' : ''})`);
+      const outputFmt = isIR ? 'pcm_44100' : 'mp3_44100_128';
+      const buffer = await generateSound(prompt, duration, loop, outputFmt);
 
-      // Update source reference
-      ref.url = localUrl;
-      ref.license = 'elevenlabs-generated';
-      ref.attribution = `ElevenLabs SFX: "${prompt.slice(0, 80)}"`;
-      ref.generatedPrompt = prompt;
+      // IR files: wrap raw PCM in a WAV container for browser decodeAudioData()
+      const fileBuffer = isIR ? wrapPCMasWAV(buffer, 44100, 1, 16) : buffer;
+      fs.writeFileSync(destPath, fileBuffer);
+      console.log(`OK  ${Math.round(fileBuffer.length / 1024)}KB  (${duration}s${isIR ? ', IR/WAV' : loop ? ', loop' : ''})`);
 
-      generated.push({ label, prompt, duration, loop, section, bytes: buffer.length });
+      // Update source reference (skip for IR — not a playable source)
+      if (!isIR) {
+        ref.url = localUrl;
+        ref.license = 'elevenlabs-generated';
+        ref.attribution = `ElevenLabs SFX: "${prompt.slice(0, 80)}"`;
+        ref.generatedPrompt = prompt;
+      }
+
+      generated.push({ label, prompt, duration, loop, section, bytes: fileBuffer.length });
       downloaded++;
 
       // Rate limit — be gentle with the API
@@ -339,6 +427,8 @@ async function main() {
       delete ref._bedDescription;
       delete ref._surface;
       delete ref._motionType;
+      delete ref._isIR;
+      delete ref._irFile;
       delete ref._motionDuration;
     }
     fs.writeFileSync(fullProfilePath, JSON.stringify(profile, null, 2) + '\n');
