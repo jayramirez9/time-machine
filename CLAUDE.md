@@ -8,7 +8,7 @@ See **PRD.md** for the full Time Machine Experience Bible — the product consti
 
 ## Project Overview
 
-Weather Engine is a weather state generator for environmental simulation systems. It supports multiple weather providers: **Visual Crossing** (paid, no rate limits, data back to ~1970) and **Open-Meteo** (free, historical data back to 1940). Provider selection is automatic — Visual Crossing is preferred when `VISUALCROSSING_API_KEY` is set, with Open-Meteo as fallback. A mock provider is also available for offline use, testing, or deterministic simulation environments.
+Weather Engine is a weather state generator for environmental simulation systems. It supports multiple weather providers: **Visual Crossing** (paid, no rate limits, data back to ~1970), **Open-Meteo** (free, historical data back to 1940), and **NOAA GHCN-Daily** (free, daily data back to ~1800s). Provider selection is automatic — for pre-1940 dates, NOAA is preferred when `NOAA_API_TOKEN` is set; for 1940+, Visual Crossing is preferred when `VISUALCROSSING_API_KEY` is set, with Open-Meteo as fallback. A mock provider is also available for offline use, testing, or deterministic simulation environments.
 
 ## Commands
 
@@ -20,17 +20,19 @@ Run the CLI directly (no build step required):
 ./cli.js -l "Paris, France" --mock          # Use mock provider (offline)
 ./cli.js -l "Baton Rouge, LA" -d "04-06-1983" --provider visualcrossing  # Force Visual Crossing
 ./cli.js -l "Baton Rouge, LA" -d "04-06-1983" --provider openmeteo      # Force Open-Meteo
+./cli.js -l "New York, NY" -d "06-15-1884" --provider noaa              # Force NOAA (pre-1940)
 ```
 
 ### Weather Providers
 
-Set environment variables for paid providers:
+Set environment variables for providers:
 ```bash
 export VISUALCROSSING_API_KEY="your-key"    # Visual Crossing ($35/mo, no rate limits)
+export NOAA_API_TOKEN="your-token"          # NOAA Climate Data Online (free, daily back to 1800s)
 export FREESOUND_API_KEY="your-key"         # Freesound (free, for audio asset fetching)
 ```
 
-Provider auto-selection: `--provider auto` (default) uses Visual Crossing if key is set, else Open-Meteo. Use `--provider visualcrossing` or `--provider openmeteo` to force a specific provider.
+Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo. Use `--provider visualcrossing`, `--provider openmeteo`, or `--provider noaa` to force a specific provider.
 
 ### Output Modes
 
@@ -44,6 +46,7 @@ Use `--mode` to control output format:
 Use `--locale` with world mode for environment-specific tuning:
 ```bash
 ./cli.js -l "New York, NY" -d "07-04-1978" --mode world --locale nyc_city
+./cli.js -l "New York, NY" -d "06-15-1884" --mode world --locale nyc_city_1884
 ./cli.js -l "Baton Rouge, LA" -d "07-04-1978" --mode world --locale baton_rouge_suburb  # default
 ```
 
@@ -231,16 +234,18 @@ This is a Node.js ES modules project:
 - **tm-replay.js** - Replay CLI for feeding logged state through the rate limiter and reporting violations
 - **lib/timezone.js** - Zero-dependency timezone utilities using `Intl.DateTimeFormat`. Exports `localToUtc()`, `getLocalHour()`, `getLocalMinutes()`, `formatLocalISO()`, `getLocalDateStr()`
 - **lib/math.js** - Shared interpolation utilities: `lerp()`, `lerpAngle()`
+- **test/noaa.test.js** - Unit tests for the NOAA GHCN-Daily provider
 
 ### Weather Providers
 - **lib/visualcrossing.js** - Visual Crossing API provider (paid, $35/mo). No rate limits, hourly data back to ~1970. Requires `VISUALCROSSING_API_KEY` env var. Same `getWeather()` interface as openmeteo.js. Includes API response caching.
 - **lib/openmeteo.js** - Open-Meteo API provider with geocoding, forecast (last 92 days + 16 days ahead), and historical archive (1940+). Free, rate-limited. Includes confidence/resolution metadata based on data age.
+- **lib/noaa.js** - NOAA GHCN-Daily API provider. Daily temperature, precipitation, wind, and snow observations from historical weather stations back to ~1800s. Requires `NOAA_API_TOKEN` env var. Free. Best for deep historical queries (pre-1940) where Open-Meteo has no data.
 - **lib/weather.js** - Mock weather provider for offline use and testing
 
 ### World State Pipeline
-- **lib/weatherTimeline.js** - Fetches surrounding hours and interpolates to configurable intervals (default: 6hr window, 15min intervals). Auto-selects provider: Visual Crossing (if key set) > Open-Meteo > Mock. Falls back to Open-Meteo if primary provider fails.
+- **lib/weatherTimeline.js** - Fetches surrounding hours and interpolates to configurable intervals (default: 6hr window, 15min intervals). Auto-selects provider: pre-1940 NOAA (if token set) > Visual Crossing (if key set) > Open-Meteo > Mock. Falls back to Open-Meteo if primary provider fails.
 - **lib/worldStateCompiler.js** - Compiles timeline into renderer-independent world state with categorical states and normalized controls (lighting, audio, atmosphere, visual)
-- **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`)
+- **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`, `nyc_city_1884`)
 
 ### Browser Clients
 - **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13). Served at `/audio-engine` (and `/audio`). Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion (stub)
@@ -248,12 +253,30 @@ This is a Node.js ES modules project:
 
 All clients connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.
 
+#### Audio Spatial Features
+
+The audio engine supports two spatial modes, auto-selected based on profile schema version:
+
+- **v2 profiles** (`schemaVersion: 2`): HRTF spatial panning via `PannerNode` with full 3D positioning (azimuth, elevation, distance). Listener position and orientation configured from profile's `listener` block. Distance-based low-pass filter simulates air absorption.
+- **v1 profiles**: Stereo `StereoPannerNode` fallback with jittered pan positions.
+
+**Doppler pitch shift**: Micro-events with `dopplerFactor > 0` get automatic `playbackRate` automation during motion. Three variants: `passby` (high→normal→low), `approach` (high→normal), `recede` (normal→low). Uses half of `dopplerFactor` as max pitch deviation.
+
+**Convolution reverb**: Synthetic impulse responses generated algorithmically (no external IR files). Enclosure-aware configs (`open_window`, `porch`, `street`, `indoor`) control decay, HF damping, and early reflection gain. Surface-aware send levels per micro-event (`granite_sett` +3dB, `iron_rail` +2dB, `wood_plank` −2dB, `dirt` −4dB). Wet/dry parallel send from each one-shot to a shared ConvolverNode.
+
 ### Audio Profiles
-- **audio-profiles/*.json** - AudioProfile presets defining all sound assets and scheduling rules for a locale/era. Served at `/audio-profiles/:id`. Each profile defines: bed sources, directional sources (N/E/S/W), weather sources (wind/rain/thunder), micro-event pools with cooldowns and time-of-day constraints, mix settings, and scheduling config.
+- **audio-profiles/*.json** - AudioProfile presets defining all sound assets and scheduling rules for a locale/era. Served at `/audio-profiles/:id`. Two schema versions:
+  - **v1** (`baton_rouge_suburb_1978`): Stereo pan positions, basic scheduling. No spatial metadata.
+  - **v2** (`nyc_city_1884`, `schemaVersion: 2`): Full HRTF spatial metadata per source (azimuth, elevation, distance), listener position/enclosure/facing, motion paths with doppler factors, surface types for reverb sends, IR profile for convolution reverb. See `docs/audio-profile-schema-v2.md` for full spec.
 - **audio-assets/{profile_id}/** - Downloaded audio files (MP3) served at `/audio-assets/*`. Gitignored (large binaries). Regenerate with `tools/freesound-fetch.js`.
+
+### Route Configs
+- **routes.json** - Production routes config for the 1884 NYC scene. 14 Unreal routes (sun position, fog, clouds, wind, precipitation, ground wetness, heat haze, sky light), 3 DSP routes, 3 lighting routes. All actor objectPaths verified against live Unreal scene.
+- **routes.example.json** - Annotated example routes config showing all transform types and actor dispatch configurations.
 
 ### Tools
 - **tools/freesound-fetch.js** - Freesound API asset fetcher. Searches for sounds matching each label in an audio profile, downloads HQ MP3 previews, updates the profile JSON to use local URLs, and writes an ATTRIBUTION.md. Requires `FREESOUND_API_KEY` env var. Usage: `FREESOUND_API_KEY=xxx ./tools/freesound-fetch.js audio-profiles/baton_rouge_suburb_1978.json`
+- **tools/spawn-greybox.js** - Unreal scene spawner for the 1884 NYC greybox. Spawns 12 brownstone blocks (2 rows of 6 scaled cubes), 4 gas lamp PointLights, and moves PlayerStart to 2nd floor listener position. Uses Unreal Remote Control API directly for objectPath-based actor configuration. Usage: `node tools/spawn-greybox.js [--host http://localhost:30010]`
 
 ### Extended Audio Controls (WorldState)
 The world state compiler (`lib/worldStateCompiler.js`) now produces extended audio controls beyond the original 3:
