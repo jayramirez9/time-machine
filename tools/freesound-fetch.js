@@ -38,6 +38,54 @@ const SEARCH_MAP = [
   { pattern: /car-pass/, queries: ['car passing', 'car drive by', 'car pass road'], duration: [2, 15] },
   { pattern: /screen-door/, queries: ['screen door', 'door slam', 'door close'], duration: [0.5, 5] },
   { pattern: /cricket/, queries: ['cricket night', 'crickets', 'cricket chirp'], duration: [3, 30] },
+
+  // --- NYC 1884 profile ---
+  // Beds & ambient
+  { pattern: /street-ambient/, queries: ['city street ambience', 'urban outdoor ambient', 'city background noise'], duration: [15, 120] },
+  { pattern: /sidestreet-north/, queries: ['quiet street ambience', 'cobblestone footsteps', 'quiet alley ambient'], duration: [10, 90] },
+  { pattern: /avenue-east/, queries: ['busy street ambience', 'horse traffic street', 'city avenue noise'], duration: [10, 120] },
+  { pattern: /crossstreet-south/, queries: ['city street summer ambient', 'street noise people talking', 'outdoor urban daytime', 'city intersection ambience'], duration: [10, 90] },
+  { pattern: /alley-west/, queries: ['back alley ambient', 'alley ambience', 'narrow street ambient'], duration: [10, 90] },
+
+  // Weather
+  { pattern: /wind-through-buildings/, queries: ['wind between buildings', 'wind urban canyon', 'wind city alley'], duration: [5, 60] },
+  { pattern: /wind-shutter/, queries: ['wooden shutter bang', 'wooden rattle wind', 'wood creak wind', 'shutter bang wind'], duration: [2, 15] },
+  { pattern: /rain-on-granite|rain-granite/, queries: ['rain on stone', 'rain street', 'rain pavement', 'rain outdoor city'], duration: [10, 90] },
+  { pattern: /rain-on-canvas|rain-canvas/, queries: ['rain on tent', 'rain on fabric', 'rain on roof close', 'rain tarp'], duration: [5, 60] },
+  { pattern: /thunder-open-sky/, queries: ['thunder distant', 'thunder rolling', 'thunderstorm distant'], duration: [3, 20] },
+
+  // Horse-drawn transport
+  { pattern: /horse-cart/, queries: ['horse cart cobblestone', 'horse carriage passing', 'horse hooves stone'], duration: [3, 20] },
+  { pattern: /hansom-cab/, queries: ['horse carriage', 'horse trot cobblestone', 'carriage horse passing'], duration: [3, 15] },
+  { pattern: /omnibus/, queries: ['horse carriage heavy', 'horse wagon cobblestone', 'horse cart heavy wheels', 'stagecoach horse'], duration: [5, 25] },
+
+  // Elevated railway
+  { pattern: /el-train/, queries: ['steam train passing', 'old train overhead', 'vintage steam locomotive passing'], duration: [5, 20] },
+
+  // Street vendors & voices
+  { pattern: /newsboy/, queries: ['boy shouting', 'child shout', 'kid yelling', 'young man shout'], duration: [1, 15] },
+  { pattern: /vendor-oyster/, queries: ['man shouting', 'male voice outdoor', 'man calling', 'street call voice'], duration: [1, 15] },
+  { pattern: /vendor-ice/, queries: ['hand bell ringing', 'small bell ring', 'bell cart ringing', 'hand bell outdoor'], duration: [3, 15] },
+  { pattern: /vendor-hotcorn/, queries: ['man yelling', 'male shout outdoor', 'voice shout outdoor', 'man calling loud'], duration: [1, 15] },
+
+  // Church & harbor
+  { pattern: /church-bell/, queries: ['church bell tolling', 'bell tower', 'church bells ringing'], duration: [3, 30] },
+  { pattern: /ferry-whistle/, queries: ['steam whistle boat', 'ship whistle', 'ferry horn steam'], duration: [2, 10] },
+  { pattern: /foghorn/, queries: ['foghorn', 'fog horn harbor', 'ship foghorn'], duration: [3, 15] },
+  { pattern: /harbor-bell/, queries: ['ship bell brass', 'ships bell ring', 'nautical bell ring', 'bell buoy harbor'], duration: [1, 10] },
+
+  // Industry & labor
+  { pattern: /blacksmith/, queries: ['blacksmith hammer anvil', 'anvil hammering', 'metal hammering forge'], duration: [2, 15] },
+  { pattern: /coal-delivery/, queries: ['coal shoveling', 'gravel dumping', 'rocks pouring chute'], duration: [2, 15] },
+  { pattern: /barrel-roll/, queries: ['wooden barrel rolling stone', 'wood rolling ground', 'rolling wood cobblestone', 'barrel rolling wood'], duration: [2, 10] },
+
+  // People & animals
+  { pattern: /children-play/, queries: ['children playing outside', 'kids playing street', 'children shouting outdoor'], duration: [3, 20] },
+  { pattern: /pigeon-flock/, queries: ['pigeon cooing', 'pigeons city', 'pigeon wings flutter'], duration: [3, 20] },
+
+  // Night
+  { pattern: /lamplighter/, queries: ['gas lamp hiss', 'footsteps cobblestone slow', 'lantern glass clink', 'match strike light'], duration: [3, 15] },
+  { pattern: /watchman-whistle/, queries: ['whistle blow', 'police whistle', 'whistle outdoor night'], duration: [1, 8] },
 ];
 
 function getSearchQueries(label) {

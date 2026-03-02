@@ -1,0 +1,993 @@
+{
+  "schemaVersion": 2,
+  "id": "nyc_city_1884",
+  "name": "New York City — Summer 1884",
+  "description": "Lower Manhattan, Gilded Age. Horse-drawn traffic on granite setts, elevated railway overhead, street vendor cries, church bells, harbor foghorns and ferry whistles. No automobiles, no subway, no electric street lighting. Listener at 2nd-floor brownstone window facing east toward a commercial avenue.",
+  "era": {
+    "year": 1884,
+    "period": "Gilded Age",
+    "confidence": 0.7
+  },
+  "listener": {
+    "position": "2nd floor window",
+    "elevation": 4.5,
+    "facing": "E",
+    "enclosure": "open_window"
+  },
+  "spatialConfig": {
+    "order": "HOA3",
+    "irProfile": "nyc_brownstone_1884"
+  },
+  "assetGeneration": {
+    "status": "pending",
+    "generator": null,
+    "promptContext": "Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor cries (oysters, ice, hot corn), church bells, East River ferry whistles and harbor foghorns, blacksmith shops, children playing, pigeons. No motorized vehicles, no electric sounds, no subway. Gas-lit at night."
+  },
+  "beds": {
+    "base": {
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/street-ambient-1.mp3",
+          "label": "street-ambient-1",
+          "freesoundId": 173410,
+          "license": "CC-BY",
+          "attribution": "\"City_Street_Traffic_01\" by dheming"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/street-ambient-2.mp3",
+          "label": "street-ambient-2",
+          "freesoundId": 173410,
+          "license": "CC-BY",
+          "attribution": "\"City_Street_Traffic_01\" by dheming"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/street-ambient-3.mp3",
+          "label": "street-ambient-3",
+          "freesoundId": 173410,
+          "license": "CC-BY",
+          "attribution": "\"City_Street_Traffic_01\" by dheming"
+        }
+      ],
+      "crossfadeSec": 14,
+      "gainDb": -8
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          {
+            "url": "/audio-assets/nyc_city_1884/sidestreet-north.mp3",
+            "label": "sidestreet-north",
+            "spatial": {
+              "azimuth": 0,
+              "elevation": -5,
+              "distance": 0.6,
+              "spread": 40
+            },
+            "freesoundId": 413949,
+            "license": "CC-BY",
+            "attribution": "\"street corner side street quiet night distant traffic and people and barking dog echo Cusco, Peru, South America.wav\" by kyles"
+          }
+        ],
+        "gainDb": -16,
+        "description": "Residential side street — occasional footsteps, distant horse on granite setts"
+      },
+      "E": {
+        "sources": [
+          {
+            "url": "/audio-assets/nyc_city_1884/avenue-east.mp3",
+            "label": "avenue-east",
+            "spatial": {
+              "azimuth": 90,
+              "elevation": -5,
+              "distance": 0.4,
+              "spread": 60
+            },
+            "freesoundId": 812102,
+            "license": "CC-BY",
+            "attribution": "\"Busy Urban Street Sounds – People, Traffic, and City Life (Palestine)\" by sounds_from_palestine"
+          }
+        ],
+        "gainDb": -10,
+        "description": "Commercial avenue — main horse traffic, vendor territory, el train overhead"
+      },
+      "S": {
+        "sources": [
+          {
+            "label": "crossstreet-south",
+            "spatial": {
+              "azimuth": 180,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 50
+            },
+            "url": "/audio-assets/nyc_city_1884/crossstreet-south.mp3",
+            "freesoundId": 349218,
+            "license": "CC-BY",
+            "attribution": "\"thunder far in city 160601_0894.wav\" by klankbeeld"
+          }
+        ],
+        "gainDb": -14,
+        "description": "Cross street — moderate horse traffic, children playing"
+      },
+      "W": {
+        "sources": [
+          {
+            "url": "/audio-assets/nyc_city_1884/alley-west.mp3",
+            "label": "alley-west",
+            "spatial": {
+              "azimuth": -90,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 30
+            },
+            "freesoundId": 26778,
+            "license": "CC-BY",
+            "attribution": "\"Back Alley in London (night:traffic).wav\" by Walter_Odington"
+          }
+        ],
+        "gainDb": -18,
+        "description": "Service alley — deliveries, barrel rolling, cats"
+      }
+    }
+  },
+  "weather": {
+    "wind": {
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/wind-channeled.mp3",
+          "label": "wind-channeled",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": 0,
+            "distance": 0.3,
+            "spread": 90
+          },
+          "freesoundId": 701967,
+          "license": "CC-BY",
+          "attribution": "\"strong wind bare trees 1249PM 230313_0570\" by klankbeeld"
+        },
+        {
+          "label": "wind-shutter-rattle",
+          "spatial": {
+            "azimuth": 45,
+            "elevation": 2,
+            "distance": 0.1,
+            "spread": 20
+          },
+          "url": "/audio-assets/nyc_city_1884/wind-shutter-rattle.mp3",
+          "freesoundId": 648771,
+          "license": "CC-BY",
+          "attribution": "\"Wood rattling.m4a\" by caroblue"
+        }
+      ],
+      "gustFilterRange": [
+        250,
+        2200
+      ],
+      "gustSweepPeriod": [
+        7,
+        18
+      ]
+    },
+    "rain": {
+      "sources": [
+        {
+          "label": "rain-granite-setts",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": -10,
+            "distance": 0.4,
+            "spread": 120
+          },
+          "url": "/audio-assets/nyc_city_1884/rain-granite-setts.mp3",
+          "freesoundId": 251625,
+          "license": "CC-BY",
+          "attribution": "\"NYC Rain 3B- interior Thunder distant traffic B.wav\" by bmlake"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/rain-canvas-awning.mp3",
+          "label": "rain-canvas-awning",
+          "spatial": {
+            "azimuth": 70,
+            "elevation": 5,
+            "distance": 0.2,
+            "spread": 40
+          },
+          "freesoundId": 141440,
+          "license": "CC-BY",
+          "attribution": "\"rain on a tarp.mp3\" by freezound5"
+        }
+      ]
+    },
+    "thunder": {
+      "sources": [
+        {
+          "label": "thunder-open-sky-1",
+          "spatial": {
+            "azimuth": 0,
+            "elevation": 60,
+            "distance": 0.8,
+            "spread": 180
+          },
+          "url": "/audio-assets/nyc_city_1884/thunder-open-sky-1.mp3",
+          "freesoundId": 251626,
+          "license": "CC-BY",
+          "attribution": "\"NYC Rain 3A- interior Thunder distant traffic- A.wav\" by bmlake"
+        },
+        {
+          "label": "thunder-open-sky-2",
+          "spatial": {
+            "azimuth": 30,
+            "elevation": 70,
+            "distance": 0.7,
+            "spread": 120
+          },
+          "url": "/audio-assets/nyc_city_1884/thunder-open-sky-2.mp3",
+          "freesoundId": 251626,
+          "license": "CC-BY",
+          "attribution": "\"NYC Rain 3A- interior Thunder distant traffic- A.wav\" by bmlake"
+        }
+      ],
+      "cooldownRange": [
+        50,
+        150
+      ]
+    }
+  },
+  "microEvents": [
+    {
+      "id": "horse_cart",
+      "description": "Horse and cart on granite setts — iron-rimmed wheels, hooves clattering",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/horse-cart-1.mp3",
+          "label": "horse-cart-1",
+          "freesoundId": 508425,
+          "license": "CC-BY",
+          "attribution": "\"carroça.wav\" by joaoespancabacelar"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/horse-cart-2.mp3",
+          "label": "horse-cart-2",
+          "freesoundId": 508425,
+          "license": "CC-BY",
+          "attribution": "\"carroça.wav\" by joaoespancabacelar"
+        }
+      ],
+      "avgCooldownSec": 15,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -60,
+        "azimuthEnd": 60,
+        "durationSec": 8,
+        "dopplerFactor": 0.2
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.88
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "hansom_cab",
+      "description": "Hansom cab — lighter, faster single horse, springs creaking",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/hansom-cab-1.mp3",
+          "label": "hansom-cab-1",
+          "freesoundId": 547972,
+          "license": "CC-BY",
+          "attribution": "\"hackney coach-1.wav\" by gurek"
+        }
+      ],
+      "avgCooldownSec": 25,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.4,
+        "spread": 15
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -45,
+        "azimuthEnd": 45,
+        "durationSec": 5,
+        "dopplerFactor": 0.25
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.92
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "omnibus",
+      "description": "Horse-drawn omnibus — heavy iron wheels, multiple horses, passenger chatter",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/omnibus-1.mp3",
+          "label": "omnibus-1",
+          "freesoundId": 437074,
+          "license": "CC-BY",
+          "attribution": "\"G52-01-Stage Coach.wav\" by craigsmith"
+        }
+      ],
+      "avgCooldownSec": 40,
+      "gainDb": -12,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.6,
+        "spread": 30
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -90,
+        "azimuthEnd": 90,
+        "durationSec": 12,
+        "dopplerFactor": 0.15
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.85
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "el_train",
+      "description": "Elevated railway — steam locomotive, iron wheels on iron rails, soot and cinder shower",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/el-train-1.mp3",
+          "label": "el-train-1",
+          "freesoundId": 591938,
+          "license": "CC-BY",
+          "attribution": "\"Train Passing By 59 with Steam Whistle, Bell.mp3\" by FunWithSound"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/el-train-2.mp3",
+          "label": "el-train-2",
+          "freesoundId": 591938,
+          "license": "CC-BY",
+          "attribution": "\"Train Passing By 59 with Steam Whistle, Bell.mp3\" by FunWithSound"
+        }
+      ],
+      "avgCooldownSec": 90,
+      "gainDb": -10,
+      "spatial": {
+        "azimuth": -30,
+        "elevation": 25,
+        "distance": 0.7,
+        "spread": 40
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -90,
+        "azimuthEnd": 90,
+        "durationSec": 10,
+        "dopplerFactor": 0.4
+      },
+      "surface": "iron_rail",
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.96
+      },
+      "activityRange": [
+        0.2,
+        1
+      ]
+    },
+    {
+      "id": "newsboy",
+      "description": "\"Extra! Extra!\" — newsboy hawking papers on the corner",
+      "sources": [
+        {
+          "label": "newsboy-1",
+          "url": "/audio-assets/nyc_city_1884/newsboy-1.mp3",
+          "freesoundId": 436784,
+          "license": "CC-BY",
+          "attribution": "\"i don't wanna\" by Alivvie"
+        },
+        {
+          "label": "newsboy-2",
+          "url": "/audio-assets/nyc_city_1884/newsboy-2.mp3",
+          "freesoundId": 436784,
+          "license": "CC-BY",
+          "attribution": "\"i don't wanna\" by Alivvie"
+        }
+      ],
+      "avgCooldownSec": 35,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 60,
+        "elevation": -5,
+        "distance": 0.4,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.28,
+        "max": 0.75
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "vendor_oyster",
+      "description": "Oyster vendor cry — \"Here's your fine oysters!\"",
+      "sources": [
+        {
+          "label": "vendor-oyster-1",
+          "url": "/audio-assets/nyc_city_1884/vendor-oyster-1.mp3",
+          "freesoundId": 421873,
+          "license": "CC-BY",
+          "attribution": "\"Loose! - (Version 2) Archers, British Male\" by theuncertainman"
+        }
+      ],
+      "avgCooldownSec": 60,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 45,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "motion": {
+        "type": "approach",
+        "azimuthStart": 90,
+        "azimuthEnd": 45,
+        "durationSec": 6,
+        "dopplerFactor": 0.1
+      },
+      "timeOfDay": {
+        "min": 0.35,
+        "max": 0.85
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "vendor_ice",
+      "description": "Ice cart — bell ringing, \"ICE!\" cry, horse slow-walking",
+      "sources": [
+        {
+          "label": "vendor-ice-1",
+          "url": "/audio-assets/nyc_city_1884/vendor-ice-1.mp3",
+          "freesoundId": 767307,
+          "license": "CC-BY",
+          "attribution": "\"BELLHand_Ringing Small Hand Bell_HvD_OwSFX\" by Hano_van_Dalen"
+        }
+      ],
+      "avgCooldownSec": 80,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": -20,
+        "elevation": -5,
+        "distance": 0.6,
+        "spread": 15
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -40,
+        "azimuthEnd": 40,
+        "durationSec": 10,
+        "dopplerFactor": 0.1
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.75
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "vendor_hotcorn",
+      "description": "\"Hot corn! Hot corn!\" — street seller with basket",
+      "sources": [
+        {
+          "label": "vendor-hotcorn-1",
+          "url": "/audio-assets/nyc_city_1884/vendor-hotcorn-1.mp3",
+          "freesoundId": 123747,
+          "license": "CC-BY",
+          "attribution": "\"scottstoked_movethatcrap.wav\" by shawshank73"
+        }
+      ],
+      "avgCooldownSec": 70,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 70,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.35,
+        "max": 0.8
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "church_bell",
+      "description": "Church bell tolling — quarter-hour or hourly",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/church-bell-1.mp3",
+          "label": "church-bell-1",
+          "freesoundId": 479985,
+          "license": "CC-BY",
+          "attribution": "\"R04-59-Short Bell Tolls.wav\" by craigsmith"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/church-bell-2.mp3",
+          "label": "church-bell-2",
+          "freesoundId": 479985,
+          "license": "CC-BY",
+          "attribution": "\"R04-59-Short Bell Tolls.wav\" by craigsmith"
+        }
+      ],
+      "avgCooldownSec": 180,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": -45,
+        "elevation": 30,
+        "distance": 0.8,
+        "spread": 60
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "ferry_whistle",
+      "description": "East River ferry steam whistle — departure signal",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/ferry-whistle-1.mp3",
+          "label": "ferry-whistle-1",
+          "freesoundId": 498684,
+          "license": "CC-BY",
+          "attribution": "\"7_whistle.wav\" by 16HPanskaKelbichova_Adela"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/ferry-whistle-2.mp3",
+          "label": "ferry-whistle-2",
+          "freesoundId": 498684,
+          "license": "CC-BY",
+          "attribution": "\"7_whistle.wav\" by 16HPanskaKelbichova_Adela"
+        }
+      ],
+      "avgCooldownSec": 120,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": 120,
+        "elevation": 0,
+        "distance": 0.9,
+        "spread": 25
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.92
+      },
+      "activityRange": [
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "foghorn",
+      "description": "Harbor foghorn — deep, mournful, carries across water",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/foghorn-1.mp3",
+          "label": "foghorn-1",
+          "freesoundId": 507471,
+          "license": "CC-BY",
+          "attribution": "\"Long Distant Foghorn.aiff\" by Danjocross"
+        }
+      ],
+      "avgCooldownSec": 200,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 150,
+        "elevation": -2,
+        "distance": 1,
+        "spread": 40
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "blacksmith",
+      "description": "Blacksmith hammer on anvil — rhythmic ringing",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/blacksmith-1.mp3",
+          "label": "blacksmith-1",
+          "freesoundId": 201183,
+          "license": "CC-BY",
+          "attribution": "\"Avoncroft Blacksmith (1).wav\" by phonoflora"
+        }
+      ],
+      "avgCooldownSec": 50,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": -60,
+        "elevation": -3,
+        "distance": 0.6,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.7
+      },
+      "activityRange": [
+        0.5,
+        1
+      ]
+    },
+    {
+      "id": "children_play",
+      "description": "Children playing in the street — shouting, running on stone",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/children-play-1.mp3",
+          "label": "children-play-1",
+          "freesoundId": 15356,
+          "license": "CC-BY",
+          "attribution": "\"swings.aif\" by tim.kahn"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/children-play-2.mp3",
+          "label": "children-play-2",
+          "freesoundId": 15356,
+          "license": "CC-BY",
+          "attribution": "\"swings.aif\" by tim.kahn"
+        }
+      ],
+      "avgCooldownSec": 30,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 50,
+        "elevation": -5,
+        "distance": 0.4,
+        "spread": 25
+      },
+      "motion": {
+        "type": "static"
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.8
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "dog_bark",
+      "description": "Street dog barking — stray or yard dog",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/dog-bark-1.mp3",
+          "label": "dog-bark-1",
+          "freesoundId": 635113,
+          "license": "CC-BY",
+          "attribution": "\"dog barking.wav\" by jocelynlopez"
+        }
+      ],
+      "avgCooldownSec": 45,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": 30,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "pigeon_flock",
+      "description": "Pigeons cooing on ledge, occasional wing flutter",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/pigeon-flock-1.mp3",
+          "label": "pigeon-flock-1",
+          "freesoundId": 808001,
+          "license": "CC-BY",
+          "attribution": "\"Pigeons & Doves - Homing Pigeon Cooing\" by TheKingOfGeeks360"
+        },
+        {
+          "url": "/audio-assets/nyc_city_1884/pigeon-flock-2.mp3",
+          "label": "pigeon-flock-2",
+          "freesoundId": 808001,
+          "license": "CC-BY",
+          "attribution": "\"Pigeons & Doves - Homing Pigeon Cooing\" by TheKingOfGeeks360"
+        }
+      ],
+      "avgCooldownSec": 20,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": 20,
+        "elevation": 5,
+        "distance": 0.3,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.85
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "coal_delivery",
+      "description": "Coal being shoveled and dumped into basement chute",
+      "sources": [
+        {
+          "url": "/audio-assets/nyc_city_1884/coal-delivery-1.mp3",
+          "label": "coal-delivery-1",
+          "freesoundId": 386143,
+          "license": "CC-BY",
+          "attribution": "\"Forge - Adding coal\" by ldezem"
+        }
+      ],
+      "avgCooldownSec": 120,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": -80,
+        "elevation": -8,
+        "distance": 0.5,
+        "spread": 20
+      },
+      "motion": {
+        "type": "static"
+      },
+      "surface": "iron_chute",
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.7
+      },
+      "activityRange": [
+        0.5,
+        1
+      ]
+    },
+    {
+      "id": "lamplighter",
+      "description": "Gas lamplighter at dusk — footsteps, glass clink, gas hiss ignition",
+      "sources": [
+        {
+          "label": "lamplighter-1",
+          "url": "/audio-assets/nyc_city_1884/lamplighter-1.mp3",
+          "freesoundId": 193299,
+          "license": "CC-BY",
+          "attribution": "\"match strike 02.wav\" by tim.kahn"
+        }
+      ],
+      "avgCooldownSec": 90,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 40,
+        "elevation": -5,
+        "distance": 0.3,
+        "spread": 10
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -30,
+        "azimuthEnd": 30,
+        "durationSec": 15,
+        "dopplerFactor": 0.05
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.78,
+        "max": 0.88
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "watchman_whistle",
+      "description": "Night watchman's whistle — shrill, echoing off buildings",
+      "sources": [
+        {
+          "label": "watchman-whistle-1",
+          "url": "/audio-assets/nyc_city_1884/watchman-whistle-1.mp3",
+          "freesoundId": 42935,
+          "license": "CC-BY",
+          "attribution": "\"Bottle end blow whistle_2.wav\" by AGFX"
+        }
+      ],
+      "avgCooldownSec": 150,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": -50,
+        "elevation": -5,
+        "distance": 0.7,
+        "spread": 10
+      },
+      "motion": {
+        "type": "recede",
+        "azimuthStart": -50,
+        "azimuthEnd": -80,
+        "durationSec": 8,
+        "dopplerFactor": 0.1
+      },
+      "timeOfDay": {
+        "min": 0.9,
+        "max": 1
+      },
+      "secondaryWindow": {
+        "min": 0,
+        "max": 0.15
+      },
+      "activityRange": [
+        0,
+        0.3
+      ]
+    },
+    {
+      "id": "harbor_bell",
+      "description": "Ship's bell — watch change, carries across water",
+      "sources": [
+        {
+          "label": "harbor-bell-1",
+          "url": "/audio-assets/nyc_city_1884/harbor-bell-1.mp3",
+          "freesoundId": 263659,
+          "license": "CC-BY",
+          "attribution": "\"Bell.aif\" by stefansmulovitz"
+        }
+      ],
+      "avgCooldownSec": 240,
+      "gainDb": -26,
+      "spatial": {
+        "azimuth": 140,
+        "elevation": 0,
+        "distance": 0.95,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "barrel_roll",
+      "description": "Wooden barrel rolled on granite — cooper or deliveryman",
+      "sources": [
+        {
+          "label": "barrel-roll-1",
+          "url": "/audio-assets/nyc_city_1884/barrel-roll-1.mp3",
+          "freesoundId": 555747,
+          "license": "CC-BY",
+          "attribution": "\"Gun-Case hits ground 4.wav\" by MGA95"
+        }
+      ],
+      "avgCooldownSec": 70,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 70,
+        "elevation": -8,
+        "distance": 0.4,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "surface": "granite_sett",
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.7
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    }
+  ],
+  "mix": {
+    "masterGainDb": -4,
+    "layerGains": {
+      "baseBed": 0,
+      "directionalBeds": -2,
+      "microEvents": -2,
+      "weather": -1,
+      "occlusion": 0
+    },
+    "reverbSend": 0.12
+  },
+  "scheduling": {
+    "maxConcurrentEvents": 4,
+    "globalCooldownSec": 1.5,
+    "densityMultipliers": {
+      "subtle": 0.5,
+      "present": 1,
+      "demo": 2.5
+    }
+  }
+}

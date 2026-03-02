@@ -189,6 +189,208 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function lerp(a, b, t) { return a + (b - a) * clamp(t, 0, 1); }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// ── Spatial Audio Helpers (v2 HRTF) ────────────────────────
+const DISTANCE_SCALE = 30; // normalized 0-1 → 0-30 meters for Web Audio
+
+function isV2Profile(p) { return (p?.schemaVersion ?? 0) >= 2; }
+
+/** Convert ADM coordinates (azimuth/elevation/distance) to Web Audio Cartesian (x=right, y=up, z=-forward) */
+function admToCartesian(azDeg, elDeg, dist, scale = DISTANCE_SCALE) {
+  const az = azDeg * Math.PI / 180;
+  const el = elDeg * Math.PI / 180;
+  const d = Math.max(0.01, dist * scale); // avoid zero distance
+  return {
+    x:  d * Math.cos(el) * Math.sin(az),    // right (+) / left (-)
+    y:  d * Math.sin(el),                     // up (+) / down (-)
+    z: -d * Math.cos(el) * Math.cos(az)      // front (-) / back (+)
+  };
+}
+
+/**
+ * Factory: create a spatial panner wrapper.
+ * If `spatial` is provided (v2 profile), returns HRTF PannerNode.
+ * Otherwise returns StereoPannerNode (v1 fallback).
+ *
+ * Wrapper API: { node, type, setPosition(az,el,dist), scheduleMotion(...), setPan(v) }
+ */
+function createSpatialPanner(audioCtx, spatial, opts = {}) {
+  if (!spatial) {
+    // v1 fallback: stereo panner
+    const p = audioCtx.createStereoPanner();
+    p.pan.value = opts.pan ?? 0;
+    return {
+      node: p,
+      type: 'stereo',
+      setPosition() {},
+      scheduleMotion() {},
+      setPan(v) { p.pan.setTargetAtTime(v, audioCtx.currentTime, RAMP); }
+    };
+  }
+
+  // v2: HRTF PannerNode
+  const p = audioCtx.createPanner();
+  p.panningModel = 'HRTF';
+  p.distanceModel = 'inverse';
+  p.refDistance = 1;
+  p.maxDistance = 1000;
+  p.rolloffFactor = 1;
+  p.coneInnerAngle = spatial.spread ?? 360;
+  p.coneOuterAngle = 360;
+  p.coneOuterGain = 0.3;
+
+  const pos = admToCartesian(spatial.azimuth ?? 0, spatial.elevation ?? 0, spatial.distance ?? 0.5);
+  if (p.positionX) {
+    p.positionX.value = pos.x;
+    p.positionY.value = pos.y;
+    p.positionZ.value = pos.z;
+  } else {
+    p.setPosition(pos.x, pos.y, pos.z);
+  }
+
+  return {
+    node: p,
+    type: 'hrtf',
+    setPan() {}, // no-op for HRTF
+    setPosition(az, el, dist) {
+      const c = admToCartesian(az, el, dist);
+      if (p.positionX) {
+        const t = audioCtx.currentTime;
+        p.positionX.setTargetAtTime(c.x, t, RAMP);
+        p.positionY.setTargetAtTime(c.y, t, RAMP);
+        p.positionZ.setTargetAtTime(c.z, t, RAMP);
+      } else {
+        p.setPosition(c.x, c.y, c.z);
+      }
+    },
+    scheduleMotion(azStart, azEnd, el, dist, durationSec, startTime) {
+      if (!p.positionX) return; // legacy browsers can't automate
+      const start = admToCartesian(azStart, el, dist);
+      const end = admToCartesian(azEnd, el, dist);
+      p.positionX.setValueAtTime(start.x, startTime);
+      p.positionY.setValueAtTime(start.y, startTime);
+      p.positionZ.setValueAtTime(start.z, startTime);
+      p.positionX.linearRampToValueAtTime(end.x, startTime + durationSec);
+      p.positionY.linearRampToValueAtTime(end.y, startTime + durationSec);
+      p.positionZ.linearRampToValueAtTime(end.z, startTime + durationSec);
+    }
+  };
+}
+
+/** Low-pass filter simulating high-frequency rolloff for distant sources */
+function createDistanceFilter(audioCtx, distance) {
+  if (distance < 0.3) return null; // close enough — no filtering
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'lowpass';
+  // 0.3 → 16kHz (barely filtered), 1.0 → 2kHz (very muffled)
+  f.frequency.value = lerp(16000, 2000, clamp((distance - 0.3) / 0.7, 0, 1));
+  f.Q.value = 0.7;
+  return f;
+}
+
+/**
+ * Generate a synthetic convolution reverb for the environment.
+ * Creates an impulse response modeled after the profile's irProfile/enclosure.
+ * Returns { convolver, wet, dry, send } or null if no irProfile defined.
+ */
+function createEnvironmentReverb(audioCtx, profile) {
+  const ir = profile?.spatialConfig?.irProfile;
+  if (!ir) return null;
+
+  const sampleRate = audioCtx.sampleRate;
+  const duration = 0.6; // short street canyon reverb
+  const length = Math.floor(sampleRate * duration);
+  const buffer = audioCtx.createBuffer(2, length, sampleRate);
+
+  // Enclosure determines reverb character
+  const enclosure = profile?.listener?.enclosure || 'street';
+  const enclosureConfig = {
+    open_window:  { decay: 3.5, hfDamp: 0.6, earlyGain: 0.8 },
+    porch:        { decay: 4.0, hfDamp: 0.5, earlyGain: 0.7 },
+    street:       { decay: 3.0, hfDamp: 0.7, earlyGain: 1.0 },
+    indoor:       { decay: 5.0, hfDamp: 0.4, earlyGain: 0.5 }
+  };
+  const cfg = enclosureConfig[enclosure] || enclosureConfig.street;
+
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buffer.getChannelData(ch);
+    // Exponentially decaying noise
+    for (let i = 0; i < length; i++) {
+      const t = i / sampleRate;
+      const envelope = Math.exp(-cfg.decay * t);
+      // High-frequency damping: attenuate noise over time
+      const hfRoll = 1.0 - cfg.hfDamp * (t / duration);
+      data[i] = (Math.random() * 2 - 1) * envelope * Math.max(0, hfRoll);
+    }
+
+    // Early reflections: building walls across the street (~12m = ~35ms)
+    const reflections = [
+      { ms: 12, gain: cfg.earlyGain * 0.6 },   // opposite wall
+      { ms: 24, gain: cfg.earlyGain * 0.35 },   // second bounce
+      { ms: 36, gain: cfg.earlyGain * 0.2 },    // third bounce
+      { ms: 52, gain: cfg.earlyGain * 0.12 }    // up from street
+    ];
+    for (const r of reflections) {
+      const idx = Math.floor(r.ms * sampleRate / 1000);
+      if (idx < length) {
+        // Stereo spread: slightly different per channel
+        const spread = ch === 0 ? 1.0 : 0.85;
+        data[idx] += r.gain * spread * (0.8 + Math.random() * 0.4);
+      }
+    }
+  }
+
+  const convolver = audioCtx.createConvolver();
+  convolver.buffer = buffer;
+
+  const wet = audioCtx.createGain();
+  const dry = audioCtx.createGain();
+  const send = audioCtx.createGain();
+
+  const reverbSend = profile?.mix?.reverbSend ?? 0.12;
+  wet.gain.value = reverbSend;
+  dry.gain.value = 1.0;
+  send.gain.value = 1.0; // per-source send level (adjusted per surface)
+
+  send.connect(convolver);
+  convolver.connect(wet);
+
+  return { convolver, wet, dry, send, reverbSend };
+}
+
+/** Surface material → reverb send gain multiplier */
+const SURFACE_REVERB_MAP = {
+  granite_sett: 1.4,    // +3dB: hard, reflective
+  cobblestone: 1.3,     // +2.5dB: hard
+  iron_rail: 1.3,       // +2dB: metallic ring
+  iron_chute: 1.3,      // +2dB: metallic
+  asphalt: 1.0,         // baseline
+  wood_plank: 0.8,      // -2dB: absorptive
+  dirt: 0.6             // -4dB: very absorptive
+};
+
+/** Set AudioContext listener orientation based on profile facing direction */
+function configureListener(audioCtx, prof) {
+  if (!isV2Profile(prof) || !prof.listener?.facing) return;
+  const facingMap = {
+    N: { fx: 0, fz: -1 },  // looking into screen (negative Z = forward)
+    E: { fx: 1, fz: 0 },
+    S: { fx: 0, fz: 1 },
+    W: { fx: -1, fz: 0 }
+  };
+  const f = facingMap[prof.listener.facing] || facingMap.N;
+  const listener = audioCtx.listener;
+  if (listener.forwardX) {
+    listener.forwardX.setValueAtTime(f.fx, audioCtx.currentTime);
+    listener.forwardY.setValueAtTime(0, audioCtx.currentTime);
+    listener.forwardZ.setValueAtTime(f.fz, audioCtx.currentTime);
+    listener.upX.setValueAtTime(0, audioCtx.currentTime);
+    listener.upY.setValueAtTime(1, audioCtx.currentTime);
+    listener.upZ.setValueAtTime(0, audioCtx.currentTime);
+  } else {
+    listener.setOrientation(f.fx, 0, f.fz, 0, 1, 0);
+  }
+}
+
 // ── Procedural Audio Synthesis ──────────────────────────────
 // Generates AudioBuffers when CDN assets fail to load
 const ProceduralAudio = {
@@ -552,6 +754,7 @@ const ProceduralAudio = {
 // ── State ────────────────────────────────────────────────────
 let ctx = null;
 let masterGain = null;
+let reverbBus = null;   // { convolver, wet, dry, send } or null
 let profile = null;
 let buffers = {};       // label → AudioBuffer
 let running = false;
@@ -849,17 +1052,31 @@ class DirectionalBedsLayer {
       const labels = (config.sources || []).map(s => s.label);
       if (labels.length === 0) continue;
 
-      const panner = ctx.createStereoPanner();
-      panner.pan.value = panMap[dir] ?? 0;
+      // v2: use HRTF from source spatial data; v1: stereo pan
+      const firstSource = (config.sources || [])[0];
+      const spatial = firstSource?.spatial || null;
+      const pannerWrapper = spatial
+        ? createSpatialPanner(ctx, spatial)
+        : createSpatialPanner(ctx, null, { pan: panMap[dir] ?? 0 });
+
       const gain = ctx.createGain();
       gain.gain.value = dbToLin(config.gainDb ?? -18);
-      gain.connect(panner);
-      panner.connect(this.output);
+
+      // Distance filter for HRTF sources
+      const distFilter = spatial ? createDistanceFilter(ctx, spatial.distance ?? 0.5) : null;
+      if (distFilter) {
+        gain.connect(distFilter);
+        distFilter.connect(pannerWrapper.node);
+      } else {
+        gain.connect(pannerWrapper.node);
+      }
+      pannerWrapper.node.connect(this.output);
 
       this.directions[dir] = {
         labels,
-        panner,
+        pannerWrapper,
         gain,
+        distFilter,
         node: null,
         currentIdx: 0,
         facingAngle: facingAngle[dir] ?? 0,
@@ -1032,14 +1249,82 @@ class MicroEventScheduler {
     const varDb = baseDb + (Math.random() - 0.5) * 6;
     gain.gain.value = dbToLin(varDb);
 
-    // Pan
-    const panner = this.ctx.createStereoPanner();
-    const basePan = pool.pan ?? 0;
-    panner.pan.value = clamp(basePan + (Math.random() - 0.5) * 0.2, -1, 1);
+    // Spatial panning: HRTF for v2, stereo for v1
+    const spatial = pool.spatial;
+    const motion = pool.motion;
+    let pannerWrapper;
 
+    if (spatial) {
+      // v2: HRTF with azimuth jitter for variety
+      const jittered = { ...spatial, azimuth: (spatial.azimuth ?? 0) + (Math.random() - 0.5) * 10 };
+      pannerWrapper = createSpatialPanner(this.ctx, jittered);
+    } else {
+      // v1 fallback: stereo pan with jitter
+      const basePan = pool.pan ?? 0;
+      pannerWrapper = createSpatialPanner(this.ctx, null, {
+        pan: clamp(basePan + (Math.random() - 0.5) * 0.2, -1, 1)
+      });
+    }
+
+    // Distance filter for HRTF sources
+    const distFilter = spatial ? createDistanceFilter(this.ctx, spatial.distance ?? 0.5) : null;
+
+    // Wire: node → gain → [distFilter] → panner → output
     node.connect(gain);
-    gain.connect(panner);
-    panner.connect(this.output);
+    if (distFilter) {
+      gain.connect(distFilter);
+      distFilter.connect(pannerWrapper.node);
+    } else {
+      gain.connect(pannerWrapper.node);
+    }
+    pannerWrapper.node.connect(this.output);
+
+    // Reverb send: tap from gain node with surface-aware level
+    let reverbSendGain = null;
+    if (reverbBus) {
+      const surfaceMul = SURFACE_REVERB_MAP[pool.surface] ?? 1.0;
+      reverbSendGain = this.ctx.createGain();
+      reverbSendGain.gain.value = reverbBus.reverbSend * surfaceMul;
+      gain.connect(reverbSendGain);
+      reverbSendGain.connect(reverbBus.send);
+    }
+
+    // Motion automation for moving sounds
+    if (pannerWrapper.type === 'hrtf' && motion && motion.type && motion.type !== 'static') {
+      const now = this.ctx.currentTime;
+      const el = spatial.elevation ?? 0;
+      const dist = spatial.distance ?? 0.5;
+
+      if (motion.type === 'passby' && motion.azimuthStart != null && motion.azimuthEnd != null) {
+        pannerWrapper.scheduleMotion(motion.azimuthStart, motion.azimuthEnd, el, dist, motion.durationSec || 8, now);
+      } else if (motion.type === 'approach' && motion.azimuthStart != null && motion.azimuthEnd != null) {
+        pannerWrapper.scheduleMotion(motion.azimuthStart, motion.azimuthEnd, el, dist * 0.3, motion.durationSec || 6, now);
+      } else if (motion.type === 'recede' && motion.azimuthStart != null && motion.azimuthEnd != null) {
+        pannerWrapper.scheduleMotion(motion.azimuthStart, motion.azimuthEnd, el, dist * 1.5, motion.durationSec || 8, now);
+      }
+
+      // Doppler pitch shift via playbackRate automation
+      if (motion.dopplerFactor > 0) {
+        const df = motion.dopplerFactor;
+        const dur = motion.durationSec || 8;
+        const now = this.ctx.currentTime;
+
+        if (motion.type === 'passby') {
+          // Full sweep: high pitch → normal → low pitch
+          node.playbackRate.setValueAtTime(1.0 + df * 0.5, now);
+          node.playbackRate.linearRampToValueAtTime(1.0, now + dur * 0.5);
+          node.playbackRate.linearRampToValueAtTime(1.0 - df * 0.5, now + dur);
+        } else if (motion.type === 'approach') {
+          // Approaching: high pitch → normal
+          node.playbackRate.setValueAtTime(1.0 + df * 0.4, now);
+          node.playbackRate.linearRampToValueAtTime(1.0, now + dur);
+        } else if (motion.type === 'recede') {
+          // Receding: normal → low pitch
+          node.playbackRate.setValueAtTime(1.0, now);
+          node.playbackRate.linearRampToValueAtTime(1.0 - df * 0.4, now + dur);
+        }
+      }
+    }
 
     node.start();
     this.activeSources++;
@@ -1049,7 +1334,9 @@ class MicroEventScheduler {
     node.onended = () => {
       this.activeSources = Math.max(0, this.activeSources - 1);
       gain.disconnect();
-      panner.disconnect();
+      pannerWrapper.node.disconnect();
+      if (distFilter) distFilter.disconnect();
+      if (reverbSendGain) reverbSendGain.disconnect();
     };
 
     logEvent('micro', `${pool.id} → ${label}`);
@@ -1083,27 +1370,32 @@ class WeatherLayer {
 
     this.buffers = buffers;
 
-    // Wind sub-layer with stereo panning based on wind direction
-    this.windPanner = ctx.createStereoPanner();
-    this.windPanner.pan.value = 0;
-    this.windPanner.connect(this.output);
+    // Wind sub-layer with spatial panning
+    const windSources = profile.weather?.wind?.sources || [];
+    this.windSpatial = windSources[0]?.spatial || null;
+    this.windPannerWrapper = this.windSpatial
+      ? createSpatialPanner(ctx, this.windSpatial)
+      : createSpatialPanner(ctx, null, { pan: 0 });
+    this.windPannerWrapper.node.connect(this.output);
     this.windGain = ctx.createGain();
     this.windGain.gain.value = 0;
-    this.windGain.connect(this.windPanner);
+    this.windGain.connect(this.windPannerWrapper.node);
     this.windNode = null;
 
-    // Gust overlay with bandpass filter + stereo panner
+    // Gust overlay with bandpass filter + spatial panner
     this.gustGain = ctx.createGain();
     this.gustGain.gain.value = 0;
     this.gustFilter = ctx.createBiquadFilter();
     this.gustFilter.type = 'bandpass';
     this.gustFilter.frequency.value = 600;
     this.gustFilter.Q.value = 0.7;
-    this.gustPanner = ctx.createStereoPanner();
-    this.gustPanner.pan.value = 0;
+    const gustSpatial = windSources[1]?.spatial || this.windSpatial;
+    this.gustPannerWrapper = gustSpatial
+      ? createSpatialPanner(ctx, gustSpatial)
+      : createSpatialPanner(ctx, null, { pan: 0 });
     this.gustGain.connect(this.gustFilter);
-    this.gustFilter.connect(this.gustPanner);
-    this.gustPanner.connect(this.output);
+    this.gustFilter.connect(this.gustPannerWrapper.node);
+    this.gustPannerWrapper.node.connect(this.output);
     this.gustNode = null;
     this._gustSweepPhase = Math.random() * Math.PI * 2;
 
@@ -1139,6 +1431,7 @@ class WeatherLayer {
 
     // Thunder (one-shots managed by micro-event style trigger)
     this.thunderSources = (profile.weather?.thunder?.sources || []).map(s => s.label);
+    this.thunderBaseSpatial = (profile.weather?.thunder?.sources || [])[0]?.spatial || null;
     this.thunderCooldown = profile.weather?.thunder?.cooldownRange || [60, 180];
     this.lastThunderAt = 0;
 
@@ -1223,12 +1516,21 @@ class WeatherLayer {
     const windTarget = dbToLin(-60 + audio.windLevel * 60);
     this.windGain.gain.setTargetAtTime(windTarget, now, RAMP);
 
-    // Wind direction panning: convert degrees to stereo pan (-1 to 1)
-    // 0°=N (center), 90°=E (+1), 180°=S (center), 270°=W (-1)
-    const windDirRad = ((audio.windDirection ?? 0) * Math.PI) / 180;
-    const windPan = clamp(Math.sin(windDirRad), -1, 1);
-    this.windPanner.pan.setTargetAtTime(windPan, now, RAMP * 2);
-    this.gustPanner.pan.setTargetAtTime(windPan * 0.8, now, RAMP * 2); // gusts slightly less directional
+    // Wind direction panning
+    const windDir = audio.windDirection ?? 0;
+    if (this.windPannerWrapper.type === 'hrtf' && this.windSpatial) {
+      // v2: rotate HRTF panner to follow wind direction
+      const el = this.windSpatial.elevation ?? 0;
+      const dist = this.windSpatial.distance ?? 0.3;
+      this.windPannerWrapper.setPosition(windDir, el, dist);
+      this.gustPannerWrapper.setPosition(windDir * 0.8, el, dist);
+    } else {
+      // v1: stereo pan from wind direction
+      const windDirRad = (windDir * Math.PI) / 180;
+      const windPan = clamp(Math.sin(windDirRad), -1, 1);
+      this.windPannerWrapper.setPan(windPan);
+      this.gustPannerWrapper.setPan(windPan * 0.8);
+    }
 
     // Gust gain from gustiness
     const gustTarget = dbToLin(-60 + audio.gustiness * 50);
@@ -1242,12 +1544,6 @@ class WeatherLayer {
     const sweepT = (Math.sin(this._gustSweepPhase) + 1) / 2;
     const freq = lerp(gustRange[0], gustRange[1], sweepT);
     this.gustFilter.frequency.setTargetAtTime(freq, now, 0.2);
-
-    // Gust stereo panning from wind direction
-    // East wind (90°) → pan right, West (270°) → pan left
-    const windDir = audio.windDirection ?? 0;
-    const gustPan = clamp(Math.sin(windDir * Math.PI / 180) * 0.7, -0.7, 0.7);
-    this.gustPanner.pan.setTargetAtTime(gustPan, now, RAMP);
 
     // Rain intensity layering: light rain = light texture only, heavy = both
     const rainLevel = audio.rainLevel ?? 0;
@@ -1300,14 +1596,26 @@ class WeatherLayer {
       node.buffer = buf;
       const gain = this.ctx.createGain();
       gain.gain.value = dbToLin(baseDb + attenDb);
-      // Pan thunder slightly based on random bearing
-      const panner = this.ctx.createStereoPanner();
-      panner.pan.value = clamp((Math.random() - 0.5) * 1.2, -1, 1);
+      // Spatial thunder: HRTF for v2 (high elevation, random azimuth), stereo fallback for v1
+      let pannerWrapper;
+      if (this.thunderBaseSpatial) {
+        const randomAz = (Math.random() - 0.5) * 300; // wide random azimuth
+        const el = this.thunderBaseSpatial.elevation ?? 60;
+        const normDist = clamp(distanceKm / 15, 0.3, 1.0);
+        pannerWrapper = createSpatialPanner(this.ctx, {
+          azimuth: randomAz, elevation: el, distance: normDist,
+          spread: this.thunderBaseSpatial.spread ?? 180
+        });
+      } else {
+        pannerWrapper = createSpatialPanner(this.ctx, null, {
+          pan: clamp((Math.random() - 0.5) * 1.2, -1, 1)
+        });
+      }
       node.connect(gain);
-      gain.connect(panner);
-      panner.connect(this.output);
+      gain.connect(pannerWrapper.node);
+      pannerWrapper.node.connect(this.output);
       node.start();
-      node.onended = () => { gain.disconnect(); panner.disconnect(); };
+      node.onended = () => { gain.disconnect(); pannerWrapper.node.disconnect(); };
       logEvent('thunder', `${label} (${distanceKm.toFixed(1)}km, ${(baseDb + attenDb).toFixed(0)}dB)`);
     }, delaySec * 1000);
   }
@@ -1345,6 +1653,18 @@ async function startEngine() {
   if (!profile) await loadProfile(currentProfileId || DEFAULT_PROFILE_ID);
   if (!ctx) initAudioContext();
   if (ctx.state === 'suspended') await ctx.resume();
+
+  // Configure listener orientation for v2 spatial profiles
+  configureListener(ctx, profile);
+
+  // Set up environment convolution reverb (v2 profiles with irProfile)
+  reverbBus = createEnvironmentReverb(ctx, profile);
+  if (reverbBus) {
+    // Parallel send: masterGain → dry → destination (already connected)
+    // Plus: masterGain → reverbBus.send → convolver → wet → destination
+    reverbBus.wet.connect(ctx.destination);
+    logEvent('reverb', `IR: ${profile.spatialConfig.irProfile}, send: ${reverbBus.reverbSend}`);
+  }
 
   // Create layers
   baseBedLayer = new BaseBedLayer(ctx, masterGain, profile, buffers);
