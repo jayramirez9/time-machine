@@ -19,8 +19,8 @@
     "irProfile": "nyc_brownstone_1884"
   },
   "assetGeneration": {
-    "status": "pending",
-    "generator": null,
+    "status": "complete",
+    "generator": "elevenlabs",
     "promptContext": "Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor cries (oysters, ice, hot corn), church bells, East River ferry whistles and harbor foghorns, blacksmith shops, children playing, pigeons. No motorized vehicles, no electric sounds, no subway. Gas-lit at night."
   },
   "beds": {
@@ -29,23 +29,23 @@
         {
           "url": "/audio-assets/nyc_city_1884/street-ambient-1.mp3",
           "label": "street-ambient-1",
-          "freesoundId": 173410,
-          "license": "CC-BY",
-          "attribution": "\"City_Street_Traffic_01\" by dheming"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor Focus on distant activity and general atmosphere.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern sounds. Pr..."
         },
         {
           "url": "/audio-assets/nyc_city_1884/street-ambient-2.mp3",
           "label": "street-ambient-2",
-          "freesoundId": 173410,
-          "license": "CC-BY",
-          "attribution": "\"City_Street_Traffic_01\" by dheming"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor Focus on close surface textures and immediate surroundings.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern ..."
         },
         {
           "url": "/audio-assets/nyc_city_1884/street-ambient-3.mp3",
           "label": "street-ambient-3",
-          "freesoundId": 173410,
-          "license": "CC-BY",
-          "attribution": "\"City_Street_Traffic_01\" by dheming"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor Focus on mid-range ambience — voices, animal sounds, wind.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern s..."
         }
       ],
       "crossfadeSec": 14,
@@ -63,9 +63,9 @@
               "distance": 0.6,
               "spread": 40
             },
-            "freesoundId": 413949,
-            "license": "CC-BY",
-            "attribution": "\"street corner side street quiet night distant traffic and people and barking dog echo Cusco, Peru, South America.wav\" by kyles"
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Residential side stre\"",
+            "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Residential side street — occasional footsteps, distant horse on granite setts. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
           }
         ],
         "gainDb": -16,
@@ -82,9 +82,9 @@
               "distance": 0.4,
               "spread": 60
             },
-            "freesoundId": 812102,
-            "license": "CC-BY",
-            "attribution": "\"Busy Urban Street Sounds – People, Traffic, and City Life (Palestine)\" by sounds_from_palestine"
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Commercial avenue — m\"",
+            "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Commercial avenue — main horse traffic, vendor territory, el train overhead. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
           }
         ],
         "gainDb": -10,
@@ -101,9 +101,9 @@
               "spread": 50
             },
             "url": "/audio-assets/nyc_city_1884/crossstreet-south.mp3",
-            "freesoundId": 349218,
-            "license": "CC-BY",
-            "attribution": "\"thunder far in city 160601_0894.wav\" by klankbeeld"
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Cross street — modera\"",
+            "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Cross street — moderate horse traffic, children playing. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
           }
         ],
         "gainDb": -14,
@@ -120,9 +120,9 @@
               "distance": 0.5,
               "spread": 30
             },
-            "freesoundId": 26778,
-            "license": "CC-BY",
-            "attribution": "\"Back Alley in London (night:traffic).wav\" by Walter_Odington"
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Ambient background soundscape: Service alley — deliv\"",
+            "generatedPrompt": "Gilded Age era, circa 1884. Ambient background soundscape: Service alley — deliveries, barrel rolling, cats. Steady, loopable, no sudden events. Suitable as a continuous background bed. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
           }
         ],
         "gainDb": -18,
@@ -142,9 +142,9 @@
             "distance": 0.3,
             "spread": 90
           },
-          "freesoundId": 701967,
-          "license": "CC-BY",
-          "attribution": "\"strong wind bare trees 1249PM 230313_0570\" by klankbeeld"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: wind channeled. Natural, organic, no \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: wind channeled. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "label": "wind-shutter-rattle",
@@ -155,9 +155,9 @@
             "spread": 20
           },
           "url": "/audio-assets/nyc_city_1884/wind-shutter-rattle.mp3",
-          "freesoundId": 648771,
-          "license": "CC-BY",
-          "attribution": "\"Wood rattling.m4a\" by caroblue"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: wind shutter rattle. Natural, organic\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: wind shutter rattle. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "gustFilterRange": [
@@ -180,9 +180,9 @@
             "spread": 120
           },
           "url": "/audio-assets/nyc_city_1884/rain-granite-setts.mp3",
-          "freesoundId": 251625,
-          "license": "CC-BY",
-          "attribution": "\"NYC Rain 3B- interior Thunder distant traffic B.wav\" by bmlake"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: rain granite setts. Natural, organic,\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: rain granite setts. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/rain-canvas-awning.mp3",
@@ -193,9 +193,9 @@
             "distance": 0.2,
             "spread": 40
           },
-          "freesoundId": 141440,
-          "license": "CC-BY",
-          "attribution": "\"rain on a tarp.mp3\" by freezound5"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: rain canvas awning. Natural, organic,\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: rain canvas awning. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ]
     },
@@ -210,9 +210,9 @@
             "spread": 180
           },
           "url": "/audio-assets/nyc_city_1884/thunder-open-sky-1.mp3",
-          "freesoundId": 251626,
-          "license": "CC-BY",
-          "attribution": "\"NYC Rain 3A- interior Thunder distant traffic- A.wav\" by bmlake"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: thunder open sky 1. Natural, organic,\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: thunder open sky 1. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "label": "thunder-open-sky-2",
@@ -223,9 +223,9 @@
             "spread": 120
           },
           "url": "/audio-assets/nyc_city_1884/thunder-open-sky-2.mp3",
-          "freesoundId": 251626,
-          "license": "CC-BY",
-          "attribution": "\"NYC Rain 3A- interior Thunder distant traffic- A.wav\" by bmlake"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Weather sound: thunder open sky 2. Natural, organic,\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Weather sound: thunder open sky 2. Natural, organic, no modern artifacts. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "cooldownRange": [
@@ -242,16 +242,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/horse-cart-1.mp3",
           "label": "horse-cart-1",
-          "freesoundId": 508425,
-          "license": "CC-BY",
-          "attribution": "\"carroça.wav\" by joaoespancabacelar"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Horse and cart on granite setts — iron\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Horse and cart on granite setts — iron-rimmed wheels, hooves clattering. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/horse-cart-2.mp3",
           "label": "horse-cart-2",
-          "freesoundId": 508425,
-          "license": "CC-BY",
-          "attribution": "\"carroça.wav\" by joaoespancabacelar"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Horse and cart on granite setts — iron\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Horse and cart on granite setts — iron-rimmed wheels, hooves clattering. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 15,
@@ -286,9 +286,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/hansom-cab-1.mp3",
           "label": "hansom-cab-1",
-          "freesoundId": 547972,
-          "license": "CC-BY",
-          "attribution": "\"hackney coach-1.wav\" by gurek"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Hansom cab — lighter, faster single ho\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Hansom cab — lighter, faster single horse, springs creaking. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 25,
@@ -323,9 +323,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/omnibus-1.mp3",
           "label": "omnibus-1",
-          "freesoundId": 437074,
-          "license": "CC-BY",
-          "attribution": "\"G52-01-Stage Coach.wav\" by craigsmith"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Horse-drawn omnibus — heavy iron wheel\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Horse-drawn omnibus — heavy iron wheels, multiple horses, passenger chatter. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 40,
@@ -360,16 +360,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/el-train-1.mp3",
           "label": "el-train-1",
-          "freesoundId": 591938,
-          "license": "CC-BY",
-          "attribution": "\"Train Passing By 59 with Steam Whistle, Bell.mp3\" by FunWithSound"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Elevated railway — steam locomotive, i\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Elevated railway — steam locomotive, iron wheels on iron rails, soot and cinder shower. Surface material: iron_rail. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/el-train-2.mp3",
           "label": "el-train-2",
-          "freesoundId": 591938,
-          "license": "CC-BY",
-          "attribution": "\"Train Passing By 59 with Steam Whistle, Bell.mp3\" by FunWithSound"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Elevated railway — steam locomotive, i\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Elevated railway — steam locomotive, iron wheels on iron rails, soot and cinder shower. Surface material: iron_rail. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 90,
@@ -404,16 +404,16 @@
         {
           "label": "newsboy-1",
           "url": "/audio-assets/nyc_city_1884/newsboy-1.mp3",
-          "freesoundId": 436784,
-          "license": "CC-BY",
-          "attribution": "\"i don't wanna\" by Alivvie"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking pape\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking papers on the corner. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "label": "newsboy-2",
           "url": "/audio-assets/nyc_city_1884/newsboy-2.mp3",
-          "freesoundId": 436784,
-          "license": "CC-BY",
-          "attribution": "\"i don't wanna\" by Alivvie"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking pape\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking papers on the corner. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 35,
@@ -443,9 +443,9 @@
         {
           "label": "vendor-oyster-1",
           "url": "/audio-assets/nyc_city_1884/vendor-oyster-1.mp3",
-          "freesoundId": 421873,
-          "license": "CC-BY",
-          "attribution": "\"Loose! - (Version 2) Archers, British Male\" by theuncertainman"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Oyster vendor cry — \"Here's your fine \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Oyster vendor cry — \"Here's your fine oysters!\". Movement: approach — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 60,
@@ -479,9 +479,9 @@
         {
           "label": "vendor-ice-1",
           "url": "/audio-assets/nyc_city_1884/vendor-ice-1.mp3",
-          "freesoundId": 767307,
-          "license": "CC-BY",
-          "attribution": "\"BELLHand_Ringing Small Hand Bell_HvD_OwSFX\" by Hano_van_Dalen"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Ice cart — bell ringing, \"ICE!\" cry, h\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Ice cart — bell ringing, \"ICE!\" cry, horse slow-walking. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 80,
@@ -516,9 +516,9 @@
         {
           "label": "vendor-hotcorn-1",
           "url": "/audio-assets/nyc_city_1884/vendor-hotcorn-1.mp3",
-          "freesoundId": 123747,
-          "license": "CC-BY",
-          "attribution": "\"scottstoked_movethatcrap.wav\" by shawshank73"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: \"Hot corn! Hot corn!\" — street seller \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: \"Hot corn! Hot corn!\" — street seller with basket. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 70,
@@ -548,16 +548,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/church-bell-1.mp3",
           "label": "church-bell-1",
-          "freesoundId": 479985,
-          "license": "CC-BY",
-          "attribution": "\"R04-59-Short Bell Tolls.wav\" by craigsmith"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Church bell tolling — quarter-hour or \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Church bell tolling — quarter-hour or hourly. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/church-bell-2.mp3",
           "label": "church-bell-2",
-          "freesoundId": 479985,
-          "license": "CC-BY",
-          "attribution": "\"R04-59-Short Bell Tolls.wav\" by craigsmith"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Church bell tolling — quarter-hour or \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Church bell tolling — quarter-hour or hourly. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 180,
@@ -587,16 +587,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/ferry-whistle-1.mp3",
           "label": "ferry-whistle-1",
-          "freesoundId": 498684,
-          "license": "CC-BY",
-          "attribution": "\"7_whistle.wav\" by 16HPanskaKelbichova_Adela"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: East River ferry steam whistle — depar\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: East River ferry steam whistle — departure signal. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/ferry-whistle-2.mp3",
           "label": "ferry-whistle-2",
-          "freesoundId": 498684,
-          "license": "CC-BY",
-          "attribution": "\"7_whistle.wav\" by 16HPanskaKelbichova_Adela"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: East River ferry steam whistle — depar\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: East River ferry steam whistle — departure signal. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 120,
@@ -626,9 +626,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/foghorn-1.mp3",
           "label": "foghorn-1",
-          "freesoundId": 507471,
-          "license": "CC-BY",
-          "attribution": "\"Long Distant Foghorn.aiff\" by Danjocross"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Harbor foghorn — deep, mournful, carri\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Harbor foghorn — deep, mournful, carries across water. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 200,
@@ -658,9 +658,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/blacksmith-1.mp3",
           "label": "blacksmith-1",
-          "freesoundId": 201183,
-          "license": "CC-BY",
-          "attribution": "\"Avoncroft Blacksmith (1).wav\" by phonoflora"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Blacksmith hammer on anvil — rhythmic \"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Blacksmith hammer on anvil — rhythmic ringing. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 50,
@@ -690,16 +690,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/children-play-1.mp3",
           "label": "children-play-1",
-          "freesoundId": 15356,
-          "license": "CC-BY",
-          "attribution": "\"swings.aif\" by tim.kahn"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Children playing in the street — shout\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Children playing in the street — shouting, running on stone. Surface material: granite_sett. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/children-play-2.mp3",
           "label": "children-play-2",
-          "freesoundId": 15356,
-          "license": "CC-BY",
-          "attribution": "\"swings.aif\" by tim.kahn"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Children playing in the street — shout\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Children playing in the street — shouting, running on stone. Surface material: granite_sett. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 30,
@@ -730,9 +730,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/dog-bark-1.mp3",
           "label": "dog-bark-1",
-          "freesoundId": 635113,
-          "license": "CC-BY",
-          "attribution": "\"dog barking.wav\" by jocelynlopez"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Street dog barking — stray or yard dog\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Street dog barking — stray or yard dog. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 45,
@@ -762,16 +762,16 @@
         {
           "url": "/audio-assets/nyc_city_1884/pigeon-flock-1.mp3",
           "label": "pigeon-flock-1",
-          "freesoundId": 808001,
-          "license": "CC-BY",
-          "attribution": "\"Pigeons & Doves - Homing Pigeon Cooing\" by TheKingOfGeeks360"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Pigeons cooing on ledge, occasional wi\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Pigeons cooing on ledge, occasional wing flutter. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         },
         {
           "url": "/audio-assets/nyc_city_1884/pigeon-flock-2.mp3",
           "label": "pigeon-flock-2",
-          "freesoundId": 808001,
-          "license": "CC-BY",
-          "attribution": "\"Pigeons & Doves - Homing Pigeon Cooing\" by TheKingOfGeeks360"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Pigeons cooing on ledge, occasional wi\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Pigeons cooing on ledge, occasional wing flutter. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 20,
@@ -801,9 +801,9 @@
         {
           "url": "/audio-assets/nyc_city_1884/coal-delivery-1.mp3",
           "label": "coal-delivery-1",
-          "freesoundId": 386143,
-          "license": "CC-BY",
-          "attribution": "\"Forge - Adding coal\" by ldezem"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Coal being shoveled and dumped into ba\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Coal being shoveled and dumped into basement chute. Surface material: iron_chute. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 120,
@@ -834,9 +834,9 @@
         {
           "label": "lamplighter-1",
           "url": "/audio-assets/nyc_city_1884/lamplighter-1.mp3",
-          "freesoundId": 193299,
-          "license": "CC-BY",
-          "attribution": "\"match strike 02.wav\" by tim.kahn"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Gas lamplighter at dusk — footsteps, g\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Gas lamplighter at dusk — footsteps, glass clink, gas hiss ignition. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 90,
@@ -871,9 +871,9 @@
         {
           "label": "watchman-whistle-1",
           "url": "/audio-assets/nyc_city_1884/watchman-whistle-1.mp3",
-          "freesoundId": 42935,
-          "license": "CC-BY",
-          "attribution": "\"Bottle end blow whistle_2.wav\" by AGFX"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Night watchman's whistle — shrill, ech\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Night watchman's whistle — shrill, echoing off buildings. Movement: recede — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 150,
@@ -911,9 +911,9 @@
         {
           "label": "harbor-bell-1",
           "url": "/audio-assets/nyc_city_1884/harbor-bell-1.mp3",
-          "freesoundId": 263659,
-          "license": "CC-BY",
-          "attribution": "\"Bell.aif\" by stefansmulovitz"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Ship's bell — watch change, carries ac\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Ship's bell — watch change, carries across water. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 240,
@@ -943,9 +943,9 @@
         {
           "label": "barrel-roll-1",
           "url": "/audio-assets/nyc_city_1884/barrel-roll-1.mp3",
-          "freesoundId": 555747,
-          "license": "CC-BY",
-          "attribution": "\"Gun-Case hits ground 4.wav\" by MGA95"
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Wooden barrel rolled on granite — coop\"",
+          "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Wooden barrel rolled on granite — cooper or deliveryman. Surface material: granite_sett. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
         }
       ],
       "avgCooldownSec": 70,

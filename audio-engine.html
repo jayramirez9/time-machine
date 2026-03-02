@@ -228,10 +228,13 @@ function createSpatialPanner(audioCtx, spatial, opts = {}) {
   }
 
   // v2: HRTF PannerNode
+  // Distance attenuation is handled by createDistanceFilter + occlusion,
+  // so set refDistance = DISTANCE_SCALE to disable the panner's own rolloff.
+  // The panner only provides HRTF directionality.
   const p = audioCtx.createPanner();
   p.panningModel = 'HRTF';
   p.distanceModel = 'inverse';
-  p.refDistance = 1;
+  p.refDistance = DISTANCE_SCALE;
   p.maxDistance = 1000;
   p.rolloffFactor = 1;
   p.coneInnerAngle = spatial.spread ?? 360;
@@ -772,6 +775,7 @@ let baseBedLayer = null;
 let directionalLayer = null;
 let weatherLayer = null;
 let microEventScheduler = null;
+let occlusionLayer = null;
 
 // ── DOM refs ─────────────────────────────────────────────────
 const btnStart = document.getElementById('btnStart');
@@ -1144,9 +1148,35 @@ class DirectionalBedsLayer {
 
   resume() {}
 
+  /**
+   * Apply static occlusion filters to directional beds.
+   * Behind-listener directions get room LPF + gain reduction.
+   */
+  applyOcclusion(occLayer) {
+    if (!occLayer) return;
+    for (const [dir, d] of Object.entries(this.directions)) {
+      const result = occLayer.createDirectionalBedFilter(dir);
+      if (!result) continue;
+
+      // Splice filter: disconnect gain from current target, insert filter
+      d.gain.disconnect();
+      d.gain.connect(result.filter);
+      if (d.distFilter) {
+        result.filter.connect(d.distFilter);
+      } else {
+        result.filter.connect(d.pannerWrapper.node);
+      }
+
+      // Apply gain reduction
+      d.gain.gain.value *= result.gainMul;
+      d.occlusionFilter = result.filter;
+    }
+  }
+
   dispose() {
     for (const d of Object.values(this.directions)) {
       try { d.node?.stop(); } catch (_) {}
+      if (d.occlusionFilter) d.occlusionFilter.disconnect();
     }
     this.output.disconnect();
   }
@@ -1184,6 +1214,10 @@ class MicroEventScheduler {
   setMode(mode) {
     const mults = this.scheduling.densityMultipliers || { subtle: 0.5, present: 1.0, demo: 2.0 };
     this.densityMultiplier = mults[mode] ?? 1.0;
+  }
+
+  setOcclusionLayer(layer) {
+    this.occlusionLayer = layer;
   }
 
   tick(worldState) {
@@ -1269,14 +1303,31 @@ class MicroEventScheduler {
     // Distance filter for HRTF sources
     const distFilter = spatial ? createDistanceFilter(this.ctx, spatial.distance ?? 0.5) : null;
 
-    // Wire: node → gain → [distFilter] → panner → output
-    node.connect(gain);
-    if (distFilter) {
-      gain.connect(distFilter);
-      distFilter.connect(pannerWrapper.node);
-    } else {
-      gain.connect(pannerWrapper.node);
+    // Occlusion filters (Layer 5): building-edge diffraction, room LPF, urban canyon
+    let occlusionResult = null;
+    if (this.occlusionLayer) {
+      // For moving sources, use midpoint azimuth for occlusion calculation
+      const occSpatial = (motion?.type && motion.type !== 'static' &&
+                          motion.azimuthStart != null && motion.azimuthEnd != null)
+        ? { ...spatial, azimuth: (motion.azimuthStart + motion.azimuthEnd) / 2 }
+        : spatial;
+      occlusionResult = this.occlusionLayer.createOcclusionFilters(occSpatial);
     }
+
+    // Wire: node → gain → [distFilter] → [occFilters] → [occGain] → panner → output
+    node.connect(gain);
+    let lastNode = gain;
+    if (distFilter) { lastNode.connect(distFilter); lastNode = distFilter; }
+    if (occlusionResult) {
+      for (const f of occlusionResult.filters) { lastNode.connect(f); lastNode = f; }
+      if (occlusionResult.gainMul < 1.0) {
+        const occGain = this.ctx.createGain();
+        occGain.gain.value = occlusionResult.gainMul;
+        lastNode.connect(occGain);
+        lastNode = occGain;
+      }
+    }
+    lastNode.connect(pannerWrapper.node);
     pannerWrapper.node.connect(this.output);
 
     // Reverb send: tap from gain node with surface-aware level
@@ -1337,6 +1388,10 @@ class MicroEventScheduler {
       pannerWrapper.node.disconnect();
       if (distFilter) distFilter.disconnect();
       if (reverbSendGain) reverbSendGain.disconnect();
+      if (occlusionResult) {
+        for (const f of occlusionResult.filters) f.disconnect();
+        this.occlusionLayer?.releaseFilters(occlusionResult.filters.length);
+      }
     };
 
     logEvent('micro', `${pool.id} → ${label}`);
@@ -1646,6 +1701,167 @@ class WeatherLayer {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  LAYER 5: Occlusion Processor
+// ═══════════════════════════════════════════════════════════════
+
+class OcclusionProcessor {
+  constructor(ctx, profile) {
+    this.ctx = ctx;
+    this.activeFilterCount = 0;
+
+    const listener = profile.listener || {};
+    this.enclosure = listener.enclosure || 'street';
+    this.listenerElevation = listener.elevation || 0;
+
+    this.facing = listener.facing || 'E';
+
+    // Only active for v2 profiles with window/indoor enclosure
+    this.enabled = isV2Profile(profile) &&
+      (this.enclosure === 'open_window' || this.enclosure === 'indoor');
+  }
+
+  start() {}
+
+  /**
+   * Create occlusion filter nodes for a single audio source.
+   * @param {Object} spatial - { azimuth, elevation, distance }
+   * @returns {{ filters: BiquadFilterNode[], gainMul: number } | null}
+   */
+  createOcclusionFilters(spatial) {
+    if (!this.enabled || !spatial) return null;
+
+    const filters = [];
+    let gainMul = 1.0;
+
+    const azimuth = spatial.azimuth ?? 0;
+    const elevation = spatial.elevation ?? 0;
+    const distance = spatial.distance ?? 0.5;
+
+    // ── Effect 1: Building-Edge Diffraction ──
+    // Listener at open window — sources below (negative elevation) are
+    // partially occluded by the building facade / windowsill.
+    // Lower elevation → more HF attenuation from diffraction.
+    if (elevation < 0 && this.enclosure === 'open_window') {
+      const depth = clamp(Math.abs(elevation) / 15, 0, 1);
+      if (depth > 0.05) {
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.value = lerp(20000, 800, depth);
+        f.Q.value = 0.5;
+        filters.push(f);
+        gainMul *= lerp(1.0, 0.85, depth);
+      }
+    }
+
+    // ── Effect 2: Room LPF (behind the listener) ──
+    // Sources behind the listener must pass through building walls.
+    // Azimuths in the profile are relative to listener facing (0=front).
+    // >120° off-axis = partially behind, >150° = heavily behind.
+    if (this.enclosure === 'open_window' || this.enclosure === 'indoor') {
+      const absAz = Math.abs(azimuth);
+      if (absAz > 120) {
+        const factor = clamp((absAz - 120) / 60, 0, 1);
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.value = lerp(16000, 400, factor);
+        f.Q.value = 0.5;
+        filters.push(f);
+        gainMul *= lerp(1.0, 0.25, factor); // ≈ -12dB at 180°
+      }
+    }
+
+    // ── Effect 3: Urban Canyon Occlusion ──
+    // Far sources (distance > 0.6) in a street canyon get additional
+    // HF rolloff from multi-bounce reflections off building facades.
+    // Stacks with createDistanceFilter (which handles gain rolloff).
+    if (distance > 0.6) {
+      const factor = clamp((distance - 0.6) / 0.4, 0, 1);
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = lerp(16000, 3000, factor);
+      f.Q.value = 0.7;
+      filters.push(f);
+    }
+
+    if (filters.length === 0) return null;
+
+    this.activeFilterCount += filters.length;
+    logEvent('occlusion',
+      `az:${azimuth.toFixed(0)} el:${elevation.toFixed(0)} d:${distance.toFixed(2)} → ${filters.length}f gain:${gainMul.toFixed(2)}`);
+    return { filters, gainMul };
+  }
+
+  /**
+   * Create a static occlusion filter for a directional bed.
+   * Only applies room LPF for behind-listener directions.
+   * @param {string} direction - Cardinal direction (N/E/S/W)
+   * @returns {{ filter: BiquadFilterNode, gainMul: number } | null}
+   */
+  createDirectionalBedFilter(direction) {
+    if (!this.enabled) return null;
+
+    // Directional bed azimuths are absolute (N=0, E=90, S=180, W=270).
+    // But profile source azimuths are relative to listener facing.
+    // For directional beds, we need to compute the relative angle.
+    // Listener faces E (90°). N bed is at 0° absolute = -90° relative (left).
+    // S bed is at 180° absolute = +90° relative (right).
+    // W bed is at 270° absolute = +180° relative (behind).
+    //
+    // However, the existing facingAngle in DirectionalBedsLayer uses:
+    //   { N: 0, E: 90, S: 180, W: 270 } — these are absolute azimuths.
+    // And the listener facing is also stored as absolute (E = 90).
+    //
+    // Relative azimuth = bed absolute - listener absolute
+    const listenerAz = { N: 0, E: 90, S: 180, W: 270 };
+    const listenerAbsAz = listenerAz[this.facing] ?? 90;
+
+    const bedAbsAz = { N: 0, E: 90, S: 180, W: 270 }[direction] ?? 0;
+    let relAz = bedAbsAz - listenerAbsAz;
+    // Normalize to -180..180
+    while (relAz > 180) relAz -= 360;
+    while (relAz < -180) relAz += 360;
+
+    const absRelAz = Math.abs(relAz);
+    if (absRelAz <= 120) return null;
+
+    const factor = clamp((absRelAz - 120) / 60, 0, 1);
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = lerp(16000, 400, factor);
+    f.Q.value = 0.5;
+
+    const gainMul = lerp(1.0, 0.25, factor);
+    this.activeFilterCount++;
+    logEvent('occlusion', `dir:${direction} relAz:${relAz.toFixed(0)} → LPF:${f.frequency.value.toFixed(0)}Hz gain:${gainMul.toFixed(2)}`);
+    return { filter: f, gainMul };
+  }
+
+  /** Called when a source with occlusion filters ends. */
+  releaseFilters(count) {
+    this.activeFilterCount = Math.max(0, this.activeFilterCount - count);
+  }
+
+  update(worldState, dt) {
+    // Occlusion is geometry-based, not weather-dependent.
+    // Future: could modulate window open/closed state from worldState.
+  }
+
+  getLevel() {
+    return Math.min(this.activeFilterCount / 10, 1.0);
+  }
+
+  getStatus() {
+    if (!this.enabled) return 'off';
+    return this.activeFilterCount > 0
+      ? `${this.activeFilterCount} active` : 'idle';
+  }
+
+  panic() { /* Filters are owned by source nodes — no-op */ }
+  resume() {}
+  dispose() { this.activeFilterCount = 0; }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  ENGINE LIFECYCLE
 // ═══════════════════════════════════════════════════════════════
 
@@ -1671,6 +1887,12 @@ async function startEngine() {
   directionalLayer = new DirectionalBedsLayer(ctx, masterGain, profile, buffers);
   microEventScheduler = new MicroEventScheduler(ctx, masterGain, profile, buffers);
   weatherLayer = new WeatherLayer(ctx, masterGain, profile, buffers);
+
+  // Layer 5: Occlusion processor (building-edge diffraction, room LPF, urban canyon)
+  occlusionLayer = new OcclusionProcessor(ctx, profile);
+  occlusionLayer.start();
+  directionalLayer.applyOcclusion(occlusionLayer);
+  microEventScheduler.setOcclusionLayer(occlusionLayer);
 
   microEventScheduler.setMode(currentMode);
 
@@ -1703,11 +1925,13 @@ function stopEngine() {
   directionalLayer?.dispose();
   microEventScheduler?.dispose();
   weatherLayer?.dispose();
+  occlusionLayer?.dispose();
 
   baseBedLayer = null;
   directionalLayer = null;
   microEventScheduler = null;
   weatherLayer = null;
+  occlusionLayer = null;
 
   btnStart.textContent = 'Start';
   btnStart.classList.remove('active');
@@ -1765,6 +1989,20 @@ function updateMeters() {
   setMeter('dir', directionalLayer?.getLevel() ?? 0);
   setMeter('events', microEventScheduler?.getLevel() ?? 0);
   setMeter('weather', weatherLayer?.getLevel() ?? 0);
+
+  // Layer 5: Occlusion uses filter count instead of audio level
+  if (occlusionLayer) {
+    const m = layerMeters.occlusion;
+    if (m) {
+      const count = occlusionLayer.activeFilterCount;
+      m.meter.style.width = clamp(count * 8, 0, 100) + '%';
+      m.meter.classList.toggle('live', running && count > 0);
+      m.status.textContent = occlusionLayer.getStatus();
+    }
+  } else {
+    const m = layerMeters.occlusion;
+    if (m) m.status.textContent = 'off';
+  }
 }
 
 function showStates(states) {
@@ -1794,6 +2032,7 @@ function engagePanic() {
   directionalLayer?.panic();
   microEventScheduler?.panic();
   weatherLayer?.panic();
+  occlusionLayer?.panic();
   logEvent('PANIC', 'engaged');
 }
 

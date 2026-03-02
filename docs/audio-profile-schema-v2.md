@@ -21,14 +21,25 @@ Historical context for the soundscape.
 | `confidence` | number | 0-1, how historically certain the soundscape is |
 
 ### `listener`
-Describes the listener's physical position in the scene.
+Describes the listener's physical position in the scene. **Required for occlusion (Layer 5).** The occlusion processor derives all spectral shaping from these fields — without them, Layer 5 is disabled and all sounds arrive unfiltered.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `position` | string | Human-readable description |
-| `elevation` | number | Meters above street level |
-| `facing` | string | Default listener orientation (cardinal direction) |
-| `enclosure` | string | Acoustic context: `open_window`, `porch`, `street`, `indoor` |
+| `elevation` | number | Meters above street level. Drives building-edge diffraction — sources below the listener get HF attenuation |
+| `facing` | string | Cardinal direction the listener faces (N/E/S/W). **Determines what's "behind the wall" vs "out the window."** Directional beds opposite to facing get heavy room LPF |
+| `enclosure` | string | Acoustic context — see table below |
+
+**Enclosure types and their occlusion behavior:**
+
+| Enclosure | Description | Occlusion Effects |
+|-----------|-------------|-------------------|
+| `open_window` | Listener at an open window (e.g., 2nd floor brownstone) | Building-edge diffraction (below), room LPF (behind), urban canyon (far) |
+| `indoor` | Fully enclosed room with closed windows | Room LPF only (all exterior sounds filtered by walls). No edge diffraction |
+| `porch` | Covered but open-sided space (veranda, stoop) | No occlusion — open to all directions |
+| `street` | Standing at street level, no enclosure | No occlusion — open air |
+
+For any new locale, you must define `facing` and `enclosure` to get occlusion. Think: "Where is the opening, and which way does it point?" A trailer with a door facing south would use `facing: "S"`, `enclosure: "indoor"` (closed) or `"open_window"` (door open).
 
 ### `spatialConfig`
 Target spatial rendering configuration.
@@ -43,8 +54,8 @@ Metadata for the AI audio generation pipeline.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `status` | string | `pending`, `generated`, `recorded`, `mixed` |
-| `generator` | string/null | AI service used (future: `elevenlabs`, `udio`, `custom`) |
+| `status` | string | `pending`, `complete`, `recorded`, `mixed` |
+| `generator` | string/null | AI service used: `elevenlabs` (primary), `udio`, `custom`, or null (Freesound/recorded) |
 | `promptContext` | string | Historical description for AI generation prompt |
 
 ## Spatial Object Fields

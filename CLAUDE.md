@@ -29,7 +29,8 @@ Set environment variables for providers:
 ```bash
 export VISUALCROSSING_API_KEY="your-key"    # Visual Crossing ($35/mo, no rate limits)
 export NOAA_API_TOKEN="your-token"          # NOAA Climate Data Online (free, daily back to 1800s)
-export FREESOUND_API_KEY="your-key"         # Freesound (free, for audio asset fetching)
+export ELEVENLABS_API_KEY="your-key"        # ElevenLabs (preferred, AI sound effects generation)
+export FREESOUND_API_KEY="your-key"         # Freesound (legacy, CC-licensed audio search)
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo. Use `--provider visualcrossing`, `--provider openmeteo`, or `--provider noaa` to force a specific provider.
@@ -268,14 +269,16 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **audio-profiles/*.json** - AudioProfile presets defining all sound assets and scheduling rules for a locale/era. Served at `/audio-profiles/:id`. Two schema versions:
   - **v1** (`baton_rouge_suburb_1978`): Stereo pan positions, basic scheduling. No spatial metadata.
   - **v2** (`nyc_city_1884`, `schemaVersion: 2`): Full HRTF spatial metadata per source (azimuth, elevation, distance), listener position/enclosure/facing, motion paths with doppler factors, surface types for reverb sends, IR profile for convolution reverb. See `docs/audio-profile-schema-v2.md` for full spec.
-- **audio-assets/{profile_id}/** - Downloaded audio files (MP3) served at `/audio-assets/*`. Gitignored (large binaries). Regenerate with `tools/freesound-fetch.js`.
+- **audio-assets/{profile_id}/** - Downloaded/generated audio files (MP3) served at `/audio-assets/*`. Gitignored (large binaries). Regenerate with `tools/elevenlabs-fetch.js` (preferred) or `tools/freesound-fetch.js` (legacy).
 
 ### Route Configs
 - **routes.json** - Production routes config for the 1884 NYC scene. 14 Unreal routes (sun position, fog, clouds, wind, precipitation, ground wetness, heat haze, sky light), 3 DSP routes, 3 lighting routes. All actor objectPaths verified against live Unreal scene.
 - **routes.example.json** - Annotated example routes config showing all transform types and actor dispatch configurations.
 
 ### Tools
-- **tools/freesound-fetch.js** - Freesound API asset fetcher. Searches for sounds matching each label in an audio profile, downloads HQ MP3 previews, updates the profile JSON to use local URLs, and writes an ATTRIBUTION.md. Requires `FREESOUND_API_KEY` env var. Usage: `FREESOUND_API_KEY=xxx ./tools/freesound-fetch.js audio-profiles/baton_rouge_suburb_1978.json`
+- **tools/elevenlabs-fetch.js** - **Primary audio asset generator.** Uses ElevenLabs Text-to-Sound Effects API to generate era-appropriate audio from text prompts. Prompts are built from profile context (era, description, surface, motion) — no anachronism risk. Generates MP3 at 44.1kHz/128kbps, writes a GENERATION_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only beds|micro|weather] [--force]`
+- **tools/freesound-fetch.js** - Legacy Freesound API asset fetcher. Searches for CC-licensed sounds by label keyword, downloads preview MP3s. Lower quality than ElevenLabs, prone to era mismatches (modern traffic in historical profiles). Still useful for natural recordings (birds, weather) where recorded audio may be preferred. Requires `FREESOUND_API_KEY` env var.
+- **tools/era-audit.js** - Era validation tool. Scans audio profile attributions for anachronistic sounds that don't belong in the target era. Checks Freesound source descriptions against year-threshold keyword patterns. Usage: `./tools/era-audit.js audio-profiles/nyc_city_1884.json`
 - **tools/spawn-greybox.js** - Unreal scene spawner for the 1884 NYC greybox. Spawns 12 brownstone blocks (2 rows of 6 scaled cubes), 4 gas lamp PointLights, and moves PlayerStart to 2nd floor listener position. Uses Unreal Remote Control API directly for objectPath-based actor configuration. Usage: `node tools/spawn-greybox.js [--host http://localhost:30010]`
 
 ### Extended Audio Controls (WorldState)
