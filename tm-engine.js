@@ -21,6 +21,7 @@ import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
 import { DEFAULT_LOCALE } from './lib/localePresets.js';
 import { getApiKey as getVCKey } from './lib/visualcrossing.js';
+import { getApiKey as getNOAAKey } from './lib/noaa.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -265,7 +266,7 @@ async function main() {
   console.log(`[Engine] Initializing...`);
   console.log(`[Engine] Location: ${args.location}`);
   console.log(`[Engine] Time scale: ${args.timescale}x`);
-  const providerName = args.mock ? 'mock' : args.provider === 'visualcrossing' ? 'Visual Crossing' : args.provider === 'openmeteo' ? 'Open-Meteo' : (getVCKey() ? 'Visual Crossing (auto)' : 'Open-Meteo (auto)');
+  const providerName = args.mock ? 'mock' : args.provider === 'visualcrossing' ? 'Visual Crossing' : args.provider === 'openmeteo' ? 'Open-Meteo' : args.provider === 'noaa' ? 'NOAA GHCN-Daily' : (getNOAAKey() ? 'NOAA (auto, pre-1940)' : getVCKey() ? 'Visual Crossing (auto)' : 'Open-Meteo (auto)');
   console.log(`[Engine] Weather provider: ${providerName}`);
   if (quiet) console.log(`[Engine] Quiet mode — only violations will be printed`);
   if (args.overnight) console.log(`[Engine] Overnight soak mode — summary on exit`);

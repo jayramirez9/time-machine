@@ -51,10 +51,10 @@ function parseArgs(args) {
     } else if (arg === '--provider') {
       const value = args[++i];
       if (!value || value.startsWith('-')) {
-        errors.push('--provider requires a value: auto, visualcrossing, or openmeteo');
+        errors.push('--provider requires a value: auto, visualcrossing, openmeteo, or noaa');
         i--;
-      } else if (!['auto', 'visualcrossing', 'openmeteo'].includes(value)) {
-        errors.push(`Invalid provider "${value}". Must be: auto, visualcrossing, or openmeteo`);
+      } else if (!['auto', 'visualcrossing', 'openmeteo', 'noaa'].includes(value)) {
+        errors.push(`Invalid provider "${value}". Must be: auto, visualcrossing, openmeteo, or noaa`);
       } else {
         parsed.provider = value;
       }
@@ -99,14 +99,15 @@ Options:
                    Defaults to current date/time if not specified
   --mode           Output mode: raw, timeline, or world (default: raw)
   --locale         Locale preset for environment tuning (default: baton_rouge_suburb)
-  --provider       Weather provider: auto, visualcrossing, or openmeteo (default: auto)
+  --provider       Weather provider: auto, visualcrossing, openmeteo, or noaa (default: auto)
   -m, --mock       Use mock weather provider (offline/testing)
   -h, --help       Show this help message
 
 Weather Providers:
-  auto (default)   Visual Crossing if VISUALCROSSING_API_KEY is set, else Open-Meteo
+  auto (default)   Pre-1940: NOAA if token set. 1940+: Visual Crossing if key set, else Open-Meteo
   visualcrossing   Paid API, hourly data back to ~1970 (requires API key)
   openmeteo        Free API, historical data from 1940 to present
+  noaa             NOAA GHCN-Daily, daily data back to 1800s (requires NOAA_API_TOKEN)
 
 Examples:
   ./cli.js -l "Baton Rouge, LA" -d "07-04-1978"               # Raw weather
@@ -333,7 +334,7 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
     return;
   }
 
-  const { fn: weatherFn } = selectProvider(provider, useMock);
+  const { fn: weatherFn } = selectProvider(provider, useMock, date);
   const weather = await weatherFn({ location, date, geo });
   console.log(formatWeather(weather));
 }
