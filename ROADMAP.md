@@ -31,9 +31,9 @@ Living document. Phases are sequential but items within a phase are not prioriti
 
 ## Phase 2.5 — Immersion Polish (NEXT)
 
-- [ ] **Occlusion layer (Layer 5)**: Building-edge diffraction for street sounds below listener, room LPF for sounds behind, distance-dependent urban canyon filter. The listener is at a 2nd floor open window — this is the last missing psychoacoustic cue. Plan complete, ready to implement.
+- [x] **Occlusion layer (Layer 5)**: Building-edge diffraction for street sounds below listener, room LPF for sounds behind, distance-dependent urban canyon filter. 3 stacking effects, directional bed filtering, per-source filter lifecycle.
 - [ ] **Real convolution IRs**: Source recorded impulse responses from OpenAIR or similar. A narrow stone street IR would replace the synthetic approximation for spatial scale accuracy.
-- [ ] **AI voice generation**: Period-appropriate vendor calls, newsboy cries, conversation fragments via ElevenLabs Speech API. Replace generic SFX one-shots for the 8 human micro-events (vendor_oyster, vendor_ice, newsboy, lamplighter, watchman_whistle, etc.) with actual spoken phrases.
+- [x] **AI voice generation**: Period-appropriate vendor calls, newsboy cries, children's shouts via ElevenLabs Text-to-Speech API. 12 voice clips across 5 events (newsboy, vendor_oyster, vendor_ice, vendor_hotcorn, children_play). Voice clips added as additional sources alongside SFX — engine bag-draw naturally mixes them. `voiceConfig` block with 4 voice profiles, per-event `phrases` arrays, auto-selected voice IDs cached in profile. Tool: `tools/elevenlabs-voice-fetch.js`.
 - [ ] **Doppler + reverb tuning pass**: Listening session to dial dopplerFactors, reverb send levels, IR decay times, and surface coefficients by ear.
 - [ ] **Unreal scene art pass**: Materials (brownstone brick, granite sett, cast iron), window geometry, stoops, awnings, period signage. Marketplace assets or custom modeling.
 - [ ] **Gas lamp light configuration**: Set warm color temperature (2200K), intensity, and attenuation on the 4 PointLight actors once Unreal is back up.

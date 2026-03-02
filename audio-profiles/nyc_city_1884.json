@@ -23,6 +23,42 @@
     "generator": "elevenlabs",
     "promptContext": "Immersive soundscape of Lower Manhattan in summer 1884. Belgian block granite sett streets, horse-drawn vehicles (carts, hansom cabs, omnibuses), elevated steam railway on nearby avenue, street vendor cries (oysters, ice, hot corn), church bells, East River ferry whistles and harbor foghorns, blacksmith shops, children playing, pigeons. No motorized vehicles, no electric sounds, no subway. Gas-lit at night."
   },
+  "voiceConfig": {
+    "voices": {
+      "newsboy": {
+        "voiceId": "SOYHLrjzK2X1ezoPC6cr",
+        "description": "Young male, 12-14 years old, energetic, slight New York accent",
+        "settings": {
+          "stability": 0.3,
+          "similarity_boost": 0.75
+        }
+      },
+      "vendor_male": {
+        "voiceId": "N2lVS1w4EtoT3dr4eOWO",
+        "description": "Middle-aged male, working class, gruff New York accent",
+        "settings": {
+          "stability": 0.35,
+          "similarity_boost": 0.7
+        }
+      },
+      "vendor_female": {
+        "voiceId": "SAz9YHcvj6GT2YYXdXww",
+        "description": "Middle-aged female, working class, loud and clear",
+        "settings": {
+          "stability": 0.35,
+          "similarity_boost": 0.7
+        }
+      },
+      "children": {
+        "voiceId": "SOYHLrjzK2X1ezoPC6cr",
+        "description": "Young child, 8-10 years old, playful, shouting",
+        "settings": {
+          "stability": 0.25,
+          "similarity_boost": 0.6
+        }
+      }
+    }
+  },
   "beds": {
     "base": {
       "sources": [
@@ -400,6 +436,12 @@
     {
       "id": "newsboy",
       "description": "\"Extra! Extra!\" — newsboy hawking papers on the corner",
+      "voice": "newsboy",
+      "phrases": [
+        "Extra! Extra! Read all about it!",
+        "Paper! Get your morning paper!",
+        "Extra! Brooklyn Bridge scandal! Read all about it!"
+      ],
       "sources": [
         {
           "label": "newsboy-1",
@@ -414,6 +456,27 @@
           "license": "elevenlabs-generated",
           "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking pape\"",
           "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: \"Extra! Extra!\" — newsboy hawking papers on the corner. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
+        },
+        {
+          "label": "newsboy-voice-1",
+          "url": "/audio-assets/nyc_city_1884/newsboy-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Extra! Extra! Read all about it!\"",
+          "generatedPhrase": "Extra! Extra! Read all about it!"
+        },
+        {
+          "label": "newsboy-voice-2",
+          "url": "/audio-assets/nyc_city_1884/newsboy-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Paper! Get your morning paper!\"",
+          "generatedPhrase": "Paper! Get your morning paper!"
+        },
+        {
+          "label": "newsboy-voice-3",
+          "url": "/audio-assets/nyc_city_1884/newsboy-voice-3.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Extra! Brooklyn Bridge scandal! Read all about it!\"",
+          "generatedPhrase": "Extra! Brooklyn Bridge scandal! Read all about it!"
         }
       ],
       "avgCooldownSec": 35,
@@ -439,6 +502,11 @@
     {
       "id": "vendor_oyster",
       "description": "Oyster vendor cry — \"Here's your fine oysters!\"",
+      "voice": "vendor_male",
+      "phrases": [
+        "Fresh oysters! Rockaway oysters!",
+        "Oysters! Here's your fine fresh oysters!"
+      ],
       "sources": [
         {
           "label": "vendor-oyster-1",
@@ -446,6 +514,20 @@
           "license": "elevenlabs-generated",
           "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Oyster vendor cry — \"Here's your fine \"",
           "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Oyster vendor cry — \"Here's your fine oysters!\". Movement: approach — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
+        },
+        {
+          "label": "vendor_oyster-voice-1",
+          "url": "/audio-assets/nyc_city_1884/vendor_oyster-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Fresh oysters! Rockaway oysters!\"",
+          "generatedPhrase": "Fresh oysters! Rockaway oysters!"
+        },
+        {
+          "label": "vendor_oyster-voice-2",
+          "url": "/audio-assets/nyc_city_1884/vendor_oyster-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Oysters! Here's your fine fresh oysters!\"",
+          "generatedPhrase": "Oysters! Here's your fine fresh oysters!"
         }
       ],
       "avgCooldownSec": 60,
@@ -475,6 +557,11 @@
     {
       "id": "vendor_ice",
       "description": "Ice cart — bell ringing, \"ICE!\" cry, horse slow-walking",
+      "voice": "vendor_male",
+      "phrases": [
+        "Ice! Ice!",
+        "Ice man! Get your ice!"
+      ],
       "sources": [
         {
           "label": "vendor-ice-1",
@@ -482,6 +569,20 @@
           "license": "elevenlabs-generated",
           "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Ice cart — bell ringing, \"ICE!\" cry, h\"",
           "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Ice cart — bell ringing, \"ICE!\" cry, horse slow-walking. Surface material: granite_sett. Movement: passby — sound passes by the listener. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
+        },
+        {
+          "label": "vendor_ice-voice-1",
+          "url": "/audio-assets/nyc_city_1884/vendor_ice-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Ice! Ice!\"",
+          "generatedPhrase": "Ice! Ice!"
+        },
+        {
+          "label": "vendor_ice-voice-2",
+          "url": "/audio-assets/nyc_city_1884/vendor_ice-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Ice man! Get your ice!\"",
+          "generatedPhrase": "Ice man! Get your ice!"
         }
       ],
       "avgCooldownSec": 80,
@@ -512,6 +613,11 @@
     {
       "id": "vendor_hotcorn",
       "description": "\"Hot corn! Hot corn!\" — street seller with basket",
+      "voice": "vendor_female",
+      "phrases": [
+        "Hot corn! Hot corn! Here's your lily-white hot corn!",
+        "Hot corn! Piping hot!"
+      ],
       "sources": [
         {
           "label": "vendor-hotcorn-1",
@@ -519,6 +625,20 @@
           "license": "elevenlabs-generated",
           "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: \"Hot corn! Hot corn!\" — street seller \"",
           "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: \"Hot corn! Hot corn!\" — street seller with basket. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
+        },
+        {
+          "label": "vendor_hotcorn-voice-1",
+          "url": "/audio-assets/nyc_city_1884/vendor_hotcorn-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Hot corn! Hot corn! Here's your lily-white hot corn!\"",
+          "generatedPhrase": "Hot corn! Hot corn! Here's your lily-white hot corn!"
+        },
+        {
+          "label": "vendor_hotcorn-voice-2",
+          "url": "/audio-assets/nyc_city_1884/vendor_hotcorn-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Hot corn! Piping hot!\"",
+          "generatedPhrase": "Hot corn! Piping hot!"
         }
       ],
       "avgCooldownSec": 70,
@@ -686,6 +806,12 @@
     {
       "id": "children_play",
       "description": "Children playing in the street — shouting, running on stone",
+      "voice": "children",
+      "phrases": [
+        "Tag! You're it!",
+        "Come on! Over here!",
+        "Catch me!"
+      ],
       "sources": [
         {
           "url": "/audio-assets/nyc_city_1884/children-play-1.mp3",
@@ -700,6 +826,27 @@
           "license": "elevenlabs-generated",
           "attribution": "ElevenLabs SFX: \"Gilded Age era, circa 1884. Sound effect: Children playing in the street — shout\"",
           "generatedPrompt": "Gilded Age era, circa 1884. Sound effect: Children playing in the street — shouting, running on stone. Surface material: granite_sett. No motors, engines, cars, electricity, or modern sounds. Pre-industrial."
+        },
+        {
+          "label": "children_play-voice-1",
+          "url": "/audio-assets/nyc_city_1884/children_play-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Tag! You're it!\"",
+          "generatedPhrase": "Tag! You're it!"
+        },
+        {
+          "label": "children_play-voice-2",
+          "url": "/audio-assets/nyc_city_1884/children_play-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Come on! Over here!\"",
+          "generatedPhrase": "Come on! Over here!"
+        },
+        {
+          "label": "children_play-voice-3",
+          "url": "/audio-assets/nyc_city_1884/children_play-voice-3.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Catch me!\"",
+          "generatedPhrase": "Catch me!"
         }
       ],
       "avgCooldownSec": 30,
