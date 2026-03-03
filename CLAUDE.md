@@ -31,6 +31,8 @@ export VISUALCROSSING_API_KEY="your-key"    # Visual Crossing ($35/mo, no rate l
 export NOAA_API_TOKEN="your-token"          # NOAA Climate Data Online (free, daily back to 1800s)
 export ELEVENLABS_API_KEY="your-key"        # ElevenLabs (preferred, AI sound effects generation)
 export FREESOUND_API_KEY="your-key"         # Freesound (legacy, CC-licensed audio search)
+export GEMINI_API_KEY="your-key"            # Google AI Studio (Gemini image generation)
+export UNREAL_CONTENT_DIR="/path/to/UE/Content" # Unreal project Content folder (for backdrop push)
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo. Use `--provider visualcrossing`, `--provider openmeteo`, or `--provider noaa` to force a specific provider.
@@ -134,6 +136,7 @@ The `unreal` transport supports multiple actor dispatch types configured in the 
 - `landscape_scalar` — calls `SetLandscapeMaterialScalarParameterValue` on a Landscape actor (used for ground wetness)
 - `postprocess` — writes Settings struct properties on a PostProcessVolume with auto-override (used for heat haze)
 - `call` — arbitrary function call on an actor
+- `texture` — imports a texture from disk into Unreal Content and assigns it to a MaterialInstance parameter (used for AI-generated backdrop)
 
 ### Rate Limiter
 
@@ -204,6 +207,8 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 | `GET /api/status` | Engine status JSON (running, location, simTime, timescale) |
 | `GET /api/locales` | Available locale presets |
 | `POST /api/launch` | Stop engine, start new one with `{location, date, timescale, provider}` |
+| `POST /api/generate-image` | Generate historical scene image via Gemini (requires `GEMINI_API_KEY`) |
+| `POST /api/push-backdrop` | Push generated image to Unreal as backdrop texture (requires `UNREAL_CONTENT_DIR`) |
 | `WebSocket /` or `/stream` | Push updates every 5 seconds |
 | `GET /audio-engine` | Full 5-layer audio engine with audition panel (PRD Section 13) |
 | `GET /audio` | Alias for `/audio-engine` |
