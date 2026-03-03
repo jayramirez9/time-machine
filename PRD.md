@@ -310,7 +310,24 @@ If we can't verify:
 * Default to generic ambience without specific brand/media references
 * Reduce specificity rather than introduce inaccuracies
 
-### 14.5 Authenticity QA (Required)
+### 14.5 Period Music System
+
+Music is date-locked to the exact WorldState date — not the year, the day. If the simulation is July 4, 1978, no recording released after July 3, 1978 may play. This is a hard constraint enforced by the system, not a guideline.
+
+The system uses a two-layer architecture:
+
+**Date Authority Layer** — Determines what music is eligible. Uses MusicBrainz (open music metadata database with exact release dates and Lucene-based date range queries) as the primary source of truth. Given a WorldState date, location, and locale context, produces a set of valid recording identifiers (MusicBrainz IDs + ISRCs). This layer enforces:
+
+* **Hard date cutoff:** No recording with a release date after the WorldState date. Recordings without a verified release date are excluded (Silence Over Wrongness).
+* **Geographic availability:** Was this record available in this market at this time? A 1978 Japanese pressing that never reached US shelves doesn't play on a Baton Rouge radio.
+* **Contextual filtering:** What would actually be heard in this locale? Genre, format (AM/FM radio, jukebox, street performer repertoire), and cultural context narrow the pool. A 1978 Baton Rouge afternoon skews Southern rock, R&B, country, gospel — not London punk.
+* **Pre-recording era handling:** For dates before commercial recordings (~pre-1890), the music layer shifts to sheet music catalogs, known performer repertoires, and instrument-appropriate selections (barrel organ cylinders, brass band standards, parlor piano). These are curated, not streamed.
+
+**Playback Layer** — Resolves validated recording identifiers to a streaming service for actual audio playback. Spotify and Apple Music both support ISRC-based lookup. This layer handles authentication, playback control, and streaming service abstraction. The playback layer is swappable — the date authority is the product, the streaming service is a commodity.
+
+The music system adds a `musicRadio` control to WorldState, driven by the locale preset. This control specifies format (radio station format, jukebox, street performer, none), genre weights, and whether music is diegetic (coming from a radio in the scene) or non-diegetic (ambient underscore). For the fixed-room installation, diegetic radio is the primary mode — the music comes from "a radio in the next room" or "a passing car." For headset experiences, spatial positioning anchors the music source in the world.
+
+### 14.6 Authenticity QA (Required)
 
 Every historical preset ships with an Accuracy Manifest:
 
@@ -320,6 +337,7 @@ Every historical preset ships with an Accuracy Manifest:
 * Slang/lexicon set + citations/source notes (internal)
 * Brand/product list + availability rationale (internal)
 * Audio source taxonomy (what types exist and why)
+* Music catalog: date cutoff, genre weights, format, source database, known gaps
 * Known compromises (explicitly listed)
 
 ## 15) Presets and Content
@@ -333,6 +351,7 @@ A WorldPreset includes:
 * Weather mode config (live/historical/curated)
 * Activity density parameters
 * AudioProfile (layer rules, directional sources map, event scheduler config)
+* MusicProfile (format, genre weights, date authority source, playback config)
 * Optional narrative script (timed transitions)
 * Accuracy Manifest (for historical presets)
 
@@ -401,7 +420,8 @@ Time Machine is a layered system. Each layer can be built and tested independent
 ┌──────────────────────┴──────────────────────────────────┐
 │                  DATA SOURCES                            │
 │  NOAA │ Open-Meteo │ Sanborn Maps │ NYPL │ LOC │        │
-│  Audubon │ Census │ Photo Archives │ Sheet Music         │
+│  Audubon │ Census │ Photo Archives │ Sheet Music │       │
+│  MusicBrainz │ Spotify │ Apple Music                     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -421,7 +441,8 @@ An Environment Profile is the complete description of a place at a moment in his
 | **Soundscape** | Audio profile: beds, directional, micro-events, weather sounds | Horse hooves on cobblestone, barrel organs, house sparrows |
 | **Urban Form** | Physical environment: buildings, streets, infrastructure | Sanborn maps → block massing, brownstone facades, gas lamps |
 | **Ecology** | Flora and fauna present at that place/time/season | Audubon records → species pools with seasonal/diurnal weights |
-| **Culture** | Music, language, commerce, social patterns | Published song catalogs, slang dictionaries, newspaper archives |
+| **Culture** | Language, commerce, social patterns | Slang dictionaries, newspaper archives, brand availability |
+| **Music** | Date-locked music catalog, format, genre context | MusicBrainz catalog filtered to exact date + locale; barrel organ repertoire (pre-recording era) |
 | **Materials** | Surface types that affect sound and visual character | Cobblestone, dirt, granite flagstone, wood plank, brick |
 | **Infrastructure** | Technology present: lighting type, transport, utilities | Gas street lamps (electric only on Broadway below 14th), elevated railway, horse-drawn carriages |
 
@@ -620,6 +641,24 @@ Working and tested:
 
 ---
 
+### Phase 4.5 — Period Music Streaming
+
+**Goal:** Turn on the radio and only hear music that existed on this exact day. Date-locked music playback driven by WorldState.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 4.5.1 | MusicBrainz date authority module | `lib/musicCatalog.js` — given a date, location, and genre context, queries MusicBrainz for recordings released on or before that date. Returns MusicBrainz IDs + ISRCs. Handles missing release dates (exclude), date-only vs full-precision dates, and regional release filtering |
+| 4.5.2 | Locale music profile schema | Add `musicProfile` to locale presets: radio format (AM Top 40, FM album rock, jukebox, street performer, none), genre weights, era-appropriate station identity (call letters, DJ style), diegetic vs non-diegetic mode |
+| 4.5.3 | `musicRadio` WorldState control | New control in WorldState compiler driven by locale preset + time-of-day. Output: current genre weight, format, whether music should be playing (e.g., radio off at 3am in a residential neighborhood) |
+| 4.5.4 | Streaming playback adapter | Thin adapter that resolves ISRCs to Spotify (or Apple Music) track URIs and controls playback. Handles auth, track queue, crossfade. Swappable backend behind a common interface |
+| 4.5.5 | Radio station simulation | Playback sequencing that feels like a radio station: song selection from the date-filtered pool weighted by popularity/genre, gaps between songs, era-appropriate DJ patter cadence (not generated speech — just timing and silence patterns) |
+| 4.5.6 | Pre-recording era music | For pre-~1890 dates: curated catalog of period-appropriate compositions. Barrel organ MIDI renderings, brass band recordings of era standards, parlor piano. Locally stored assets, not streamed. Integrated into the same `musicRadio` control |
+| 4.5.7 | Baton Rouge 1978 music test | Full integration test: run the daemon for July 4, 1978 Baton Rouge. Radio plays songs released before that date. No disco from Saturday Night Fever soundtrack (Dec 1977 — OK). No Grease soundtrack (April 1978 — OK). No "Don't Stop Me Now" by Queen (Jan 1979 — blocked). Verify 20+ song transitions with zero date violations |
+
+**Exit Criteria:** Start a session. A radio is playing somewhere in the world. Every song on it was released before the WorldState date. Switch to 1884 NYC — the radio disappears, replaced by a barrel organ playing tunes from published 1880s sheet music catalogs. The date rule is absolute and automated. No manual curation required for the hard cutoff — only for genre/format taste.
+
+---
+
 ### Phase 5 — Historical Urban Form
 
 **Goal:** The 3D world looks like 1884, not just sounds like it.
@@ -678,16 +717,16 @@ Working and tested:
 ### Milestone Map
 
 ```
-TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 ─── Phase 4 ─── Phase 5 ─── Phase 6 ─── Phase 7
-          Weather      Audio+       Multi-       Pre-1940     Era          Urban        Agent        Living
-          Loop         Visual       Window       Weather      Soundscapes  Form         Layer        Street
-          (Unreal)     Coherence    + Spatial                                                        View
-          ▲                                      ▲                                     ▲
-          YOU ARE                                 1884 weather                          Autonomous
-          HERE                                   becomes real                          research
+TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 ─── Phase 4 ── Phase 4.5 ── Phase 5 ─── Phase 6 ─── Phase 7
+          Weather      Audio+       Multi-       Pre-1940     Era        Period        Urban        Agent        Living
+          Loop         Visual       Window       Weather      Sound-     Music         Form         Layer        Street
+          (Unreal)     Coherence    + Spatial                 scapes     Streaming                               View
+          ▲                                      ▲                      ▲                          ▲
+          YOU ARE                                 1884 weather           Date-locked                Autonomous
+          HERE                                   becomes real           radio                      research
 ```
 
-Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 5-6 makes it visual. Phase 7 is the dream state.
+Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 4.5 adds period music. Phase 5-6 makes it visual. Phase 7 is the dream state.
 
 ## 22) The Agent-Driven Research Model
 
@@ -701,7 +740,7 @@ AI agents change this equation. The research model works like this:
 2. **The Weather Agent** queries NOAA GHCN-Daily for Central Park station records. Finds daily high/low/precip for every day of 1884. Reconstructs hourly curves using solar position models. Outputs a weather provider config.
 3. **The Ecology Agent** queries historical ornithological surveys of the NYC region. Cross-references Audubon Society records, early Central Park bird censuses, and seasonal migration data. Outputs species pools: house sparrow (year-round, high frequency), American robin (spring-fall, dawn-weighted), chimney swift (summer, dusk), etc.
 4. **The Urban Form Agent** locates the Robinson Atlas of NYC (1885) and Sanborn fire insurance maps. Extracts block-level building footprints, heights, materials, use-types. Cross-references with city records for street surface types. Outputs a GIS dataset.
-5. **The Cultural Agent** researches 1884 NYC: published song catalogs (what a barrel organ would play), newspaper archives (street vendor calls, social customs), infrastructure records (which streets had gas lamps, the elevated railway schedule, horse car routes). Outputs cultural metadata.
+5. **The Cultural Agent** researches 1884 NYC: newspaper archives (street vendor calls, social customs), infrastructure records (which streets had gas lamps, the elevated railway schedule, horse car routes). Outputs cultural metadata. For the music dimension, queries MusicBrainz for recordings available at the target date and cross-references published song catalogs (pre-recording era) to build a date-locked music profile.
 6. **The Photo Agent** searches NYPL Digital Collections, Library of Congress, Museum of the City of New York. Finds stereographs of Broadway, photos of Trinity Church, illustrations of the elevated railway. Tags each with location, date, viewing angle. Outputs a reference image set.
 7. **The Assembler** combines all agent outputs into a single Environment Profile. Generates the Accuracy Manifest: what's verified, what's interpolated, what's missing. A human reviews and approves.
 
@@ -747,5 +786,7 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 2. **Sanborn map parsing:** What's the realistic pipeline from scanned Sanborn pages to GIS building footprints?
 3. **Historical ecology data:** How complete are pre-1900 species records for major US cities?
 4. **AI texture generation:** Current state of the art for photo→PBR texture extraction from a single historical image?
+5. **MusicBrainz date precision:** How complete are exact release dates (day-level) for US releases in the 1970s-80s? What percentage are year-only vs month vs exact day? How does coverage degrade for pre-1950 recordings?
+6. **Streaming API ISRC resolution:** What percentage of MusicBrainz ISRCs resolve to playable tracks on Spotify vs Apple Music? Are there rate limits or licensing gaps that would block a "radio station" use case with continuous playback?
 
 Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.

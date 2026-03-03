@@ -21,54 +21,17 @@
 
 import { readFile } from 'fs/promises';
 import { basename } from 'path';
+import { getAuditPatterns } from '../lib/eraData.js';
 
-// ── Anachronism keyword sets by era boundary ─────────────────
-
-const ERA_KEYWORDS = {
-  // Things that didn't exist before ~1890
-  pre1890: [
-    'car', 'automobile', 'motor', 'engine', 'truck', 'bus ',
-    'taxi', 'siren', 'horn honk', 'traffic light',
-    'airplane', 'aeroplane', 'jet', 'helicopter',
-    'electric', 'amplifier', 'speaker', 'radio', 'television', 'tv ',
-    'telephone ring', 'cell phone', 'mobile',
-    'air condition', 'hvac', 'generator',
-    'plastic', 'neon', 'synthesizer',
-    'subway', 'metro ',    // NYC subway opened 1904
-    'bicycle bell',        // existed but uncommon before 1890s
-  ],
-  // Things that didn't exist before ~1920
-  pre1920: [
-    'car', 'automobile', 'truck', 'bus ',
-    'airplane', 'aeroplane', 'jet', 'helicopter',
-    'radio', 'television', 'amplifier', 'speaker',
-    'air condition', 'hvac',
-    'neon', 'synthesizer',
-  ],
-  // Things that didn't exist before ~1950
-  pre1950: [
-    'jet', 'helicopter', 'television', 'tv ',
-    'synthesizer', 'cell phone', 'mobile phone',
-    'air condition', 'hvac',
-    'neon sign',
-  ],
-};
-
-// Context-sensitive keywords that need the full phrase, not just substring
+// ── Supplementary context keywords ──────────────────────────
+// These catch broad recording-context clues that the shared anachronisms
+// list doesn't cover (e.g., "urban street" likely contains modern sounds).
 const CONTEXT_KEYWORDS = [
   { pattern: /\btraffic\b/i, flag: 'modern traffic (cars)', threshold: 1900 },
   { pattern: /\burban street\b/i, flag: 'likely modern urban recording', threshold: 1900 },
   { pattern: /\bcity life\b/i, flag: 'likely modern city recording', threshold: 1900 },
   { pattern: /\bcity street\b/i, flag: 'likely modern city recording', threshold: 1900 },
-  { pattern: /\bengine\b/i, flag: 'engine sounds', threshold: 1885 },
-  { pattern: /\bmotor\b/i, flag: 'motor sounds', threshold: 1890 },
-  { pattern: /\bcar\b/i, flag: 'automobile', threshold: 1900 },
-  { pattern: /\bsiren\b/i, flag: 'modern siren', threshold: 1900 },
-  { pattern: /\bhonk/i, flag: 'car horn', threshold: 1900 },
   { pattern: /\bplayground\b/i, flag: 'modern playground equipment', threshold: 1920 },
-  { pattern: /\bswing/i, flag: 'modern playground swings', threshold: 1920 },
-  { pattern: /\bgenerator\b/i, flag: 'electric generator', threshold: 1895 },
-  { pattern: /\bsubway\b/i, flag: 'subway/metro', threshold: 1904 },
 ];
 
 // ── Source mismatch detection ────────────────────────────────
@@ -146,26 +109,28 @@ function auditSource(source, eraYear) {
     return flags;
   }
 
-  // Context keyword checks
+  // Shared anachronism checks (from lib/eraData.js)
+  if (eraYear) {
+    const eraPatterns = getAuditPatterns(eraYear);
+    for (const ep of eraPatterns) {
+      if (ep.pattern.test(searchText)) {
+        flags.push({
+          severity: 'error',
+          message: `"${ep.flag}" — anachronistic for ${eraYear}`,
+          match: searchText.match(ep.pattern)?.[0],
+        });
+      }
+    }
+  }
+
+  // Supplementary context keyword checks
   for (const kw of CONTEXT_KEYWORDS) {
-    if (eraYear && eraYear < kw.threshold && kw.pattern.test(searchText)) {
+    if (eraYear && eraYear < kw.threshold && kw.pattern.test(searchText) &&
+        !flags.some(f => f.match === searchText.match(kw.pattern)?.[0])) {
       flags.push({
         severity: 'error',
         message: `"${kw.flag}" — anachronistic for ${eraYear} (post-${kw.threshold})`,
         match: searchText.match(kw.pattern)?.[0],
-      });
-    }
-  }
-
-  // Also check the attribution specifically
-  const attrib = (source.attribution || '').toLowerCase();
-  for (const kw of CONTEXT_KEYWORDS) {
-    if (eraYear && eraYear < kw.threshold && kw.pattern.test(attrib) &&
-        !flags.some(f => f.match === attrib.match(kw.pattern)?.[0])) {
-      flags.push({
-        severity: 'error',
-        message: `Attribution contains "${kw.flag}"`,
-        match: attrib.match(kw.pattern)?.[0],
       });
     }
   }

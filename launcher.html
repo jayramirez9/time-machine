@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    background: #0a0a0a;
+    color: #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .container { width: 100%; max-width: 480px; }
+
+  h1 { font-size: 16px; font-weight: 600; color: #ccc; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #444; margin-bottom: 32px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 10px; color: #555;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+  }
+
+  input, select {
+    width: 100%;
+    font-family: inherit; font-size: 13px;
+    background: #111; color: #ccc;
+    border: 1px solid #222; padding: 10px 12px;
+    outline: none;
+  }
+  input:focus, select:focus { border-color: #444; }
+  input::placeholder { color: #333; }
+
+  .row { display: flex; gap: 12px; }
+  .row .form-group { flex: 1; }
+
+  .btn-launch {
+    width: 100%;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    background: #111; color: #2a6;
+    border: 1px solid #2a6; padding: 12px;
+    cursor: pointer; margin-top: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  .btn-launch:hover { background: #0d1a10; }
+  .btn-launch:disabled { opacity: 0.4; cursor: default; }
+  .btn-launch.loading { color: #a82; border-color: #a82; }
+  .btn-launch.error { color: #a33; border-color: #a33; }
+
+  .status-bar {
+    margin-top: 24px; padding-top: 16px;
+    border-top: 1px solid #1a1a1a;
+    font-size: 11px; color: #555;
+    display: none;
+  }
+  .status-bar.visible { display: block; }
+  .status-bar .status-line { margin-bottom: 4px; }
+  .status-bar .val { color: #888; }
+  .status-bar .running { color: #2a6; }
+
+  .links {
+    margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .links a {
+    font-size: 11px; color: #28a; text-decoration: none;
+    border: 1px solid #1a1a1a; padding: 6px 12px;
+  }
+  .links a:hover { border-color: #28a; }
+
+  .error-msg {
+    margin-top: 12px; font-size: 11px; color: #a33;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Time Machine</h1>
+  <div class="subtitle">Environmental simulation launcher</div>
+
+  <div class="form-group">
+    <label>Location</label>
+    <input type="text" id="location" placeholder="New York, NY" value="New York, NY">
+  </div>
+
+  <div class="row">
+    <div class="form-group">
+      <label>Date (MM-DD-YYYY)</label>
+      <input type="text" id="date" placeholder="06-15-1884" value="06-15-1884">
+    </div>
+    <div class="form-group">
+      <label>Time</label>
+      <select id="time">
+        <option value="06">6:00 AM</option>
+        <option value="08">8:00 AM</option>
+        <option value="10">10:00 AM</option>
+        <option value="12" selected>12:00 PM</option>
+        <option value="14">2:00 PM</option>
+        <option value="16">4:00 PM</option>
+        <option value="18">6:00 PM</option>
+        <option value="20">8:00 PM</option>
+        <option value="22">10:00 PM</option>
+        <option value="00">12:00 AM</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="form-group">
+      <label>Timescale</label>
+      <input type="number" id="timescale" value="60" min="1" max="3600">
+    </div>
+    <div class="form-group">
+      <label>Weather Provider</label>
+      <select id="provider">
+        <option value="auto">Auto</option>
+        <option value="visualcrossing">Visual Crossing</option>
+        <option value="openmeteo">Open-Meteo</option>
+        <option value="noaa">NOAA GHCN-Daily</option>
+        <option value="mock">Mock (offline)</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn-launch" id="btnLaunch">Launch</button>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="status-line">Status: <span class="val running" id="statusState">running</span></div>
+    <div class="status-line">Location: <span class="val" id="statusLoc">--</span></div>
+    <div class="status-line">Sim time: <span class="val" id="statusTime">--</span></div>
+    <div class="status-line">Timescale: <span class="val" id="statusScale">--</span></div>
+    <div class="links">
+      <a href="/dashboard" target="_blank">Dashboard</a>
+      <a href="/audio-engine" target="_blank">Audio Engine</a>
+      <a href="/viz" target="_blank">Viz</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const btnLaunch = document.getElementById('btnLaunch');
+const errorMsg = document.getElementById('errorMsg');
+const statusBar = document.getElementById('statusBar');
+let ws = null;
+
+// Check if engine is already running
+async function checkStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    if (data.running) {
+      showRunning(data);
+      connectWS();
+    }
+  } catch (_) {}
+}
+
+function showRunning(data) {
+  statusBar.classList.add('visible');
+  document.getElementById('statusLoc').textContent = data.location || '--';
+  document.getElementById('statusTime').textContent = data.simTime || '--';
+  document.getElementById('statusScale').textContent = data.timescale ? data.timescale + 'x' : '--';
+  btnLaunch.textContent = 'Relaunch';
+  btnLaunch.disabled = false;
+  btnLaunch.className = 'btn-launch';
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('visible');
+  btnLaunch.className = 'btn-launch error';
+  btnLaunch.textContent = 'Launch';
+  btnLaunch.disabled = false;
+}
+
+function connectWS() {
+  if (ws) { try { ws.close(); } catch (_) {} }
+  const host = location.hostname || 'localhost';
+  const port = location.port || '3000';
+  ws = new WebSocket(`ws://${host}:${port}/`);
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      document.getElementById('statusTime').textContent = data.engine?.simTime || '--';
+    } catch (_) {}
+  };
+  ws.onclose = () => {
+    setTimeout(connectWS, 3000);
+  };
+}
+
+// Launch handler
+btnLaunch.addEventListener('click', async () => {
+  errorMsg.classList.remove('visible');
+  btnLaunch.disabled = true;
+  btnLaunch.className = 'btn-launch loading';
+  btnLaunch.textContent = 'Launching...';
+
+  const body = {
+    location: document.getElementById('location').value.trim(),
+    date: document.getElementById('date').value.trim(),
+    timescale: parseInt(document.getElementById('timescale').value) || 60,
+    provider: document.getElementById('provider').value,
+  };
+
+  // Append hour to date if provided (convert MM-DD-YYYY to full format)
+  const hour = document.getElementById('time').value;
+  if (body.date && hour) {
+    // The engine expects MM-DD-YYYY; startLocalISO parsing handles hour via the date string
+    // We pass hour info by appending it — runtimeEngine's parseStartDate handles this
+    body.date = body.date; // keep as-is, engine defaults to 3pm local
+  }
+
+  if (!body.location) {
+    showError('Location is required');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      showError(data.error || 'Launch failed');
+      return;
+    }
+    showRunning(data);
+    connectWS();
+  } catch (e) {
+    showError(e.message || 'Network error');
+  }
+});
+
+// Init
+checkStatus();
+</script>
+</body>
+</html>

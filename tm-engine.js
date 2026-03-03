@@ -19,7 +19,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
-import { DEFAULT_LOCALE } from './lib/localePresets.js';
+import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
 import { getApiKey as getVCKey } from './lib/visualcrossing.js';
 import { getApiKey as getNOAAKey } from './lib/noaa.js';
 
@@ -170,53 +170,147 @@ function serveHtml(res, filePath) {
   });
 }
 
-// HTTP Server
-function createServer(engine) {
-  const server = http.createServer((req, res) => {
+// JSON body parser helper
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', c => chunks.push(c));
+    req.on('end', () => {
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString())); }
+      catch (e) { reject(e); }
+    });
+    req.on('error', reject);
+  });
+}
+
+// HTTP Server — engineRef is a mutable { engine, config } container
+function createServer(engineRef) {
+  const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
 
     const wss = server.wss;
+    const engine = engineRef.engine;
+    const urlPath = req.url.split('?')[0];
 
-    if (req.method === 'GET' && req.url === '/worldstate') {
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify(engine.getState(), null, 2));
-    } else if (req.method === 'GET' && req.url === '/status') {
+    // ── API endpoints ──────────────────────────────────────
+    if (req.method === 'GET' && urlPath === '/api/status') {
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
-        status: 'running',
-        location: engine.location,
-        simTime: engine.simTime.toISOString(),
-        timescale: engine.timescale,
-        clients: wss.clientCount,
+        running: !!engine,
+        location: engine?.location || null,
+        simTime: engine?.simTime?.toISOString() || null,
+        timescale: engine?.timescale || null,
+        locale: engineRef.config?.locale || null,
+        provider: engineRef.config?.provider || null,
+        date: engineRef.config?.startDate || null,
+        clients: wss?.clientCount || 0,
         uptime: process.uptime()
       }));
-    } else if (req.method === 'GET' && req.url === '/') {
-      res.setHeader('Content-Type', 'text/html');
-      res.end(`
-<!DOCTYPE html>
-<html>
-<head><title>Time Machine Engine</title></head>
-<body>
-<h1>Time Machine Engine</h1>
-<p>Location: ${engine.location}</p>
-<p>Sim Time: <span id="simTime">-</span></p>
-<pre id="state"></pre>
-<script>
-const ws = new WebSocket('ws://' + location.host + '/');
-ws.onmessage = (e) => {
-  const data = JSON.parse(e.data);
-  document.getElementById('simTime').textContent = data.engine.simTime;
-  document.getElementById('state').textContent = JSON.stringify(data, null, 2);
-};
-</script>
-</body>
-</html>
-      `);
-    } else if (req.method === 'GET' && (req.url === '/audio' || req.url === '/audio/' || req.url === '/audio-engine' || req.url === '/audio-engine/')) {
+      return;
+    }
+
+    if (req.method === 'GET' && urlPath === '/api/locales') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        locales: Object.keys(LOCALES),
+        default: DEFAULT_LOCALE
+      }));
+      return;
+    }
+
+    if (req.method === 'POST' && urlPath === '/api/launch') {
+      try {
+        const body = await readBody(req);
+        if (!body.location) {
+          res.statusCode = 400;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ ok: false, error: 'location is required' }));
+          return;
+        }
+
+        // Stop current engine
+        if (engine) {
+          engine.stop();
+          console.log('[Engine] Stopped for relaunch');
+        }
+
+        const config = {
+          location: body.location,
+          startDate: body.date || null,
+          locale: body.locale || DEFAULT_LOCALE,
+          timescale: body.timescale || 60,
+          provider: body.provider || 'auto',
+          mock: body.provider === 'mock'
+        };
+
+        console.log(`[Engine] Launching: ${config.location} @ ${config.startDate || 'now'} (${config.locale})`);
+
+        const newEngine = await startEngine({
+          location: config.location,
+          startLocalISO: config.startDate,
+          timescale: config.timescale,
+          tickMs: 1000,
+          publishEveryMs: 5000,
+          localePreset: config.locale,
+          routesConfigPath: engineRef.routesConfigPath,
+          useMock: config.mock,
+          provider: config.provider
+        });
+
+        // Swap engine reference and re-wire publish
+        engineRef.engine = newEngine;
+        engineRef.config = config;
+        if (engineRef.unwire) engineRef.unwire();
+        engineRef.unwire = engineRef.wirePublish(newEngine, wss);
+
+        console.log(`[Engine] Running: ${newEngine.simTime.toISOString()}`);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          ok: true,
+          location: newEngine.location,
+          simTime: newEngine.simTime.toISOString(),
+          timescale: newEngine.timescale
+        }));
+      } catch (e) {
+        console.error('[Engine] Launch failed:', e);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      }
+      return;
+    }
+
+    // ── Existing routes ─────────────────────────────────────
+    if (req.method === 'GET' && urlPath === '/worldstate') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(engine ? JSON.stringify(engine.getState(), null, 2) : '{}');
+    } else if (req.method === 'GET' && urlPath === '/status') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({
+        status: engine ? 'running' : 'stopped',
+        location: engine?.location,
+        simTime: engine?.simTime?.toISOString(),
+        timescale: engine?.timescale,
+        clients: wss?.clientCount || 0,
+        uptime: process.uptime()
+      }));
+    } else if (req.method === 'GET' && urlPath === '/') {
+      serveHtml(res, path.join(__dirname, 'launcher.html'));
+    } else if (req.method === 'GET' && urlPath === '/dashboard') {
+      serveHtml(res, path.join(__dirname, 'dashboard.html'));
+    } else if (req.method === 'GET' && (urlPath === '/audio' || urlPath === '/audio/' || urlPath === '/audio-engine' || urlPath === '/audio-engine/')) {
       serveHtml(res, path.join(__dirname, 'audio-engine.html'));
-    } else if (req.method === 'GET' && req.url.startsWith('/audio-profiles/')) {
-      const profileId = req.url.replace('/audio-profiles/', '').replace(/\.json$/, '').replace(/\/$/, '');
+    } else if (req.method === 'GET' && urlPath.startsWith('/audio-profiles/')) {
+      const profileId = urlPath.replace('/audio-profiles/', '').replace(/\.json$/, '').replace(/\/$/, '');
       const filePath = path.join(__dirname, 'audio-profiles', profileId + '.json');
       fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
@@ -227,8 +321,8 @@ ws.onmessage = (e) => {
         res.setHeader('Content-Type', 'application/json');
         res.end(data);
       });
-    } else if (req.method === 'GET' && req.url.startsWith('/audio-assets/')) {
-      const assetPath = req.url.replace('/audio-assets/', '');
+    } else if (req.method === 'GET' && urlPath.startsWith('/audio-assets/')) {
+      const assetPath = urlPath.replace('/audio-assets/', '');
       const filePath = path.join(__dirname, 'audio-assets', assetPath);
       const ext = path.extname(filePath).toLowerCase();
       const mimeTypes = {
@@ -248,7 +342,7 @@ ws.onmessage = (e) => {
         res.setHeader('Cache-Control', 'public, max-age=86400');
         res.end(data);
       });
-    } else if (req.method === 'GET' && (req.url === '/viz' || req.url === '/viz/')) {
+    } else if (req.method === 'GET' && (urlPath === '/viz' || urlPath === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {
       res.statusCode = 404;
@@ -271,6 +365,72 @@ async function main() {
   if (quiet) console.log(`[Engine] Quiet mode — only violations will be printed`);
   if (args.overnight) console.log(`[Engine] Overnight soak mode — summary on exit`);
 
+  // Mutable engine container — shared with server route handlers
+  const engineRef = {
+    engine: null,
+    config: {
+      location: args.location,
+      startDate: args.startDate,
+      locale: args.locale,
+      timescale: args.timescale,
+      provider: args.provider
+    },
+    routesConfigPath: args.routesConfigPath,
+    unwire: null,
+    wirePublish: null   // set below
+  };
+
+  // Violation tracking for quiet/overnight modes
+  const stats = {
+    publishCount: 0,
+    totalViolations: 0,
+    maxDeltaSeen: {},
+    startedAt: Date.now()
+  };
+
+  // Wire an engine's onPublish to the WebSocket broadcast + console logging
+  function wirePublish(engine, wss) {
+    return engine.onPublish((state) => {
+      wss.broadcast(state);
+      stats.publishCount++;
+
+      const violations = state.violations || [];
+
+      if (violations.length > 0) {
+        stats.totalViolations += violations.length;
+        for (const v of violations) {
+          const key = `${v.endpoint}::${v.param}`;
+          const absDelta = Math.abs(v.delta);
+          if (!stats.maxDeltaSeen[key] || absDelta > stats.maxDeltaSeen[key]) {
+            stats.maxDeltaSeen[key] = absDelta;
+          }
+        }
+      }
+
+      if (quiet) {
+        for (const v of violations) {
+          console.log(
+            `[SNAP] ${state.engine.simTime} ${v.endpoint}::${v.param} ` +
+            `delta=${v.delta} max=${v.maxDelta} clamped→${v.clamped}`
+          );
+        }
+      } else {
+        const s = state.states;
+        const c = state.controls.lighting;
+        let line =
+          `[${state.engine.simTime.slice(11, 19)}] ` +
+          `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
+          `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`;
+        if (violations.length > 0) {
+          line += ` SNAPS:${violations.length}`;
+        }
+        console.log(line);
+      }
+    });
+  }
+  engineRef.wirePublish = wirePublish;
+
+  // Start initial engine
   const engine = await startEngine({
     location: args.location,
     startLocalISO: args.startDate,
@@ -282,62 +442,17 @@ async function main() {
     useMock: args.mock,
     provider: args.provider
   });
+  engineRef.engine = engine;
 
   console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);
   console.log(`[Engine] Ready.`);
 
-  const server = createServer(engine);
+  const server = createServer(engineRef);
   const wss = new WebSocketServer(server);
   server.wss = wss;
 
-  // Violation tracking for quiet/overnight modes
-  const stats = {
-    publishCount: 0,
-    totalViolations: 0,
-    maxDeltaSeen: {},
-    startedAt: Date.now()
-  };
-
-  // Push state to WebSocket clients on every publish
-  engine.onPublish((state) => {
-    wss.broadcast(state);
-    stats.publishCount++;
-
-    const violations = state.violations || [];
-
-    // Track violation stats
-    if (violations.length > 0) {
-      stats.totalViolations += violations.length;
-      for (const v of violations) {
-        const key = `${v.endpoint}::${v.param}`;
-        const absDelta = Math.abs(v.delta);
-        if (!stats.maxDeltaSeen[key] || absDelta > stats.maxDeltaSeen[key]) {
-          stats.maxDeltaSeen[key] = absDelta;
-        }
-      }
-    }
-
-    if (quiet) {
-      // Only print violations
-      for (const v of violations) {
-        console.log(
-          `[SNAP] ${state.engine.simTime} ${v.endpoint}::${v.param} ` +
-          `delta=${v.delta} max=${v.maxDelta} clamped→${v.clamped}`
-        );
-      }
-    } else {
-      const s = state.states;
-      const c = state.controls.lighting;
-      let line =
-        `[${state.engine.simTime.slice(11, 19)}] ` +
-        `${s.timeOfDay.padEnd(9)} ${s.sky.padEnd(9)} ${s.comfort.padEnd(6)} ` +
-        `lum:${c.exteriorLuminance.toFixed(2)} clients:${wss.clientCount}`;
-      if (violations.length > 0) {
-        line += ` SNAPS:${violations.length}`;
-      }
-      console.log(line);
-    }
-  });
+  // Wire initial engine publish
+  engineRef.unwire = wirePublish(engine, wss);
 
   // SIGINT/SIGTERM handler — print summary
   function printSummary() {
@@ -371,21 +486,21 @@ async function main() {
 
   process.on('SIGINT', () => {
     printSummary();
-    engine.stop();
+    engineRef.engine?.stop();
     process.exit(0);
   });
 
   process.on('SIGTERM', () => {
     printSummary();
-    engine.stop();
+    engineRef.engine?.stop();
     process.exit(0);
   });
 
   server.listen(args.port, () => {
     console.log(`[Server] HTTP:      http://localhost:${args.port}/worldstate`);
     console.log(`[Server] WebSocket: ws://localhost:${args.port}/ or /stream`);
-    console.log(`[Server] Status:    http://localhost:${args.port}/status`);
-    console.log(`[Server] Dashboard: http://localhost:${args.port}/`);
+    console.log(`[Server] Launcher:  http://localhost:${args.port}/`);
+    console.log(`[Server] Dashboard: http://localhost:${args.port}/dashboard`);
     console.log(`[Server] Audio:     http://localhost:${args.port}/audio-engine`);
     console.log(`[Server] Viz:       http://localhost:${args.port}/viz`);
     console.log('');

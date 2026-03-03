@@ -94,6 +94,37 @@
   .event-log div { margin-bottom: 2px; }
   .event-log .time { color: #555; }
   .event-log .name { color: #28a; }
+
+  .audition-panel { margin-top: 16px; border-top: 1px solid #1a1a1a; padding-top: 12px; }
+  .audition-toggle {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 1px; cursor: pointer; user-select: none;
+  }
+  .audition-toggle:hover { color: #666; }
+  .audition-toggle::before { content: '\25B6  '; font-size: 8px; }
+  .audition-toggle.open::before { content: '\25BC  '; }
+  .audition-body { display: none; margin-top: 8px; }
+  .audition-body.open { display: block; }
+  .audition-group { margin-bottom: 10px; }
+  .audition-group-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .audition-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 0; font-size: 11px; color: #666;
+  }
+  .audition-item button {
+    padding: 2px 8px; font-size: 10px; min-width: 44px;
+  }
+  .audition-item button.playing { border-color: #28a; color: #28a; }
+  .audition-item .label {
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .audition-item .dur {
+    font-size: 10px; color: #444; min-width: 36px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
 </style>
 </head>
 <body>
@@ -171,6 +202,11 @@
 
 <div class="section-label">Event Log</div>
 <div class="event-log" id="eventLog"></div>
+
+<div class="audition-panel">
+  <div class="audition-toggle" id="auditionToggle">Audition</div>
+  <div class="audition-body" id="auditionBody"></div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -807,6 +843,8 @@ let panicEngaged = false;
 let currentMode = 'subtle';
 let currentState = null;
 let currentProfileId = null;   // Track loaded profile ID for dynamic switching
+let auditionSource = null;     // Currently playing audition AudioBufferSourceNode
+let auditionLabel = null;      // Label of currently auditioning sound
 let ws = null;
 let reconTimer = null;
 let schedulerInterval = null;
@@ -850,6 +888,93 @@ function logEvent(name, detail) {
   eventLogEl.innerHTML = eventLogLines.slice(0, 15).map(e =>
     `<div><span class="time">${e.time}</span> <span class="name">${e.name}</span> ${e.detail || ''}</div>`
   ).join('');
+}
+
+// ── Audition panel ──────────────────────────────────────────
+document.getElementById('auditionToggle').addEventListener('click', function () {
+  this.classList.toggle('open');
+  document.getElementById('auditionBody').classList.toggle('open');
+});
+
+function stopAudition() {
+  if (auditionSource) {
+    try { auditionSource.stop(); } catch (_) {}
+    auditionSource = null;
+  }
+  if (auditionLabel) {
+    const prev = document.querySelector(`.audition-item button[data-label="${CSS.escape(auditionLabel)}"]`);
+    if (prev) { prev.textContent = 'Play'; prev.classList.remove('playing'); }
+    auditionLabel = null;
+  }
+}
+
+function playAudition(label) {
+  if (!ctx || !buffers[label]) return;
+  if (auditionLabel === label) { stopAudition(); return; }
+  stopAudition();
+  const src = ctx.createBufferSource();
+  src.buffer = buffers[label];
+  src.connect(masterGain);
+  src.onended = () => {
+    if (auditionLabel === label) stopAudition();
+  };
+  src.start();
+  auditionSource = src;
+  auditionLabel = label;
+  const btn = document.querySelector(`.audition-item button[data-label="${CSS.escape(label)}"]`);
+  if (btn) { btn.textContent = 'Stop'; btn.classList.add('playing'); }
+  logEvent('audition', label);
+}
+
+function buildAuditionPanel() {
+  const body = document.getElementById('auditionBody');
+  body.innerHTML = '';
+  if (!profile) return;
+
+  const groups = [];
+
+  // Base beds
+  if (profile.beds?.base?.sources?.length) {
+    groups.push({ name: 'Base Beds', sources: profile.beds.base.sources });
+  }
+
+  // Directional beds
+  for (const [dir, cfg] of Object.entries(profile.beds?.directional || {})) {
+    if (cfg.sources?.length) {
+      groups.push({ name: `Dir — ${dir.toUpperCase()}`, sources: cfg.sources });
+    }
+  }
+
+  // Weather
+  for (const [type, cfg] of Object.entries(profile.weather || {})) {
+    if (cfg.sources?.length) {
+      groups.push({ name: `Weather — ${type}`, sources: cfg.sources });
+    }
+  }
+
+  // Micro-events
+  for (const evt of profile.microEvents || []) {
+    if (evt.sources?.length) {
+      groups.push({ name: `Micro — ${evt.id}`, sources: evt.sources });
+    }
+  }
+
+  for (const grp of groups) {
+    const div = document.createElement('div');
+    div.className = 'audition-group';
+    div.innerHTML = `<div class="audition-group-label">${grp.name}</div>`;
+    for (const src of grp.sources) {
+      const label = src.label;
+      const buf = buffers[label];
+      const dur = buf ? buf.duration.toFixed(1) + 's' : '--';
+      const item = document.createElement('div');
+      item.className = 'audition-item';
+      item.innerHTML = `<button data-label="${label}">Play</button><span class="label">${label}</span><span class="dur">${dur}</span>`;
+      item.querySelector('button').addEventListener('click', () => playAudition(label));
+      div.appendChild(item);
+    }
+    body.appendChild(div);
+  }
 }
 
 // ── Profile loader ───────────────────────────────────────────
@@ -922,6 +1047,7 @@ async function loadProfile(id) {
     profileDot.className = 'dot ok';
     profileLabel.textContent = `${profile.name} (${Object.keys(buffers).length}/${total}${procCount > 0 ? ` · ${procCount} synth` : ''})`;
     logEvent('profile', `loaded ${id} — ${Object.keys(buffers).length}/${total} assets${procCount > 0 ? ` (${procCount} procedural)` : ''}`);
+    buildAuditionPanel();
   } catch (e) {
     profileDot.className = 'dot err';
     profileLabel.textContent = `error: ${e.message}`;

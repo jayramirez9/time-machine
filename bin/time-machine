@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Launch the Time Machine daemon and open the browser UI.
+# Usage: time-machine [--no-open]
+
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PORT="${TM_PORT:-3000}"
+OPEN_BROWSER=true
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-open) OPEN_BROWSER=false ;;
+  esac
+done
+
+# Source .env if present
+if [ -f "$DIR/.env" ]; then
+  set -a; source "$DIR/.env"; set +a
+fi
+
+# Check if already running
+if curl -s "http://localhost:$PORT/api/status" >/dev/null 2>&1; then
+  echo "Time Machine already running on port $PORT"
+  if $OPEN_BROWSER; then
+    open "http://localhost:$PORT/"
+  fi
+  exit 0
+fi
+
+echo "Starting Time Machine on port $PORT..."
+
+# Start daemon in background
+node "$DIR/tm-engine.js" \
+  --port "$PORT" \
+  --routes "$DIR/routes.json" \
+  --mock \
+  --timescale 120 &
+
+TM_PID=$!
+
+# Wait for server to be ready (up to 5s)
+for i in $(seq 1 50); do
+  if curl -s "http://localhost:$PORT/api/status" >/dev/null 2>&1; then
+    echo "Time Machine ready — http://localhost:$PORT/"
+    if $OPEN_BROWSER; then
+      open "http://localhost:$PORT/"
+    fi
+    wait $TM_PID
+    exit 0
+  fi
+  sleep 0.1
+done
+
+echo "Timed out waiting for server to start."
+exit 1

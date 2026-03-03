@@ -29,6 +29,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getExclusionText } from '../lib/eraData.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -115,11 +116,11 @@ function buildPrompt(source, section, profile) {
     parts.push(`Movement: ${source._motionType} — sound passes by the listener.`);
   }
 
-  // Era-specific exclusions
-  if (era && era.year < 1900) {
-    parts.push('No motors, engines, cars, electricity, or modern sounds. Pre-industrial.');
-  } else if (era && era.year < 1950) {
-    parts.push('No jet engines, televisions, or modern electronics.');
+  // Year-based technology exclusions from shared era data
+  if (era && era.year) {
+    const exclusion = getExclusionText(era.year);
+    if (exclusion) parts.push(exclusion);
+    parts.push(`Sounds typical of life in ${era.year}.`);
   }
 
   let prompt = parts.filter(Boolean).join(' ').trim();

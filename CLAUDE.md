@@ -199,9 +199,13 @@ The daemon (`tm-engine.js`) is a thin CLI + HTTP/WebSocket transport shell aroun
 |----------|-------------|
 | `GET /worldstate` | Pull current world state (JSON) |
 | `GET /status` | Engine status (uptime, clients, sim time) |
-| `GET /` | Browser dashboard with live updates |
+| `GET /` | Web launcher — pick location, date, time, provider and launch |
+| `GET /dashboard` | Browser dashboard with live updates |
+| `GET /api/status` | Engine status JSON (running, location, simTime, timescale) |
+| `GET /api/locales` | Available locale presets |
+| `POST /api/launch` | Stop engine, start new one with `{location, date, timescale, provider}` |
 | `WebSocket /` or `/stream` | Push updates every 5 seconds |
-| `GET /audio-engine` | Full 5-layer audio engine (PRD Section 13) |
+| `GET /audio-engine` | Full 5-layer audio engine with audition panel (PRD Section 13) |
 | `GET /audio` | Alias for `/audio-engine` |
 | `GET /audio-profiles/:id` | Audio profile JSON |
 | `GET /audio-assets/*` | Audio asset files (MP3, WAV, etc.) |
@@ -226,7 +230,7 @@ This is a Node.js ES modules project:
 
 ### Core
 - **cli.js** - Command-line interface with three input modes (TTY, piped, flags) and three output modes (raw, timeline, world)
-- **tm-engine.js** - Daemon shell: CLI arg parsing, HTTP/WebSocket transport. Delegates to `startEngine()`
+- **tm-engine.js** - Daemon shell: CLI arg parsing, HTTP/WebSocket transport, web launcher API. Supports runtime engine restart via `POST /api/launch`. Delegates to `startEngine()`
 - **lib/runtimeEngine.js** - Runtime engine: world time progression, timeline caching, state smoothing, publish tick loop. Exports `startEngine()` and `easeWorldState()`
 - **lib/environmentRouter.js** - Config-driven WorldState field mapping to downstream endpoints. Exports `evaluateRoutes()` and `validateConfig()`
 - **lib/dispatch.js** - Plugin-model endpoint dispatcher. Exports `dispatch()`, `registerTransport()`, `getTransport()`
@@ -234,6 +238,7 @@ This is a Node.js ES modules project:
 - **lib/stateLog.js** - JSONL state logger, writes daily files to `logs/`. Exports `createStateLog()`
 - **tm-replay.js** - Replay CLI for feeding logged state through the rate limiter and reporting violations
 - **lib/timezone.js** - Zero-dependency timezone utilities using `Intl.DateTimeFormat`. Exports `localToUtc()`, `getLocalHour()`, `getLocalMinutes()`, `formatLocalISO()`, `getLocalDateStr()`
+- **lib/eraData.js** - Shared era anachronisms timeline (~35 entries, 1712–2017). Single source of truth for technology introduction dates, used by `elevenlabs-fetch.js` (prompt exclusions) and `era-audit.js` (attribution auditing). Exports `getExclusionText(year)` and `getAuditPatterns(year)`
 - **lib/math.js** - Shared interpolation utilities: `lerp()`, `lerpAngle()`
 - **test/noaa.test.js** - Unit tests for the NOAA GHCN-Daily provider
 
@@ -249,7 +254,8 @@ This is a Node.js ES modules project:
 - **lib/localePresets.js** - Environment-specific tuning presets (e.g., `baton_rouge_suburb`, `nyc_city`, `nyc_city_1884`)
 
 ### Browser Clients
-- **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13). Served at `/audio-engine` (and `/audio`). Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion (stub)
+- **launcher.html** - Web launcher for picking location, date, time, timescale, and weather provider. POSTs to `/api/launch` to start/restart the engine. Shows live status via WebSocket. Served at `/`
+- **audio-engine.html** - Full 5-layer PRD audio engine (PRD Section 13) with audition panel. Served at `/audio-engine` (and `/audio`). Layers: Base Bed (crossfade-rotating), Directional Beds (N/E/S/W panned), Micro-Events (procedurally scheduled one-shots with bag-draw), Weather (wind/gust/rain/thunder), Occlusion. Audition panel: collapsible panel listing every loaded sound grouped by layer with play/stop buttons for debugging individual assets in isolation
 - **viz.html** - WebGPU fullscreen renderer with sky, sun, clouds, rain, haze, heat distortion. Served at `/viz`
 
 All clients connect to the daemon via WebSocket at `/stream` and smoothly interpolate toward incoming WorldState values.
@@ -279,8 +285,9 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **tools/elevenlabs-fetch.js** - **Primary audio asset generator.** Uses ElevenLabs Text-to-Sound Effects API to generate era-appropriate audio from text prompts. Prompts are built from profile context (era, description, surface, motion) — no anachronism risk. Generates MP3 at 44.1kHz/128kbps (WAV for impulse responses), writes a GENERATION_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only beds|micro|weather|ir] [--force]`
 - **tools/freesound-fetch.js** - Legacy Freesound API asset fetcher. Searches for CC-licensed sounds by label keyword, downloads preview MP3s. Lower quality than ElevenLabs, prone to era mismatches (modern traffic in historical profiles). Still useful for natural recordings (birds, weather) where recorded audio may be preferred. Requires `FREESOUND_API_KEY` env var.
 - **tools/elevenlabs-voice-fetch.js** - **Voice generation tool.** Uses ElevenLabs Text-to-Speech API to generate period-appropriate spoken phrases (vendor cries, newsboy calls, children's shouts) for micro-events with `voice` + `phrases` fields. Auto-selects voices from the ElevenLabs library based on profile `voiceConfig` descriptions, caches voice IDs back to the profile. Generated clips are added as additional sources alongside existing SFX — the engine's bag-draw naturally mixes them. Writes VOICE_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-voice-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only <event_id>] [--force] [--list-voices]`
-- **tools/era-audit.js** - Era validation tool. Scans audio profile attributions for anachronistic sounds that don't belong in the target era. Checks Freesound source descriptions against year-threshold keyword patterns. Usage: `./tools/era-audit.js audio-profiles/nyc_city_1884.json`
+- **tools/era-audit.js** - Era validation tool. Scans audio profile attributions for anachronistic sounds that don't belong in the target era. Uses shared anachronism data from `lib/eraData.js` for year-precise keyword checks, plus supplementary context and mismatch patterns. Usage: `./tools/era-audit.js audio-profiles/nyc_city_1884.json`
 - **tools/spawn-greybox.js** - Unreal scene spawner for the 1884 NYC greybox. Spawns 12 brownstone blocks (2 rows of 6 scaled cubes), 4 gas lamp PointLights, and moves PlayerStart to 2nd floor listener position. Uses Unreal Remote Control API directly for objectPath-based actor configuration. Usage: `node tools/spawn-greybox.js [--host http://localhost:30010]`
+- **bin/time-machine** - Shell launcher script. Sources `.env`, starts the daemon, waits for it to be ready, and opens `http://localhost:3000/` in the browser. Detects if already running. Aliased as `time-machine` in user's shell. Usage: `time-machine` or `time-machine --no-open`
 
 ### Extended Audio Controls (WorldState)
 The world state compiler (`lib/worldStateCompiler.js`) now produces extended audio controls beyond the original 3:
