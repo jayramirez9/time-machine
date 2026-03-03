@@ -144,7 +144,9 @@ function getDuration(source, section) {
   if (section.startsWith('weather.thunder')) return 8;
   if (section.startsWith('weather.')) return 20;
 
-  // Micro-events: use motion duration if available, else reasonable default
+  // Micro-events: use explicit duration, motion duration, or default
+  const explicitDur = source._explicitDuration;
+  if (explicitDur) return explicitDur;
   const motionDur = source._motionDuration;
   if (motionDur) return Math.min(Math.ceil(motionDur) + 2, 30);
   return 6;
@@ -235,8 +237,8 @@ function collectSources(profile, only) {
     for (const [type, group] of Object.entries(profile.weather)) {
       if (group.sources) {
         for (const s of group.sources) {
-          // Use label for richer description than just "wind weather"
-          s._bedDescription = s.label.replace(/-/g, ' ');
+          // Use group description if available, else fall back to label
+          s._bedDescription = group.description || s.label.replace(/-/g, ' ');
           sources.push({ ref: s, section: `weather.${type}` });
         }
       }
@@ -252,6 +254,7 @@ function collectSources(profile, only) {
           s._surface = event.surface || null;
           s._motionType = event.motion?.type || 'static';
           s._motionDuration = event.motion?.durationSec || null;
+          s._explicitDuration = event.durationSec || null;
           sources.push({ ref: s, section: `microEvents.${event.id}` });
         }
       }
@@ -431,6 +434,7 @@ async function main() {
       delete ref._isIR;
       delete ref._irFile;
       delete ref._motionDuration;
+      delete ref._explicitDuration;
     }
     fs.writeFileSync(fullProfilePath, JSON.stringify(profile, null, 2) + '\n');
     console.log(`  Updated ${fullProfilePath}`);

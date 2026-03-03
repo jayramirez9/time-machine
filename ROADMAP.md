@@ -37,7 +37,8 @@ Living document. Phases are sequential but items within a phase are not prioriti
 - [x] **Year-precise era exclusions**: Shared anachronism timeline (`lib/eraData.js`, 35 entries 1712–2017) used by both `elevenlabs-fetch.js` and `era-audit.js`. Replaced hardcoded tier system with per-year filtering (`>=` so debut year is excluded). Positive era anchor in prompts prevents regression. All 53 SFX + 12 voice assets regenerated with corrected prompts.
 - [x] **Audition panel**: Collapsible panel in audio engine listing every loaded sound grouped by layer (base beds, directional, weather, micro-events) with play/stop buttons. Routes through masterGain for raw asset preview. One sound at a time.
 - [x] **Web launcher**: `launcher.html` served at `/` with location, date, time, timescale, and weather provider fields. `POST /api/launch` stops and restarts the engine at runtime. `tm-engine.js` refactored to mutable engine reference pattern. WebSocket live status. `bin/time-machine` shell launcher with browser auto-open.
-- [ ] **Doppler + reverb tuning pass**: Listening session to dial dopplerFactors, reverb send levels, IR decay times, and surface coefficients by ear.
+- [x] **Doppler + reverb tuning pass**: Listening session confirmed NYC 1884 mix quality. Doppler factors, reverb send levels, and surface coefficients validated by ear.
+- [x] **Harvard Square 1969 locale**: Third locale/era — Cambridge MA, January 13, 1969. V2 audio profile with 17 micro-events (removed steam radiator from one-shots, baked into base bed), 3 voice profiles (newspaper vendor, protester, student), 4 directional beds. 55 SFX + 12 voice assets generated. Per-event `durationSec` override added to profile schema and `elevenlabs-fetch.js` for precise clip lengths (car horn 2s, dog bark 3s, etc). Reverb bus cleanup fix in audio engine stop handler.
 - [ ] **Unreal scene art pass**: Materials (brownstone brick, granite sett, cast iron), window geometry, stoops, awnings, period signage. Marketplace assets or custom modeling.
 - [ ] **Gas lamp light configuration**: Set warm color temperature (2200K), intensity, and attenuation on the 4 PointLight actors once Unreal is back up.
 
@@ -51,7 +52,7 @@ Long-horizon items. No timeline, no commitment. Ideas that would meaningfully ad
 
 - [ ] **Ambisonic output for WAMM speakers**: Full ambisonic rendering pipeline for Wilson WAMM speaker array. See `docs/audio-architecture-wamm.md` for architecture notes.
 
-- [ ] **Multi-locale support**: Generalize the system beyond NYC 1884 and Baton Rouge 1978. Template for rapid locale/era onboarding: locale preset + audio profile + Unreal scene package.
+- [ ] **Multi-locale support**: Generalize beyond the current 3 locales (Baton Rouge 1978, NYC 1884, Harvard Square 1969). Template for rapid locale/era onboarding: locale preset + audio profile + Unreal scene package.
 
 - [ ] **Crowd simulation**: Persistent ambient human presence beyond discrete micro-events. Murmur layers, footstep density tied to activityLevel, crowd noise that responds to time-of-day and weather.
 

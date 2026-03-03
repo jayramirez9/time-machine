@@ -4,7 +4,7 @@
     {
       "name": "tm-engine",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["tm-engine.js", "-l", "New York, NY", "-d", "06-15-1884", "--locale", "nyc_city_1884", "--mock", "--timescale", "120", "--routes", "routes.json"],
+      "runtimeArgs": ["tm-engine.js", "-l", "Cambridge, MA", "-d", "01-13-1969", "--locale", "harvard_square_1969", "--timescale", "60"],
       "port": 3000
     }
   ]

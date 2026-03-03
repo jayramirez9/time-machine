@@ -2095,6 +2095,15 @@ function stopEngine() {
   weatherLayer?.dispose();
   occlusionLayer?.dispose();
 
+  // Disconnect reverb bus (convolver tail would otherwise ring out)
+  if (reverbBus) {
+    reverbBus.send.disconnect();
+    reverbBus.convolver.disconnect();
+    reverbBus.wet.disconnect();
+    reverbBus.dry.disconnect();
+    reverbBus = null;
+  }
+
   baseBedLayer = null;
   directionalLayer = null;
   microEventScheduler = null;

@@ -1,0 +1,938 @@
+{
+  "schemaVersion": 2,
+  "id": "harvard_square_1969",
+  "name": "Harvard Square — Winter 1969",
+  "description": "Harvard Square, Cambridge MA, mid-January 1969. Late-60s counter-culture epicenter a week before Nixon's inauguration. Traffic on Mass Ave (V8 sedans, VW Beetles, diesel MBTA buses), students crossing brick sidewalks in winter boots, church bells from Memorial Church, protest chants drifting from the Yard, shop doors releasing bursts of radio and warmth. Red Line subway rumbles underfoot. Listener at 2nd-floor apartment above a shop, window cracked against the cold. Faint steam radiator hiss and occasional pipe clank from inside the room.",
+  "era": {
+    "year": 1969,
+    "period": "Late 1960s",
+    "confidence": 0.85
+  },
+  "listener": {
+    "position": "2nd floor apartment above shop",
+    "elevation": 4,
+    "facing": "S",
+    "enclosure": "open_window"
+  },
+  "spatialConfig": {
+    "order": "HOA3",
+    "irProfile": {
+      "id": "harvard_square_1969",
+      "file": "ir-harvard-square.wav",
+      "fallback": "synthetic"
+    }
+  },
+  "assetGeneration": {
+    "status": "pending",
+    "generator": "elevenlabs",
+    "promptContext": "Immersive winter soundscape of Harvard Square, Cambridge MA in January 1969. Brick-and-mortar university town, narrow streets between 3-story brick buildings. Late-60s American cars (V8 sedans, VW Beetles), diesel city buses, brick sidewalks, bare winter trees, light snow. Anti-war student activism, bookshops, coffeehouses. No modern hybrids, no cell phones, no digital sounds."
+  },
+  "voiceConfig": {
+    "voices": {
+      "newspaper_vendor": {
+        "description": "Middle-aged male, gruff Boston accent, outdoor voice projecting over traffic",
+        "settings": {
+          "stability": 0.35,
+          "similarity_boost": 0.7
+        },
+        "voiceId": "N2lVS1w4EtoT3dr4eOWO"
+      },
+      "protester": {
+        "description": "Young male, 18-22 years old, passionate and rhythmic, slight New England accent, chanting in unison cadence",
+        "settings": {
+          "stability": 0.25,
+          "similarity_boost": 0.6
+        },
+        "voiceId": "SOYHLrjzK2X1ezoPC6cr"
+      },
+      "student_female": {
+        "description": "Young female, 19-21 years old, casual conversational tone, educated New England accent",
+        "settings": {
+          "stability": 0.4,
+          "similarity_boost": 0.7
+        },
+        "voiceId": "SOYHLrjzK2X1ezoPC6cr"
+      }
+    }
+  },
+  "beds": {
+    "base": {
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/base-ambient-1.mp3",
+          "label": "base-ambient-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soun\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soundscape of Harvard Square, Cambridge MA in January 1969. Brick-and-mortar university town, narrow streets between 3-story brick buildings. Late-60s American cars (V8 sedans, VW Bee Focus on distant activity and general atmosphere.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or digital s..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/base-ambient-2.mp3",
+          "label": "base-ambient-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soun\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soundscape of Harvard Square, Cambridge MA in January 1969. Brick-and-mortar university town, narrow streets between 3-story brick buildings. Late-60s American cars (V8 sedans, VW Bee Focus on close surface textures and immediate surroundings.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/base-ambient-3.mp3",
+          "label": "base-ambient-3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soun\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Immersive winter soundscape of Harvard Square, Cambridge MA in January 1969. Brick-and-mortar university town, narrow streets between 3-story brick buildings. Late-60s American cars (V8 sedans, VW Bee Focus on mid-range ambience — voices, animal sounds, wind.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or ..."
+        }
+      ],
+      "crossfadeSec": 14,
+      "gainDb": -8
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          {
+            "url": "/audio-assets/harvard_square_1969/dir-north-yard.mp3",
+            "label": "dir-north-yard",
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Harvard Yard — bare t\"",
+            "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Harvard Yard — bare trees in wind, distant footsteps on gravel paths, quiet academic grounds. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric sc..."
+          }
+        ],
+        "gainDb": -18,
+        "description": "Harvard Yard — bare trees in wind, distant footsteps on gravel paths, quiet academic grounds",
+        "spatial": {
+          "azimuth": 0,
+          "elevation": 0,
+          "distance": 0.7,
+          "spread": 45
+        }
+      },
+      "E": {
+        "sources": [
+          {
+            "url": "/audio-assets/harvard_square_1969/dir-east-massave.mp3",
+            "label": "dir-east-massave",
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Mass Ave — steady tra\"",
+            "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Mass Ave — steady traffic flow, diesel buses, car tires on wet asphalt, honking. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds...."
+          }
+        ],
+        "gainDb": -12,
+        "description": "Mass Ave — steady traffic flow, diesel buses, car tires on wet asphalt, honking",
+        "spatial": {
+          "azimuth": 90,
+          "elevation": -5,
+          "distance": 0.4,
+          "spread": 50
+        }
+      },
+      "S": {
+        "sources": [
+          {
+            "url": "/audio-assets/harvard_square_1969/dir-south-square.mp3",
+            "label": "dir-south-square",
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: The square — pedestri\"",
+            "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: The square — pedestrian bustle, footsteps on brick, shop activity, Out of Town Newsstand. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scoote..."
+          }
+        ],
+        "gainDb": -14,
+        "description": "The square — pedestrian bustle, footsteps on brick, shop activity, Out of Town Newsstand",
+        "spatial": {
+          "azimuth": 180,
+          "elevation": -8,
+          "distance": 0.5,
+          "spread": 60
+        }
+      },
+      "W": {
+        "sources": [
+          {
+            "url": "/audio-assets/harvard_square_1969/dir-west-brattle.mp3",
+            "label": "dir-west-brattle",
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Ambient background soundscape: Brattle Street — quie\"",
+            "generatedPrompt": "Late 1960s era, circa 1969. Ambient background soundscape: Brattle Street — quieter residential, occasional car, bare branches creaking. Steady, loopable, no sudden events. Suitable as a continuous background bed. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. On..."
+          }
+        ],
+        "gainDb": -20,
+        "description": "Brattle Street — quieter residential, occasional car, bare branches creaking",
+        "spatial": {
+          "azimuth": -90,
+          "elevation": 0,
+          "distance": 0.6,
+          "spread": 35
+        }
+      }
+    }
+  },
+  "weather": {
+    "wind": {
+      "description": "Cold January wind blowing steadily through bare tree branches and between brick buildings, low whistling and occasional gusts, winter urban wind ambience",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/wind-winter-1.mp3",
+          "label": "wind-winter-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Cold January wind blowing steadily th\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Cold January wind blowing steadily through bare tree branches and between brick buildings, low whistling and occasional gusts, winter urban wind ambience. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, elec..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/wind-winter-2.mp3",
+          "label": "wind-winter-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Cold January wind blowing steadily th\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Cold January wind blowing steadily through bare tree branches and between brick buildings, low whistling and occasional gusts, winter urban wind ambience. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, elec..."
+        }
+      ],
+      "gustFilterRange": [
+        200,
+        2400
+      ],
+      "gustSweepPeriod": [
+        6,
+        15
+      ]
+    },
+    "rain": {
+      "description": "Freezing rain and sleet hitting brick sidewalks and building facades, icy pellets ticking against glass windows, wet winter precipitation on pavement",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/sleet-1.mp3",
+          "label": "sleet-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Freezing rain and sleet hitting brick\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Freezing rain and sleet hitting brick sidewalks and building facades, icy pellets ticking against glass windows, wet winter precipitation on pavement. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric..."
+        }
+      ]
+    },
+    "thunder": {
+      "description": "Distant winter thunderclap rolling across a flat urban landscape, deep rumbling echo between buildings, cold-air thunder",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/thunder-winter-1.mp3",
+          "label": "thunder-winter-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Distant winter thunderclap rolling ac\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Distant winter thunderclap rolling across a flat urban landscape, deep rumbling echo between buildings, cold-air thunder. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds ..."
+        }
+      ],
+      "cooldownRange": [
+        60,
+        180
+      ]
+    },
+    "snow": {
+      "description": "Soft snowfall muffling a city — quiet hush of snow landing on brick and pavement, dampened ambient sounds, gentle winter stillness",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/snow-fall-1.mp3",
+          "label": "snow-fall-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Soft snowfall muffling a city — quiet\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Soft snowfall muffling a city — quiet hush of snow landing on brick and pavement, dampened ambient sounds, gentle winter stillness. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. On..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/snow-fall-2.mp3",
+          "label": "snow-fall-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Weather sound: Soft snowfall muffling a city — quiet\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Weather sound: Soft snowfall muffling a city — quiet hush of snow landing on brick and pavement, dampened ambient sounds, gentle winter stillness. Natural, organic, no modern artifacts. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. On..."
+        }
+      ]
+    }
+  },
+  "microEvents": [
+    {
+      "id": "car_pass",
+      "description": "Late-1960s American V8 sedan passing — Ford Galaxie, Chevy Impala, or Plymouth Fury. Big engine rumble, tire hiss on wet cold asphalt",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/car-pass-1.mp3",
+          "label": "car-pass-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing —\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing — Ford Galaxie, Chevy Impala, or Plymouth Fury. Big engine rumble, tire hiss on wet cold asphalt. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric veh..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/car-pass-2.mp3",
+          "label": "car-pass-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing —\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing — Ford Galaxie, Chevy Impala, or Plymouth Fury. Big engine rumble, tire hiss on wet cold asphalt. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric veh..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/car-pass-3.mp3",
+          "label": "car-pass-3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing —\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Late-1960s American V8 sedan passing — Ford Galaxie, Chevy Impala, or Plymouth Fury. Big engine rumble, tire hiss on wet cold asphalt. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric veh..."
+        }
+      ],
+      "avgCooldownSec": 12,
+      "gainDb": -12,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -8,
+        "distance": 0.4,
+        "spread": 15
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 140,
+        "azimuthEnd": 40,
+        "durationSec": 6
+      },
+      "dopplerFactor": 0.15,
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.95
+      }
+    },
+    {
+      "id": "vw_beetle",
+      "description": "Volkswagen Beetle passing — distinctive air-cooled flat-four engine whine, lighter and higher-pitched than American V8s. Iconic student car of the late 1960s",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/vw-beetle-1.mp3",
+          "label": "vw-beetle-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Volkswagen Beetle passing — distinctiv\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Volkswagen Beetle passing — distinctive air-cooled flat-four engine whine, lighter and higher-pitched than American V8s. Iconic student car of the late 1960s. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircra..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/vw-beetle-2.mp3",
+          "label": "vw-beetle-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Volkswagen Beetle passing — distinctiv\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Volkswagen Beetle passing — distinctive air-cooled flat-four engine whine, lighter and higher-pitched than American V8s. Iconic student car of the late 1960s. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircra..."
+        }
+      ],
+      "avgCooldownSec": 25,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -8,
+        "distance": 0.45,
+        "spread": 12
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 50,
+        "azimuthEnd": 130,
+        "durationSec": 5
+      },
+      "dopplerFactor": 0.1,
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "mbta_bus",
+      "description": "MBTA diesel city bus on Mass Ave — heavy diesel engine growl, air brakes hissing at stop, door pneumatics, pulling away with acceleration",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/mbta-bus-1.mp3",
+          "label": "mbta-bus-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: MBTA diesel city bus on Mass Ave — hea\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: MBTA diesel city bus on Mass Ave — heavy diesel engine growl, air brakes hissing at stop, door pneumatics, pulling away with acceleration. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/mbta-bus-2.mp3",
+          "label": "mbta-bus-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: MBTA diesel city bus on Mass Ave — hea\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: MBTA diesel city bus on Mass Ave — heavy diesel engine growl, air brakes hissing at stop, door pneumatics, pulling away with acceleration. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric..."
+        }
+      ],
+      "avgCooldownSec": 45,
+      "gainDb": -10,
+      "spatial": {
+        "azimuth": 100,
+        "elevation": -10,
+        "distance": 0.35,
+        "spread": 25
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 150,
+        "azimuthEnd": 30,
+        "durationSec": 10
+      },
+      "dopplerFactor": 0.2,
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "church_bell",
+      "description": "Church bell tolling from Memorial Church in Harvard Yard — deep bronze bell, winter air carries sound crisply, slight reverb off surrounding brick buildings",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/church-bell-1.mp3",
+          "label": "church-bell-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Church bell tolling from Memorial Chur\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Church bell tolling from Memorial Church in Harvard Yard — deep bronze bell, winter air carries sound crisply, slight reverb off surrounding brick buildings. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that..."
+        }
+      ],
+      "avgCooldownSec": 120,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": -10,
+        "elevation": 25,
+        "distance": 0.6,
+        "spread": 30
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.85
+      }
+    },
+    {
+      "id": "footsteps_snow",
+      "description": "Footsteps on snowy brick sidewalk — winter boots crunching through thin snow and ice on old Cambridge brick, steady walking pace",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/footsteps-snow-1.mp3",
+          "label": "footsteps-snow-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Footsteps on snowy brick sidewalk — wi\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Footsteps on snowy brick sidewalk — winter boots crunching through thin snow and ice on old Cambridge brick, steady walking pace. Surface material: brick_sidewalk. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric v..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/footsteps-snow-2.mp3",
+          "label": "footsteps-snow-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Footsteps on snowy brick sidewalk — wi\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Footsteps on snowy brick sidewalk — winter boots crunching through thin snow and ice on old Cambridge brick, steady walking pace. Surface material: brick_sidewalk. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric v..."
+        }
+      ],
+      "avgCooldownSec": 18,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 160,
+        "elevation": -12,
+        "distance": 0.5,
+        "spread": 8
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 120,
+        "azimuthEnd": -160,
+        "durationSec": 8
+      },
+      "dopplerFactor": 0.05,
+      "surface": "brick_sidewalk",
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.92
+      }
+    },
+    {
+      "id": "students_talking",
+      "description": "Group of college students walking and talking animatedly — winter coats rustling, laughter, overlapping conversation, youthful energy",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/students-talking-1.mp3",
+          "label": "students-talking-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Group of college students walking and \"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Group of college students walking and talking animatedly — winter coats rustling, laughter, overlapping conversation, youthful energy. Surface material: brick_sidewalk. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, elect..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/students-talking-2.mp3",
+          "label": "students-talking-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Group of college students walking and \"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Group of college students walking and talking animatedly — winter coats rustling, laughter, overlapping conversation, youthful energy. Surface material: brick_sidewalk. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, elect..."
+        },
+        {
+          "label": "students_talking-voice-1",
+          "url": "/audio-assets/harvard_square_1969/students_talking-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Did you see the exam posted? I can't believe he's testing us on chapter twelve.\"",
+          "generatedPhrase": "Did you see the exam posted? I can't believe he's testing us on chapter twelve."
+        },
+        {
+          "label": "students_talking-voice-2",
+          "url": "/audio-assets/harvard_square_1969/students_talking-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"It's freezing out here, let's get coffee.\"",
+          "generatedPhrase": "It's freezing out here, let's get coffee."
+        },
+        {
+          "label": "students_talking-voice-3",
+          "url": "/audio-assets/harvard_square_1969/students_talking-voice-3.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Are you going to the rally tomorrow?\"",
+          "generatedPhrase": "Are you going to the rally tomorrow?"
+        },
+        {
+          "label": "students_talking-voice-4",
+          "url": "/audio-assets/harvard_square_1969/students_talking-voice-4.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"I heard Baez might play at the coffeehouse this weekend.\"",
+          "generatedPhrase": "I heard Baez might play at the coffeehouse this weekend."
+        }
+      ],
+      "avgCooldownSec": 22,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 170,
+        "elevation": -10,
+        "distance": 0.45,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -150,
+        "azimuthEnd": 150,
+        "durationSec": 10
+      },
+      "dopplerFactor": 0.08,
+      "surface": "brick_sidewalk",
+      "voice": "student_female",
+      "phrases": [
+        "Did you see the exam posted? I can't believe he's testing us on chapter twelve.",
+        "It's freezing out here, let's get coffee.",
+        "Are you going to the rally tomorrow?",
+        "I heard Baez might play at the coffeehouse this weekend."
+      ],
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.88
+      }
+    },
+    {
+      "id": "shop_door",
+      "description": "Shop door opening below — brass bell jingle, burst of warm air carrying faint AM radio music and indoor conversation, door closing again",
+      "durationSec": 4,
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/shop-door-1.mp3",
+          "label": "shop-door-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Shop door opening below — brass bell j\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Shop door opening below — brass bell jingle, burst of warm air carrying faint AM radio music and indoor conversation, door closing again. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. So..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/shop-door-2.mp3",
+          "label": "shop-door-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Shop door opening below — brass bell j\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Shop door opening below — brass bell jingle, burst of warm air carrying faint AM radio music and indoor conversation, door closing again. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. So..."
+        }
+      ],
+      "avgCooldownSec": 30,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": 170,
+        "elevation": -15,
+        "distance": 0.2,
+        "spread": 25
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.85
+      }
+    },
+    {
+      "id": "pigeon_flock",
+      "description": "Flock of pigeons startled into flight in the square — wing fluttering, cooing, brief burst then settling",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/pigeon-flock-1.mp3",
+          "label": "pigeon-flock-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Flock of pigeons startled into flight \"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Flock of pigeons startled into flight in the square — wing fluttering, cooing, brief burst then settling. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. Sounds typical of life in 1969."
+        }
+      ],
+      "avgCooldownSec": 60,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 160,
+        "elevation": -5,
+        "distance": 0.55,
+        "spread": 40
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.8
+      }
+    },
+    {
+      "id": "dog_bark",
+      "description": "Dog barking on the sidewalk — medium-sized dog on a leash, two or three sharp barks then quiet",
+      "durationSec": 3,
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/dog-bark-1.mp3",
+          "label": "dog-bark-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Dog barking on the sidewalk — medium-s\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Dog barking on the sidewalk — medium-sized dog on a leash, two or three sharp barks then quiet. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. Sounds typical of life in 1969."
+        }
+      ],
+      "avgCooldownSec": 55,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -120,
+        "elevation": -12,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.85
+      }
+    },
+    {
+      "id": "car_horn",
+      "description": "Car horn honk — single quick blast from a late-1960s American car horn, lower-pitched than modern horns",
+      "durationSec": 2,
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/car-horn-1.mp3",
+          "label": "car-horn-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Car horn honk — single quick blast fro\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Car horn honk — single quick blast from a late-1960s American car horn, lower-pitched than modern horns. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. Sounds typical of life in 1969."
+        }
+      ],
+      "avgCooldownSec": 40,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 110,
+        "elevation": -8,
+        "distance": 0.4,
+        "spread": 15
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.9
+      }
+    },
+    {
+      "id": "police_siren",
+      "description": "1960s police siren — mechanical wail siren (not electronic yelp), Cambridge police car passing at speed on Mass Ave",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/police-siren-1.mp3",
+          "label": "police-siren-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: 1960s police siren — mechanical wail s\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: 1960s police siren — mechanical wail siren (not electronic yelp), Cambridge police car passing at speed on Mass Ave. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electr..."
+        }
+      ],
+      "avgCooldownSec": 180,
+      "gainDb": -8,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -8,
+        "distance": 0.3,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 160,
+        "azimuthEnd": 20,
+        "durationSec": 7
+      },
+      "dopplerFactor": 0.3,
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      }
+    },
+    {
+      "id": "snow_plow",
+      "description": "City snow plow truck passing — heavy diesel engine, metal blade scraping asphalt, chains on tires, salt/sand spraying",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/snow-plow-1.mp3",
+          "label": "snow-plow-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: City snow plow truck passing — heavy d\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: City snow plow truck passing — heavy diesel engine, metal blade scraping asphalt, chains on tires, salt/sand spraying. Surface material: asphalt. Movement: passby — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, elec..."
+        }
+      ],
+      "avgCooldownSec": 300,
+      "gainDb": -8,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -10,
+        "distance": 0.3,
+        "spread": 30
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": 160,
+        "azimuthEnd": 20,
+        "durationSec": 12
+      },
+      "dopplerFactor": 0.15,
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0,
+        "max": 0.35
+      },
+      "secondaryWindow": {
+        "min": 0.85,
+        "max": 1
+      }
+    },
+    {
+      "id": "newspaper_vendor",
+      "description": "Newspaper vendor calling out headlines on the sidewalk — middle-aged man with gruff Boston accent, projecting over traffic noise",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/newspaper-vendor-1.mp3",
+          "label": "newspaper-vendor-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Newspaper vendor calling out headlines\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Newspaper vendor calling out headlines on the sidewalk — middle-aged man with gruff Boston accent, projecting over traffic noise. Surface material: brick_sidewalk. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sound..."
+        },
+        {
+          "label": "newspaper_vendor-voice-1",
+          "url": "/audio-assets/harvard_square_1969/newspaper_vendor-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Globe! Get your Boston Globe!\"",
+          "generatedPhrase": "Globe! Get your Boston Globe!"
+        },
+        {
+          "label": "newspaper_vendor-voice-2",
+          "url": "/audio-assets/harvard_square_1969/newspaper_vendor-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Herald! Morning Herald here!\"",
+          "generatedPhrase": "Herald! Morning Herald here!"
+        },
+        {
+          "label": "newspaper_vendor-voice-3",
+          "url": "/audio-assets/harvard_square_1969/newspaper_vendor-voice-3.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Paper! Nixon inauguration coverage! Get your paper!\"",
+          "generatedPhrase": "Paper! Nixon inauguration coverage! Get your paper!"
+        },
+        {
+          "label": "newspaper_vendor-voice-4",
+          "url": "/audio-assets/harvard_square_1969/newspaper_vendor-voice-4.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Globe! Read all about it!\"",
+          "generatedPhrase": "Globe! Read all about it!"
+        }
+      ],
+      "avgCooldownSec": 50,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 150,
+        "elevation": -12,
+        "distance": 0.45,
+        "spread": 15
+      },
+      "surface": "brick_sidewalk",
+      "voice": "newspaper_vendor",
+      "phrases": [
+        "Globe! Get your Boston Globe!",
+        "Herald! Morning Herald here!",
+        "Paper! Nixon inauguration coverage! Get your paper!",
+        "Globe! Read all about it!"
+      ],
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.75
+      }
+    },
+    {
+      "id": "protest_chant",
+      "description": "Distant anti-war protest chanting from Harvard Yard — rhythmic group chanting, approaching then fading, young voices in unison",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/protest-chant-1.mp3",
+          "label": "protest-chant-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Distant anti-war protest chanting from\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Distant anti-war protest chanting from Harvard Yard — rhythmic group chanting, approaching then fading, young voices in unison. Surface material: brick_sidewalk. Movement: approach — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric v..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/protest-chant-2.mp3",
+          "label": "protest-chant-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Distant anti-war protest chanting from\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Distant anti-war protest chanting from Harvard Yard — rhythmic group chanting, approaching then fading, young voices in unison. Surface material: brick_sidewalk. Movement: approach — sound passes by the listener. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric v..."
+        },
+        {
+          "label": "protest_chant-voice-1",
+          "url": "/audio-assets/harvard_square_1969/protest_chant-voice-1.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Hell no, we won't go!\"",
+          "generatedPhrase": "Hell no, we won't go!"
+        },
+        {
+          "label": "protest_chant-voice-2",
+          "url": "/audio-assets/harvard_square_1969/protest_chant-voice-2.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Hey hey, LBJ, how many kids did you kill today?\"",
+          "generatedPhrase": "Hey hey, LBJ, how many kids did you kill today?"
+        },
+        {
+          "label": "protest_chant-voice-3",
+          "url": "/audio-assets/harvard_square_1969/protest_chant-voice-3.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"One, two, three, four, we don't want your dirty war!\"",
+          "generatedPhrase": "One, two, three, four, we don't want your dirty war!"
+        },
+        {
+          "label": "protest_chant-voice-4",
+          "url": "/audio-assets/harvard_square_1969/protest_chant-voice-4.mp3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs TTS: \"Give peace a chance!\"",
+          "generatedPhrase": "Give peace a chance!"
+        }
+      ],
+      "avgCooldownSec": 120,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": -20,
+        "elevation": -3,
+        "distance": 0.65,
+        "spread": 50
+      },
+      "motion": {
+        "type": "approach",
+        "azimuthStart": -20,
+        "azimuthEnd": -10,
+        "durationSec": 15
+      },
+      "dopplerFactor": 0.05,
+      "surface": "brick_sidewalk",
+      "voice": "protester",
+      "phrases": [
+        "Hell no, we won't go!",
+        "Hey hey, LBJ, how many kids did you kill today?",
+        "One, two, three, four, we don't want your dirty war!",
+        "Give peace a chance!"
+      ],
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.75
+      }
+    },
+    {
+      "id": "subway_rumble",
+      "description": "Red Line subway train passing underground — deep low-frequency rumble felt through the floor and walls, muffled screeching of brakes, lasting 8-10 seconds",
+      "durationSec": 10,
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/subway-rumble-1.mp3",
+          "label": "subway-rumble-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Red Line subway train passing undergro\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Red Line subway train passing underground — deep low-frequency rumble felt through the floor and walls, muffled screeching of brakes, lasting 8-10 seconds. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that e..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/subway-rumble-2.mp3",
+          "label": "subway-rumble-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Red Line subway train passing undergro\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Red Line subway train passing underground — deep low-frequency rumble felt through the floor and walls, muffled screeching of brakes, lasting 8-10 seconds. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that e..."
+        }
+      ],
+      "avgCooldownSec": 50,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 160,
+        "elevation": -40,
+        "distance": 0.3,
+        "spread": 60
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.95
+      }
+    },
+    {
+      "id": "wind_gust",
+      "description": "Sharp winter wind gust channeled between brick buildings — sudden howl, rattling a loose window pane, whistling past eaves, then subsiding",
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/wind-gust-1.mp3",
+          "label": "wind-gust-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Sharp winter wind gust channeled betwe\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Sharp winter wind gust channeled between brick buildings — sudden howl, rattling a loose window pane, whistling past eaves, then subsiding. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. ..."
+        },
+        {
+          "url": "/audio-assets/harvard_square_1969/wind-gust-2.mp3",
+          "label": "wind-gust-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Sharp winter wind gust channeled betwe\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Sharp winter wind gust channeled between brick buildings — sudden howl, rattling a loose window pane, whistling past eaves, then subsiding. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1969. ..."
+        }
+      ],
+      "avgCooldownSec": 25,
+      "gainDb": -12,
+      "spatial": {
+        "azimuth": 0,
+        "elevation": 5,
+        "distance": 0.2,
+        "spread": 70
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      }
+    },
+    {
+      "id": "taxi_idle",
+      "description": "Checker cab idling at the curb — big inline-six engine rumbling at idle, passenger door slam (heavy metal door), cab pulls away",
+      "durationSec": 8,
+      "sources": [
+        {
+          "url": "/audio-assets/harvard_square_1969/taxi-idle-1.mp3",
+          "label": "taxi-idle-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Late 1960s era, circa 1969. Sound effect: Checker cab idling at the curb — big i\"",
+          "generatedPrompt": "Late 1960s era, circa 1969. Sound effect: Checker cab idling at the curb — big inline-six engine rumbling at idle, passenger door slam (heavy metal door), cab pulls away. Surface material: asphalt. No jumbo jet aircraft, personal computer beeps or digital sounds, portable cassette players, cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that e..."
+        }
+      ],
+      "avgCooldownSec": 70,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 130,
+        "elevation": -10,
+        "distance": 0.35,
+        "spread": 15
+      },
+      "surface": "asphalt",
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.92
+      }
+    }
+  ],
+  "mix": {
+    "masterGainDb": -4,
+    "layerGains": {
+      "baseBed": 0,
+      "directionalBeds": -2,
+      "microEvents": -2,
+      "weather": -1,
+      "occlusion": 0
+    },
+    "reverbSend": 0.15
+  },
+  "scheduling": {
+    "maxConcurrentEvents": 3,
+    "globalCooldownSec": 2,
+    "densityMultipliers": {
+      "subtle": 0.5,
+      "present": 1,
+      "demo": 2.5
+    }
+  }
+}
