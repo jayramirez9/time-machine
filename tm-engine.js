@@ -183,6 +183,11 @@ function readBody(req) {
   });
 }
 
+function geoLatLon(engine) {
+  const geo = engine?.geo;
+  return geo ? { lat: geo.lat, lon: geo.lon } : null;
+}
+
 // HTTP Server — engineRef is a mutable { engine, config } container
 function createServer(engineRef) {
   const server = http.createServer(async (req, res) => {
@@ -203,7 +208,6 @@ function createServer(engineRef) {
     // ── API endpoints ──────────────────────────────────────
     if (req.method === 'GET' && urlPath === '/api/status') {
       res.setHeader('Content-Type', 'application/json');
-      const geo = engine?.geo;
       res.end(JSON.stringify({
         running: !!engine,
         location: engine?.location || null,
@@ -212,7 +216,7 @@ function createServer(engineRef) {
         locale: engineRef.config?.locale || null,
         provider: engineRef.config?.provider || null,
         date: engineRef.config?.startDate || null,
-        geo: geo ? { lat: geo.lat, lon: geo.lon } : null,
+        geo: geoLatLon(engine),
         clients: wss?.clientCount || 0,
         uptime: process.uptime()
       }));
@@ -281,7 +285,7 @@ function createServer(engineRef) {
           location: newEngine.location,
           simTime: newEngine.simTime.toISOString(),
           timescale: newEngine.timescale,
-          geo: newEngine.geo ? { lat: newEngine.geo.lat, lon: newEngine.geo.lon } : null
+          geo: geoLatLon(newEngine)
         }));
       } catch (e) {
         console.error('[Engine] Launch failed:', e);
