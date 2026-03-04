@@ -425,6 +425,42 @@ Our existing `unreal` transport dispatch types map cleanly:
 
 ---
 
+## Reference Videos
+
+### "Google Maps in Unreal Engine 5 is INSANE!!" — Bad Decisions Studio (June 2023)
+
+https://youtu.be/mrC5IencIKA
+
+The baseline tutorial that introduced the Cesium + Google 3D Tiles pipeline. Shows the complete workflow in 5 minutes:
+
+1. Install Cesium for Unreal plugin from Epic Marketplace
+2. Enable Google Map Tiles API, get API key
+3. Add CesiumSunSky + blank Cesium3DTileset
+4. Set tileset source to "From URL" with Google's 3D Tiles endpoint + API key
+5. Set CesiumGeoreference lat/lon to teleport to any location
+
+**Still works in 2026.** Core workflow is unchanged. Their practical findings also still hold:
+- Low MaxScreenSpaceError burns through API quota fast (they hit the limit mid-project)
+- CesiumSunSky has limited controllability — they ended up using UE's default Environment Light Mixer
+- Write Alpha must be off for sky to render in PNG sequences
+
+**Why we're going beyond this approach:** Their pipeline is scouting/cinematics-only. For Time Machine we need editable terrain (period materials, ground wetness), dynamic lighting (weather engine controls everything), offline capability, and no Google ToS restrictions. The two-track strategy uses this exact workflow for quick previews, then USGS heightmaps for production scenes.
+
+---
+
+## Decision Log
+
+**March 4, 2026 — Geo pipeline is foundational priority.**
+
+Agreed that terrain must come before any building art pass, period lighting, gas lamps, etc. The pipeline is era-independent — same terrain for 1884 and 2024. Proceeding with the two-track approach:
+
+1. **Track A (Scouting):** Cesium + Google 3D Tiles per the Bad Decisions Studio workflow — instant location preview
+2. **Track B (Production):** USGS 3DEP heightmaps → native Unreal Landscape — editable, offline, full weather engine integration
+
+Next concrete step: prototype both tracks for Baton Rouge (existing test location) and validate that the weather engine drives atmosphere correctly over real terrain.
+
+---
+
 ## Sources
 
 ### Official Documentation
