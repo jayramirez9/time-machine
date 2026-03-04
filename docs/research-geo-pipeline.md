@@ -250,7 +250,21 @@ Cost: Drone + processing time per location. Scales poorly to many locations but 
 | **George Maestri** (LinkedIn Learning) | Real-world terrain import | Uses OpenTopography data |
 | **The Gab Meister** | "3D Geospatial Landscapes with Cesium for UE" | Detailed writeup with workflow |
 
-Search YouTube for: "Cesium for Unreal tutorial", "Google Photorealistic 3D Tiles Unreal", "real world terrain Unreal Engine 5"
+**Additional creators from deeper research:**
+
+| Creator / Source | Focus | Notes |
+|-----------------|-------|-------|
+| **Freedom Arts** | Google Map 3D → UE5 (full tutorials) | Uses RenderDoc + Blender pipeline to extract Google Maps 3D meshes. "Google Map 3D to Unreal Engine 5 — Full Tutorial" (23 min) |
+| **Matt Linkert** (@mattlinkert_) | "Import Earth into UE5 Speedrun" | Quick-hit tutorials, fastest path from Google Earth to UE5 |
+| **World of Level Design (AlexG)** | Heightmap import mastery | "Secrets to Generating Real-World Heightmaps from Terrain Party for UE4" — the definitive heightmap guide |
+| **Undini** | Houdini + LiDAR → UE | "Importing Terrain Data into Unreal using Lidar & Houdini" — 30-min complete pipeline |
+| **Cinematography Database (Matt Workman)** | Filmmaking in UE, environments | "Unreal Engine for Filmmakers" series |
+| **William Faucher** | VFX, lighting, volumetric clouds | Credits on Black Panther, HBO Watchmen; UE5 Lumen/Nanite focus |
+| **UnrealCG** | Environment art techniques | Wide range of UE tutorials |
+| **AccuCities** | 3D city models in UE5 | 3-part tutorial using accurate 3D London models with Nanite |
+| **Simon Blakeney** | VR + Cesium + Google 3D Tiles | Published Jan 2024, covers VR-specific setup, LOD, below-surface issues |
+
+Search YouTube for: "Cesium for Unreal tutorial", "Google Photorealistic 3D Tiles Unreal", "real world terrain Unreal Engine 5", "CityBLD Unreal", "Houdini LiDAR Unreal"
 
 ---
 
@@ -266,11 +280,18 @@ Search YouTube for: "Cesium for Unreal tutorial", "Google Photorealistic 3D Tile
 
 ### What Doesn't Work
 
-- **Converting Cesium tiles to editable Landscape** — no clean path exists. This is the #1 community complaint.
+- **Converting Cesium tiles to editable Landscape** — no clean path exists. This is the #1 community complaint. Users describe trying to convert Cesium terrain to UE's editable Landscape as "grueling, tedious, and generally terrible."
 - **Ground-level viewing of Google 3D Tiles** — quality degrades significantly. Photogrammetry was captured from aerial angles (40-60° tilt). Street-level views look distorted.
 - **Fast camera movement** — tiles load late or in lower resolution during rapid maneuvers.
 - **Cesium + Pixel Streaming** — had packaging conflicts in UE 5.4 (library collision).
 - **Baked shadows in satellite imagery** — Cesium terrain textures have shadows/clouds baked in, which conflicts with dynamic lighting.
+
+### Known Cesium Visual Issues (from GitHub/Forums)
+
+- **Flickering artifacts**: White pixel flickering from DitherFade material during LOD transitions (GitHub issue #1388). Workaround: remove DitherFade layer, disable occlusion culling
+- **Google 3D Tiles look blurrier in UE than in Google Earth** — even with MaximumScreenSpaceError set to 1. Different rendering pipelines
+- **Performance**: User with RTX 4090 / AMD 7950X3D / 64GB DDR5 at 3840x1440 reported only 50-70 FPS with 25% GPU utilization, suggesting CPU-bound streaming bottlenecks
+- **Baked shadows in satellite imagery** conflict with dynamic lighting (our weather engine). Cesium terrain textures have shadows/clouds baked into the satellite imagery
 
 ### Common Pitfalls
 
@@ -315,6 +336,82 @@ For the handful of locations where maximum quality matters:
 Cesium gives you the quick "Grand Canyon in 30 seconds" experience. The heightmap pipeline gives you the editable, offline, licensable terrain for production. Historical content (Phase 6) layers on top of the production terrain.
 
 The key automation target: **a script/tool that takes a location string, fetches the USGS DEM, processes it, and produces an Unreal-ready heightmap + landscape material** — eliminating the manual QGIS step.
+
+---
+
+## Additional Tools Worth Investigating
+
+### CityBLD (Procedural City Generator)
+
+A UE5 plugin that recreates real-world cities from OpenStreetMap data. Has a demo video recreating 1:1 Manhattan. 3-part tutorial on Epic Dev Community covers OSM data integration with GIS coordinates. This could be very relevant for Time Machine's urban scenes — it bridges the gap between raw OSM building footprints and a navigable Unreal city.
+
+- [Part 1](https://dev.epicgames.com/community/learning/tutorials/wP8j/unreal-engine-creating-procedural-urban-environments-with-citybld-a-step-by-step-ue-guide-part-1)
+- [Part 2](https://dev.epicgames.com/community/learning/tutorials/EkYe/unreal-engine-creating-procedural-urban-environments-with-citybld-a-step-by-step-ue-guide-part-2)
+- [Part 3](https://dev.epicgames.com/community/learning/tutorials/Zm5a/unreal-engine-creating-procedural-urban-environments-with-citybld-a-step-by-step-ue-guide-part-3)
+
+### TerraForm PRO (GIS → UE Plugin)
+
+Paid plugin that imports GIS data (GeoTIFF DEMs, SHP vector files) directly into UE. Creates native Landscapes, Landscape Splines (roads from GIS road data), and procedural meshes. Uses QGIS for data preparation. Millimeter-precision geographic accuracy. Community describes it as "really fast and powerful" and a "game changer."
+
+- [TerraFormPRO.com](https://www.terraformpro.com/)
+- Free tier available (TerraForm Lite)
+
+### Houdini + LiDAR Pipeline
+
+The highest-fidelity approach. SideFX Houdini processes LiDAR point cloud data into UE5-compatible heightfields. A YouTuber called **Undini** has tutorials showing the complete pipeline in ~30 minutes. SideFX has an official "Advanced Terrains using LiDAR" course.
+
+- [80 Level — Undini LiDAR Tutorial](https://80.lv/articles/tutorial-importing-terrain-data-into-unreal-using-lidar-houdini)
+- [SideFX — Advanced Terrains with LiDAR](https://www.sidefx.com/tutorials/advanced-terrains-in-houdini-using-lidar/)
+
+### StreetMap Plugin (Mike Fricker / Epic Games)
+
+Open-source plugin that imports OpenStreetMap XML directly into UE. Generates renderable meshes from road and building data with full road connectivity for navigation.
+
+- [GitHub — StreetMap Plugin](https://github.com/ue4plugins/StreetMap)
+
+### Landscape Combinator Plugin
+
+Free for personal use. Creates real-world landscapes from heightmap data in a few steps. Available on UE Forums.
+
+- [UE Forum Thread](https://forums.unrealengine.com/t/plugin-landscape-combinator-a-plugin-to-create-real-world-landscapes-free-for-personal-use/772305)
+
+### ArcGIS Maps SDK for Unreal Engine
+
+Esri's enterprise GIS SDK. Similar to Cesium but backed by Esri's ecosystem. Supports 3D Tiles, buildings, point clouds, vector/image tiles. Has sample projects for real-time weather and time-of-day controls. Enterprise pricing — overkill for our needs but worth knowing about.
+
+- [ArcGIS SDK for UE](https://developers.arcgis.com/unreal-engine/)
+
+---
+
+## Weather Engine Integration with Cesium
+
+Cesium provides `CesiumSunSky`, a globe-aware sun and atmosphere system. This is directly compatible with our weather engine:
+
+- **CesiumSunSky's Solar Time** can be driven dynamically — maps to our time progression
+- **Light intensity** (default 111,000 lux) can be adjusted for overcast/storm conditions
+- **Sky Atmosphere** settings control Rayleigh/Mie scattering — suitable for weather state transitions
+- You can **replace CesiumSunSky's Directional Light** with a custom one for more control
+
+Our existing `unreal` transport dispatch types map cleanly:
+- `rotation` → DirectionalLight sun position (drives CesiumSunSky's Solar Time)
+- `property` → ExponentialHeightFog density
+- `material_scalar` → Volumetric cloud coverage
+- `niagara` → Precipitation particles
+- `landscape_scalar` → Ground wetness (**requires editable Landscape, NOT Cesium tiles** — reinforces the hybrid approach)
+- `postprocess` → Heat haze
+
+**Critical note**: Baked shadows in Google 3D Tiles satellite imagery will conflict with our dynamic lighting. This is another reason to use Cesium tiles only for distant context, not the focal area.
+
+---
+
+## Recommended Prototype Steps
+
+1. **Install Cesium for Unreal** and add Google Photorealistic 3D Tiles for Baton Rouge. Evaluate ground-level quality firsthand.
+2. **Test Cartographic Polygons**: Clip a neighborhood block and place a test building to validate the replacement workflow.
+3. **Test weather integration**: Connect the existing `unreal` transport to CesiumSunSky properties. Verify dynamic time-of-day and atmosphere control work together.
+4. **Import a USGS DEM heightmap** for the same area as an editable Landscape. Blend with Cesium tiles using Cartographic Polygons.
+5. **Benchmark performance**: Run the weather engine alongside Cesium tile streaming. Identify frame-rate or latency conflicts.
+6. **Evaluate Landscape Combinator plugin** as a potential automation tool for the heightmap import pipeline.
 
 ---
 
