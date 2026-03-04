@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 See **PRD.md** for the full Time Machine Experience Bible — the product constitution, non-negotiables, and system requirements. All implementation decisions must align with that document.
 
+## Current Status
+
+**Last updated**: 2026-03-04
+
+**Active phase**: Phase 5 — Geographic Data Pipeline (see ROADMAP.md)
+
+**What's done in Phase 5**:
+- Cesium for Unreal plugin installed and verified (Baton Rouge, Manhattan, Grand Canyon)
+- Cesium OSM Buildings streaming (~1.4B building volumes over Manhattan)
+- Weather engine dispatch working over Cesium terrain (sun, fog, clouds, sky light)
+
+**What's next in Phase 5**:
+- Terrain from DEM (USGS 3DEP or Cesium terrain tiles → Unreal Landscape)
+- Satellite imagery base layer
+- Google Photorealistic 3D Tiles evaluation (licensing concerns — see `docs/research-geo-pipeline.md`)
+- Vector data ingestion (OSM roads, water, land-use)
+- Location → Unreal automation (end-to-end geocode → fetch → Landscape actor)
+
+**Key research completed**:
+- Cesium for Unreal architecture, pricing, capabilities (free plugin, optional Cesium Ion cloud)
+- Two-track geo strategy decided: Cesium streaming for scouting, USGS heightmaps for production
+- Google Photorealistic 3D Tiles NOT recommended for production (licensing restrictions)
+- Full research in `docs/research-geo-pipeline.md`
+
+**All prior phases complete**: Phase 0 (weather loop), Phase 1 (audio-visual coherence), Phase 2 (spatial audio — hardware pending), Phase 3 (pre-1940 weather), Phase 4 (era soundscapes — art pass pending)
+
 ## Project Overview
 
 Weather Engine is a weather state generator for environmental simulation systems. It supports multiple weather providers: **Visual Crossing** (paid, no rate limits, data back to ~1970), **Open-Meteo** (free, historical data back to 1940), and **NOAA GHCN-Daily** (free, daily data back to ~1800s). Provider selection is automatic — for pre-1940 dates, NOAA is preferred when `NOAA_API_TOKEN` is set; for 1940+, Visual Crossing is preferred when `VISUALCROSSING_API_KEY` is set, with Open-Meteo as fallback. A mock provider is also available for offline use, testing, or deterministic simulation environments.
