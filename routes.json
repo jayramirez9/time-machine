@@ -18,23 +18,23 @@
         },
         "DirectionalLight.Elevation": {
           "type": "rotation",
-          "objectPath": "/Game/TimeMachine3-0.TimeMachine3-0:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
           "component": "Pitch"
         },
         "DirectionalLight.Azimuth": {
           "type": "rotation",
-          "objectPath": "/Game/TimeMachine3-0.TimeMachine3-0:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.DirectionalLight_UAID_A85E45CFE40401D200_1470382761",
           "component": "Yaw"
         },
         "SkyLight.Intensity": {
           "type": "property",
-          "objectPath": "/Game/TimeMachine3-0.TimeMachine3-0:PersistentLevel.SkyLight_UAID_A85E45CFE40401D200_1470380759",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.SkyLight_UAID_A85E45CFE40401D200_1470380759",
           "componentPath": "SkyLightComponent0",
           "propertyName": "Intensity"
         },
         "ExponentialHeightFog.FogDensity": {
           "type": "property",
-          "objectPath": "/Game/TimeMachine3-0.TimeMachine3-0:PersistentLevel.ExponentialHeightFog_UAID_A85E45CFE40401D200_1470382763",
+          "objectPath": "/Temp/Untitled_1.Untitled_1:PersistentLevel.ExponentialHeightFog_UAID_A85E45CFE40401D200_1470382763",
           "componentPath": "HeightFogComponent0",
           "propertyName": "FogDensity"
         }

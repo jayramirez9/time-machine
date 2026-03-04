@@ -277,8 +277,16 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
   - **v2** (`nyc_city_1884`, `schemaVersion: 2`): Full HRTF spatial metadata per source (azimuth, elevation, distance), listener position/enclosure/facing, motion paths with doppler factors, surface types for reverb sends, IR profile for convolution reverb, voice generation config (`voiceConfig` + per-event `voice`/`phrases`). See `docs/audio-profile-schema-v2.md` for full spec.
 - **audio-assets/{profile_id}/** - Downloaded/generated audio files (MP3) served at `/audio-assets/*`. Gitignored (large binaries). Regenerate with `tools/elevenlabs-fetch.js` (preferred) or `tools/freesound-fetch.js` (legacy).
 
+### Cesium Integration (Phase 5)
+- **Cesium for Unreal** plugin provides real-world geospatial terrain and building data. Installed via Fab/Marketplace.
+- **CesiumGeoreference** actor sets the world origin to a lat/lon. Controllable via Remote Control API: `OriginLatitude`, `OriginLongitude`, `OriginHeight` properties on the actor's objectPath (not RootComponent).
+- **Cesium World Terrain** streams global terrain with satellite imagery. Added via Cesium panel Quick Add.
+- **Cesium OSM Buildings** streams ~1.4B building volumes from OpenStreetMap. Added via Cesium panel Quick Add (asset ID 96188).
+- Weather engine dispatch (sun, fog, clouds, sky light) works over Cesium terrain — verified with moving shadows on Manhattan.
+- See `docs/research-geo-pipeline.md` for full research on approaches, licensing, and the two-track strategy (Cesium streaming for scouting, USGS heightmaps for production).
+
 ### Route Configs
-- **routes.json** - Production routes config for the 1884 NYC scene. 14 Unreal routes (sun position, fog, clouds, wind, precipitation, ground wetness, heat haze, sky light), 3 DSP routes, 3 lighting routes. All actor objectPaths verified against live Unreal scene.
+- **routes.json** - Production routes config. Unreal routes (sun position, fog, clouds, sky light), DSP routes, lighting routes. Actor objectPaths must match the current level — update the level path prefix when switching projects.
 - **routes.example.json** - Annotated example routes config showing all transform types and actor dispatch configurations.
 
 ### Tools

@@ -1,61 +1,160 @@
 # Time Machine — Roadmap
 
-Living document. Phases are sequential but items within a phase are not prioritized.
+Living document. Phase numbering matches PRD. Phases are sequential but items within a phase are not prioritized.
 
 ---
 
-## Phase 1 — Foundation (DONE)
+## Phase 0 — Complete the Weather Loop (DONE)
 
-- [x] Weather engine with Visual Crossing, Open-Meteo, NOAA providers
+One location, one era, full weather→visual+audio loop running end-to-end in Unreal.
+
+- [x] Weather engine with Visual Crossing, Open-Meteo providers
 - [x] WorldState compiler: categorical states + normalized controls
 - [x] Runtime engine with tick loop, timeline caching, state smoothing
 - [x] Environment router + endpoint dispatcher (Unreal, DSP, lighting)
 - [x] Rate limiter with EMA smoothing
+- [x] Live Unreal dispatch (sun, fog, clouds, wind, precip, wetness, haze)
+- [x] Daemon with HTTP/WebSocket transport
+- [x] WebGPU viz client
+- [x] Full 24-hour soak test: 29 publishes, 0 violations on live engine AND replay
+
+## Phase 1 — Audio-Visual Coherence (DONE)
+
+Sound and picture agree. Weather you see is weather you hear.
+
 - [x] 5-layer audio engine (PRD Section 13)
 - [x] Audio profile v1 (Baton Rouge Suburb 1978)
-- [x] WebGPU viz client
-- [x] Daemon with HTTP/WebSocket transport
+- [x] Wire audio engine to daemon WebSocket — all 9 controls driving 5 layers
+- [x] Wind audio coherence (level + gustiness + direction matched to visual)
+- [x] Rain surface audio matched to precipDensity
+- [x] Thunder model with distance-based delay
 
-## Phase 2 — Spatial Audio + Unreal Integration (DONE)
+## Phase 2 — Multi-Window + Spatial Audio (PARTIAL)
 
+The room becomes a portal. Multiple windows, directional audio, spatial coherence.
+
+Done (spatial audio):
 - [x] HRTF spatial panning (v2 audio profiles)
 - [x] Doppler pitch shift on micro-events
 - [x] Synthetic convolution reverb (enclosure-aware, surface-aware sends)
-- [x] Audio profile v2 schema (NYC 1884)
+- [x] Real convolution IRs (file-based loading with synthetic fallback)
+- [x] Occlusion layer (Layer 5): building-edge diffraction, room LPF, urban canyon filter
+- [x] HRTF panner refDistance fix (micro-events audible in mix)
+
+Not started (installation hardware):
+- [ ] Multi-camera Unreal scene (N/E/S/W)
+- [ ] Exposure/color matching across cameras
+- [ ] 4-zone speaker mapping
+- [ ] Window physics stub ("glass closed" EQ filtering)
+- [ ] Operator preset switcher
+- [ ] Calibration flow v1
+
+## Phase 3 — Historical Depth / Pre-1940 Weather (DONE)
+
+Break the 1940 barrier. Reach back to the 1800s with real weather data.
+
+- [x] NOAA GHCN-Daily provider for pre-1940 historical data (daily obs back to ~1800s)
+- [x] Provider fallback chain: Visual Crossing (1940+) → NOAA (pre-1940) → Open-Meteo → Mock
+- [x] Confidence/resolution metadata based on data age
+- [x] 1884 NYC weather verified end-to-end
+
+## Phase 4 — Era-Specific Soundscapes (DONE)
+
+You hear 1884, not 2024 with old buildings.
+
+- [x] Audio profile v2 schema (NYC 1884): full HRTF spatial metadata, motion paths, doppler, surface types, IR profile, voice generation config
+- [x] Locale preset: `nyc_city_1884` with era-appropriate parameters
 - [x] ElevenLabs SFX pipeline — era-aware AI audio generation (replaced Freesound)
 - [x] 40 NYC 1884 audio assets generated via ElevenLabs (0 era audit errors)
-- [x] HRTF panner refDistance fix (micro-events audible in mix)
-- [x] Live Unreal dispatch (sun, fog, clouds, wind, precip, wetness, haze)
+- [x] AI voice generation: period vendor calls, newsboy cries, children's shouts (12 TTS clips across 5 events)
+- [x] Year-precise era exclusions: shared anachronism timeline (`lib/eraData.js`, 35 entries 1712–2017)
+- [x] Era audit tool (`tools/era-audit.js`)
 - [x] Greybox scene spawner (12 brownstones, 4 gas lamps, player position)
-- [x] NOAA GHCN-Daily provider for pre-1940 historical data
+- [x] Harvard Square 1969 locale: third locale/era (17 micro-events, 3 voice profiles, 55 SFX + 12 voice assets)
+- [x] Doppler + reverb tuning pass (listening session validated)
+- [x] Audition panel for debugging individual assets
+- [x] Web launcher with runtime engine restart
+- [ ] **Unreal scene art pass** *(after geo data)*: Materials (brownstone brick, granite sett, cast iron), window geometry, stoops, awnings, period signage
+- [ ] **Gas lamp light configuration** *(after geo data)*: Set warm color temperature (2200K), intensity, and attenuation on the 4 PointLight actors
 
-## Phase 2.5 — Immersion Polish (NEXT)
+## Phase 4.5 — Period Music Streaming
 
-- [x] **Occlusion layer (Layer 5)**: Building-edge diffraction for street sounds below listener, room LPF for sounds behind, distance-dependent urban canyon filter. 3 stacking effects, directional bed filtering, per-source filter lifecycle.
-- [x] **Real convolution IRs**: File-based IR loading in audio engine with synthetic fallback. `irProfile` expanded to `{ id, file, fallback }` object. ElevenLabs SFX API generates IR from acoustic space prompt (narrow stone street between brownstones). `elevenlabs-fetch.js --only ir` generates WAV. Engine fetches at startup, falls back to synthetic on 404/decode error.
-- [x] **AI voice generation**: Period-appropriate vendor calls, newsboy cries, children's shouts via ElevenLabs Text-to-Speech API. 12 voice clips across 5 events (newsboy, vendor_oyster, vendor_ice, vendor_hotcorn, children_play). Voice clips added as additional sources alongside SFX — engine bag-draw naturally mixes them. `voiceConfig` block with 4 voice profiles, per-event `phrases` arrays, auto-selected voice IDs cached in profile. Tool: `tools/elevenlabs-voice-fetch.js`.
-- [x] **Year-precise era exclusions**: Shared anachronism timeline (`lib/eraData.js`, 35 entries 1712–2017) used by both `elevenlabs-fetch.js` and `era-audit.js`. Replaced hardcoded tier system with per-year filtering (`>=` so debut year is excluded). Positive era anchor in prompts prevents regression. All 53 SFX + 12 voice assets regenerated with corrected prompts.
-- [x] **Audition panel**: Collapsible panel in audio engine listing every loaded sound grouped by layer (base beds, directional, weather, micro-events) with play/stop buttons. Routes through masterGain for raw asset preview. One sound at a time.
-- [x] **Web launcher**: `launcher.html` served at `/` with location, date, time, timescale, and weather provider fields. `POST /api/launch` stops and restarts the engine at runtime. `tm-engine.js` refactored to mutable engine reference pattern. WebSocket live status. `bin/time-machine` shell launcher with browser auto-open.
-- [x] **Doppler + reverb tuning pass**: Listening session confirmed NYC 1884 mix quality. Doppler factors, reverb send levels, and surface coefficients validated by ear.
-- [x] **Harvard Square 1969 locale**: Third locale/era — Cambridge MA, January 13, 1969. V2 audio profile with 17 micro-events (removed steam radiator from one-shots, baked into base bed), 3 voice profiles (newspaper vendor, protester, student), 4 directional beds. 55 SFX + 12 voice assets generated. Per-event `durationSec` override added to profile schema and `elevenlabs-fetch.js` for precise clip lengths (car horn 2s, dog bark 3s, etc). Reverb bus cleanup fix in audio engine stop handler.
-- [ ] **Unreal scene art pass**: Materials (brownstone brick, granite sett, cast iron), window geometry, stoops, awnings, period signage. Marketplace assets or custom modeling.
-- [ ] **Gas lamp light configuration**: Set warm color temperature (2200K), intensity, and attenuation on the 4 PointLight actors once Unreal is back up.
+Turn on the radio and only hear music that existed on this exact day. See PRD Section 14.5.
 
-## Phase 3+ — Dream State
+- [ ] MusicBrainz date authority module
+- [ ] Locale music profile schema (radio format, genre weights, station identity)
+- [ ] `musicRadio` WorldState control
+- [ ] Streaming playback adapter (Spotify/Apple Music via ISRC lookup)
+- [ ] Radio station simulation (sequencing, gaps, patter cadence)
+- [ ] Pre-recording era music (barrel organ, brass band, parlor piano)
+- [ ] Baton Rouge 1978 integration test (20+ transitions, zero date violations)
 
-Long-horizon items. No timeline, no commitment. Ideas that would meaningfully advance realism but require resources, research, or external dependencies.
+## Phase 5 — Geographic Data Pipeline (NEXT)
 
-- [ ] **Foley session / sound library upgrade**: The 40 NYC 1884 assets are now ElevenLabs AI-generated (a major step up from Freesound keyword search), but a dedicated Foley session with period-appropriate props or a curated sound library (Sonniss, Boom, Pro Sound Effects) would push source material quality further. Particularly: horse hooves on real granite, wooden wheel rumble, coal chute impact, iron-on-iron rail sounds. The spatial pipeline (HRTF, doppler, reverb, surface sends) benefits proportionally from source quality improvements.
+Type a location, get real terrain in Unreal. The foundation for every visual scene. See PRD Section 18 and `docs/research-geo-pipeline.md` for full spec and research.
 
-- [ ] **Present-day weather modeling for historical reconstruction**: Use modern meteorological models (reanalysis datasets like ERA5, 20CRv3) to reconstruct sub-daily weather conditions for historical dates where only daily NOAA observations exist. NOAA GHCN-Daily gives us daily min/max temperature and total precipitation, but not hourly progression, cloud cover, humidity, or wind patterns. A reanalysis-informed interpolation layer could synthesize realistic hourly weather curves from sparse daily observations — turning "high of 85F, 0.2in rain" into a plausible hour-by-hour arc with morning fog, afternoon buildup, evening thunderstorm, and post-storm clearing. This would dramatically improve the temporal texture of pre-1940 simulations.
+- [x] Cesium for Unreal integration: plugin installed, georeference set via Remote Control API, verified at Baton Rouge, Manhattan, and Grand Canyon
+- [x] Cesium OSM Buildings: 1.4B building volumes streaming, verified over Manhattan
+- [x] Weather engine dispatch over Cesium terrain: sun position, fog, clouds, sky light driving real geo data — shadows moving correctly
+- [ ] Terrain from DEM: USGS 3DEP or Cesium terrain tiles → Unreal Landscape
+- [ ] Satellite imagery base layer: aerial/satellite imagery as landscape material
+- [ ] Google Photorealistic 3D Tiles: stream through Cesium for terrain + buildings
+- [ ] Vector data ingestion (OSM): roads, water, land-use → spline guides and landscape masks
+- [ ] Location → Unreal automation: end-to-end geocode → fetch → Landscape actor
+- [ ] LOD and scale strategy: city block vs Grand Canyon, streaming tile budget
+- [ ] Historical overlay workflow: modern terrain base + period content swap
 
-- [ ] **Ambisonic output for WAMM speakers**: Full ambisonic rendering pipeline for Wilson WAMM speaker array. See `docs/audio-architecture-wamm.md` for architecture notes.
+## Phase 6 — Historical Urban Form
 
-- [ ] **Multi-locale support**: Generalize beyond the current 3 locales (Baton Rouge 1978, NYC 1884, Harvard Square 1969). Template for rapid locale/era onboarding: locale preset + audio profile + Unreal scene package.
+The 3D world looks like 1884, not just sounds like it. See PRD Phase 6.
 
-- [ ] **Crowd simulation**: Persistent ambient human presence beyond discrete micro-events. Murmur layers, footstep density tied to activityLevel, crowd noise that responds to time-of-day and weather.
+- [ ] Sanborn map ingestion (footprints, heights, materials from LOC archive)
+- [ ] Block massing generation (procedural volumes from Sanborn data on Phase 5 terrain)
+- [ ] Era-appropriate street layout (cobblestone, granite sidewalks, gas lamp placement)
+- [ ] Architectural style library (brownstone, Italianate, cast-iron, Federal, Greek Revival)
+- [ ] Hero building modeling (Trinity Church, Brooklyn Bridge, City Hall, Grand Central Depot)
+- [ ] Historical photo → texture pipeline (AI-assisted PBR extraction)
+- [ ] Street-level props (gas lamps, hitching posts, awnings, period signage)
 
-- [ ] **Period music streaming (Phase 4.5)**: Date-locked music playback driven by WorldState. Two-layer architecture: MusicBrainz date authority (exact release date filtering down to the day) + streaming playback adapter (Spotify/Apple Music via ISRC lookup). Adds `musicRadio` control to WorldState. Pre-recording era (~pre-1890) uses curated local assets (barrel organ renderings, brass band recordings). See PRD Section 14.5 and Phase 4.5 for full spec.
+## Phase 7 — The Agent Layer
 
-- [ ] **Dynamic music / score layer**: Generative or adaptive musical underscore that responds to weather state, time of day, and dramatic arc. Not a soundtrack — a subtle tonal bed that shifts with the environment.
+AI agents autonomously research and assemble Place×Time profiles. See PRD Phase 7.
+
+- [ ] Profile schema specification (formal JSON schema with confidence ratings + citations)
+- [ ] Weather research agent
+- [ ] Ecology research agent
+- [ ] Urban form research agent
+- [ ] Cultural research agent
+- [ ] Photo archive agent
+- [ ] Profile assembler (orchestrator)
+- [ ] Accuracy manifest generator
+
+## Phase 8 — Living Street View
+
+The full dream. Walk through a historically accurate 3D reconstruction. See PRD Phase 8.
+
+- [ ] Walkable city blocks (navigable street-level Unreal experience)
+- [ ] Acoustic environment modeling (per-street reverb/reflection)
+- [ ] Dynamic population (procedural pedestrians, carriages, vendors)
+- [ ] Period-accurate lighting transitions (lamplighter NPC, sunrise through canyons)
+- [ ] Interactive audio anchoring (spatial audio tied to world position)
+- [ ] Multi-era support (same block, different year)
+- [ ] Narrative mode (scripted time-lapse: sunrise→sunset, decade→decade)
+
+---
+
+## Backlog — No Phase, No Timeline
+
+Ideas that would improve quality but don't belong to a specific phase.
+
+- [ ] **Foley session / sound library upgrade**: Dedicated Foley session with period-appropriate props or curated sound library (Sonniss, Boom, Pro Sound Effects). Horse hooves on real granite, wooden wheel rumble, coal chute impact, iron-on-iron rail sounds.
+
+- [ ] **Present-day weather modeling for historical reconstruction**: Reanalysis datasets (ERA5, 20CRv3) to reconstruct sub-daily weather from sparse NOAA daily observations. Turn "high of 85F, 0.2in rain" into a plausible hourly arc.
+
+- [ ] **Ambisonic output for WAMM speakers**: Full ambisonic rendering pipeline for Wilson WAMM speaker array. See `docs/audio-architecture-wamm.md`.
+
+- [ ] **Multi-locale support**: Template for rapid locale/era onboarding: locale preset + audio profile + Unreal scene package.
+
+- [ ] **Crowd simulation**: Persistent ambient human presence — murmur layers, footstep density tied to activityLevel, crowd noise responding to time-of-day and weather.
+
+- [ ] **Dynamic music / score layer**: Generative or adaptive musical underscore that responds to weather state, time of day, and dramatic arc.
