@@ -165,6 +165,7 @@ Time Machine is a set of coordinated systems:
 8. **Agent Research Layer** — AI agents that assemble Environment Profiles from archival sources
 9. **Operator UX + Health + Recovery** — Non-technical operation, monitoring, graceful degradation
 10. **Telemetry + Diagnostics** — State logging, replay, soak testing
+11. **Geographic Data Pipeline** — Real-world terrain, elevation, and satellite imagery ingestion from geographic data services into Unreal Engine
 
 Everything hangs off WorldState. Everything upstream of WorldState is research and data. Everything downstream is rendering and output.
 
@@ -417,6 +418,7 @@ An Environment Profile is the complete description of a place at a moment in his
 
 | Layer | What It Describes | Example: NYC 1884 |
 |-------|-------------------|-------------------|
+| **Terrain** | Elevation, landform, water bodies — the physical ground truth | USGS DEM + Cesium terrain tiles for Manhattan island; unchanged across eras |
 | **Weather** | Hourly atmospheric conditions | NOAA Central Park daily obs → interpolated hourly |
 | **Soundscape** | Audio profile: beds, directional, micro-events, weather sounds | Horse hooves on cobblestone, barrel organs, house sparrows |
 | **Urban Form** | Physical environment: buildings, streets, infrastructure | Sanborn maps → block massing, brownstone facades, gas lamps |
@@ -451,7 +453,102 @@ Each layer has a **confidence rating** and an explicit **known compromises** man
 
 * Clock discipline across nodes (minimum: network time sync with drift correction; upgrade path to tighter sync solutions).
 
-## 18) MVP Definition (What "Done" Means)
+## 18) Geographic Data Pipeline
+
+The Geographic Data Pipeline solves a foundational problem: before you can place buildings, streets, or vegetation, you need the actual terrain. Type in "Grand Canyon" or "Manhattan" and the system pulls real-world geographic data — elevation, terrain, satellite/aerial imagery — and builds the Unreal landscape from it. Man-made structures, period detail, and environment dressing come after, layered on top of ground truth geography.
+
+### 18.1 Pipeline Overview
+
+```
+Location input (string or coordinates)
+        ↓
+Geocode → lat/lon + bounding box
+        ↓
+Fetch geographic data layers:
+  • DEM / elevation (heightmap)
+  • Satellite / aerial imagery (texture)
+  • Vector data (roads, water, land use)
+  • 3D building footprints (where available)
+        ↓
+Transform to Unreal-compatible formats:
+  • Heightmap → Landscape actor
+  • Imagery → Landscape material (base layer)
+  • Vector → spline guides for roads, water bodies
+  • Buildings → mesh volumes
+        ↓
+Unreal Landscape assembled automatically
+        ↓
+Layer in man-made / period content on top
+```
+
+### 18.2 Data Sources
+
+| Source | Data Type | Coverage | Resolution |
+|--------|-----------|----------|------------|
+| **Google Earth / Google Maps** (Photorealistic 3D Tiles) | 3D terrain + building mesh + photographic texture | Global urban areas | Sub-meter in cities |
+| **Cesium Ion** (3D Tiles, quantized mesh) | Terrain, 3D buildings, imagery | Global | 1-30m terrain, sub-meter in cities |
+| **USGS 3DEP** (via National Map) | Bare-earth DEM (LiDAR-derived) | Continental US | 1m (LiDAR areas), 10m (full US) |
+| **Mapbox Terrain** | RGB-encoded heightmaps + vector tiles | Global | ~5m |
+| **OpenStreetMap** | Vector: roads, buildings, land use, water | Global | Crowd-sourced, variable |
+| **Bing Maps** | Aerial imagery | Global | 15cm in urban areas |
+| **USDA NAIP** | Aerial ortho-imagery | US agricultural + urban | 60cm |
+
+### 18.3 Unreal Integration Model
+
+**Landscape from Heightmap:**
+The pipeline fetches DEM/elevation data for the target area, converts it to a 16-bit heightmap, and imports it as an Unreal Landscape actor. Landscape size scales to the bounding box — a city block vs. the Grand Canyon are different scales with different LOD strategies.
+
+**Terrain Material from Imagery:**
+Satellite or aerial imagery becomes the base landscape material. For present-day scenes this is direct. For historical scenes, the aerial imagery serves as a layout reference — the material gets swapped for period-appropriate textures, but the terrain shape remains (terrain doesn't change on human timescales).
+
+**Vector Data as Guides:**
+Roads, water bodies, and land-use boundaries from OSM or similar become spline actors or landscape layer masks in Unreal. These guide procedural placement: roads get road materials, water polygons get water shaders, parks get vegetation scatter.
+
+**3D Buildings (Modern Baseline):**
+Google's Photorealistic 3D Tiles or Cesium OSM Buildings provide modern building geometry. For present-day scenes, this is usable directly. For historical scenes, it provides a reference for what's there now — the historical pipeline (Phase 5) replaces buildings with period-accurate versions, but the modern data tells you lot lines, street widths, and general urban density.
+
+### 18.4 The Historical Layering Model
+
+The geographic pipeline and the historical pipeline are complementary:
+
+1. **Terrain is timeless** — The Grand Canyon in 1884 had the same elevation profile as today (geological timescales). Fetch modern DEM, use it directly.
+2. **Street grid is semi-stable** — Manhattan's street grid was laid out by the Commissioners' Plan of 1811. Modern vector data gives you the grid. Historical maps tell you which streets existed and what they were surfaced with.
+3. **Buildings change** — Modern 3D building data is a starting point, not the answer. For historical scenes, Sanborn maps (Phase 6) replace modern buildings with period footprints. For present-day scenes, the 3D tiles are the answer.
+4. **Vegetation changes** — Modern land cover is a starting point. Historical ecology data (Phase 4) overrides it with period-accurate flora.
+
+The key insight: **fetch the real geography once, then dress it for any era.** The terrain and street grid are the foundation that persists across time. Everything above ground level is era-specific content layered on top.
+
+### 18.5 Cesium for Unreal (Primary Integration Path)
+
+Cesium for Unreal is the most mature pipeline for streaming real-world geographic data into Unreal Engine:
+
+* Streams 3D Tiles (terrain + buildings + imagery) directly into the Unreal scene
+* Supports Google Photorealistic 3D Tiles as a tile source
+* WGS84 georeference system — place the Unreal origin at any lat/lon and the world builds around it
+* Level-of-detail streaming — loads detail as needed, handles Grand Canyon and city block scales
+* Open source plugin, production-ready
+
+For Time Machine, Cesium provides the fast path: type a location, the plugin places you there with real terrain and (where available) real 3D buildings. From that starting point, the historical content pipeline can selectively replace modern elements with period-accurate versions.
+
+### 18.6 Workflow Vision
+
+**Present-day scene (fastest path):**
+1. Enter location: "Grand Canyon, South Rim"
+2. Pipeline fetches terrain + imagery via Cesium/Google 3D Tiles
+3. Unreal Landscape assembled automatically
+4. Weather engine drives sky, lighting, atmosphere over the real terrain
+5. Done — you're standing at the Grand Canyon with real weather
+
+**Historical scene (layered):**
+1. Enter location + date: "Manhattan, 1884"
+2. Pipeline fetches modern terrain (elevation doesn't change)
+3. Pipeline fetches modern street grid as reference
+4. Historical pipeline (Phase 6) replaces buildings with Sanborn-derived period geometry
+5. Historical pipeline (Phase 4) overrides vegetation and soundscape
+6. Weather engine drives the atmosphere from 1884 NOAA records
+7. You're standing in 1884 Manhattan on real terrain with period buildings
+
+## 19) MVP Definition (What "Done" Means)
 
 MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 
@@ -472,7 +569,7 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 * Calibration is repeatable and saved.
 * Panic/recovery works and preserves dignity.
 
-## 19) Success Metrics
+## 20) Success Metrics
 
 **Believability:**
 * Unprompted "this feels real" comments
@@ -490,7 +587,7 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 * Steps to start a session (<5)
 * Crash-free session rate
 
-## 20) Risks and Mitigations
+## 21) Risks and Mitigations
 
 **Risk: It still feels like TV**
 * Fix black levels, exposure matching, and room lighting integration before adding "features."
@@ -507,7 +604,7 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 **Risk: Mac hardware ceilings**
 * Prototype on Mac; define production hardware baseline that can hit realism targets.
 
-## 21) Roadmap (From Today to the Dream State)
+## 22) Roadmap (From Today to the Dream State)
 
 This roadmap is grounded in what exists today and builds toward the full vision in concrete steps. Each phase delivers a usable product. Each phase makes the next one possible.
 
@@ -622,56 +719,75 @@ In progress:
 
 ---
 
-### Phase 5 — Historical Urban Form
+### Phase 5 — Geographic Data Pipeline
+
+**Goal:** Type a location, get real terrain in Unreal. The foundation for every visual scene.
+
+| Step | Task | Description |
+|------|------|-------------|
+| 5.1 | Cesium for Unreal integration | Install and configure Cesium plugin. Georeference system wired to engine's geocode output (lat/lon) |
+| 5.2 | Terrain from DEM | Fetch USGS 3DEP or Cesium terrain tiles for target area. Import as Unreal Landscape with correct elevation |
+| 5.3 | Satellite imagery base layer | Fetch aerial/satellite imagery and apply as landscape material. Visual ground truth for present-day scenes |
+| 5.4 | Google Photorealistic 3D Tiles | Stream Google's 3D tiles through Cesium — get photorealistic terrain + buildings for any location with coverage |
+| 5.5 | Vector data ingestion (OSM) | Pull roads, water bodies, land-use boundaries from OpenStreetMap. Convert to spline guides and landscape layer masks |
+| 5.6 | Location → Unreal automation | End-to-end: enter "Grand Canyon" → geocode → fetch terrain + imagery → Landscape actor built. Weather engine drives sky/atmosphere on top |
+| 5.7 | LOD and scale strategy | Handle scale differences between a city block and the Grand Canyon. Streaming LOD, tile budget, view distance |
+| 5.8 | Historical overlay workflow | Modern terrain as base, with tooling to swap imagery/buildings for period content. Defines the handoff to Phase 6 (Urban Form) |
+
+**Exit Criteria:** Type "Grand Canyon, South Rim" and get a real-terrain Unreal scene with correct elevation, satellite imagery, and weather driving the sky. Type "Manhattan" and get the island with real building geometry. The terrain is the ground truth that all subsequent phases build on.
+
+---
+
+### Phase 6 — Historical Urban Form
 
 **Goal:** The 3D world looks like 1884, not just sounds like it.
 
 | Step | Task | Description |
 |------|------|-------------|
-| 5.1 | Sanborn map ingestion | Agent extracts building footprints, heights, materials, use-types from digitized Sanborn fire insurance maps (LOC archive) |
-| 5.2 | Block massing generation | Procedural generation of building volumes from Sanborn data — correct footprints, correct heights, correct lot lines |
-| 5.3 | Era-appropriate street layout | Cobblestone streets, dirt side streets, granite sidewalks, no asphalt. Gas lamp placement. Horse watering troughs. |
-| 5.4 | Architectural style library | Procedural facade system: Brownstone rowhouse, Italianate commercial, Cast-iron front, Federal, Greek Revival — applied based on Sanborn material data + neighborhood + date |
-| 5.5 | Hero building modeling | Key landmarks modeled from historical photos: Trinity Church, the Equitable Building, Brooklyn Bridge (1 year old in 1884), City Hall, Grand Central Depot |
-| 5.6 | Historical photo → texture pipeline | AI-assisted: reference photo of a specific building → diffuse/normal/roughness texture maps for Unreal materials |
-| 5.7 | Street-level props | Gas lamp posts, horse hitching posts, awnings, period signage — procedurally placed based on street type and neighborhood |
+| 6.1 | Sanborn map ingestion | Agent extracts building footprints, heights, materials, use-types from digitized Sanborn fire insurance maps (LOC archive) |
+| 6.2 | Block massing generation | Procedural generation of building volumes from Sanborn data — correct footprints, correct heights, correct lot lines. Placed on Phase 5 terrain |
+| 6.3 | Era-appropriate street layout | Cobblestone streets, dirt side streets, granite sidewalks, no asphalt. Gas lamp placement. Horse watering troughs. |
+| 6.4 | Architectural style library | Procedural facade system: Brownstone rowhouse, Italianate commercial, Cast-iron front, Federal, Greek Revival — applied based on Sanborn material data + neighborhood + date |
+| 6.5 | Hero building modeling | Key landmarks modeled from historical photos: Trinity Church, the Equitable Building, Brooklyn Bridge (1 year old in 1884), City Hall, Grand Central Depot |
+| 6.6 | Historical photo → texture pipeline | AI-assisted: reference photo of a specific building → diffuse/normal/roughness texture maps for Unreal materials |
+| 6.7 | Street-level props | Gas lamp posts, horse hitching posts, awnings, period signage — procedurally placed based on street type and neighborhood |
 
 **Exit Criteria:** Fly through the Unreal scene. Building heights match Sanborn data. Materials match the era. Hero buildings are recognizable from period photos. Streets are cobblestone where they should be. No anachronistic materials (no steel-and-glass, no asphalt, no electric lights south of 14th Street).
 
 ---
 
-### Phase 6 — The Agent Layer
+### Phase 7 — The Agent Layer
 
 **Goal:** AI agents autonomously research and assemble Place×Time profiles.
 
 | Step | Task | Description |
 |------|------|-------------|
-| 6.1 | Profile schema specification | Formal JSON schema for Environment Profiles: all layers, all fields, confidence ratings, source citations |
-| 6.2 | Weather research agent | Given a place + date range, finds the best available weather data source (Open-Meteo, NOAA GHCN, reconstructed) and produces a weather provider config |
-| 6.3 | Ecology research agent | Given a place + date, queries historical biodiversity records (Audubon, eBird historical, natural history surveys) and produces species pools with seasonal/diurnal weights |
-| 6.4 | Urban form research agent | Given a place + date, locates Sanborn maps, historical atlases, census records, and produces a GIS-compatible urban form dataset |
-| 6.5 | Cultural research agent | Given a place + date, researches period music, language/slang, commerce, social customs, and produces a cultural metadata bundle |
-| 6.6 | Photo archive agent | Given a place + date, scours digitized photo archives (NYPL, LOC, Museum of City of NY, stereograph collections) and produces a tagged reference image set with location + angle metadata |
-| 6.7 | Profile assembler | Orchestrator agent that invokes specialist agents and assembles a complete Environment Profile with confidence ratings and known compromises |
-| 6.8 | Accuracy manifest generator | Auto-generates the Accuracy Manifest (Section 14.5) from agent research, listing sources, confidence, and gaps |
+| 7.1 | Profile schema specification | Formal JSON schema for Environment Profiles: all layers, all fields, confidence ratings, source citations |
+| 7.2 | Weather research agent | Given a place + date range, finds the best available weather data source (Open-Meteo, NOAA GHCN, reconstructed) and produces a weather provider config |
+| 7.3 | Ecology research agent | Given a place + date, queries historical biodiversity records (Audubon, eBird historical, natural history surveys) and produces species pools with seasonal/diurnal weights |
+| 7.4 | Urban form research agent | Given a place + date, locates Sanborn maps, historical atlases, census records, and produces a GIS-compatible urban form dataset |
+| 7.5 | Cultural research agent | Given a place + date, researches period music, language/slang, commerce, social customs, and produces a cultural metadata bundle |
+| 7.6 | Photo archive agent | Given a place + date, scours digitized photo archives (NYPL, LOC, Museum of City of NY, stereograph collections) and produces a tagged reference image set with location + angle metadata |
+| 7.7 | Profile assembler | Orchestrator agent that invokes specialist agents and assembles a complete Environment Profile with confidence ratings and known compromises |
+| 7.8 | Accuracy manifest generator | Auto-generates the Accuracy Manifest (Section 14.5) from agent research, listing sources, confidence, and gaps |
 
 **Exit Criteria:** Tell the system "NYC, June 15, 1884." An agent pipeline produces a complete Environment Profile — weather, soundscape, urban form metadata, cultural context, reference photos — with source citations for every claim. A human reviews it, approves it, and the system can run it.
 
 ---
 
-### Phase 7 — Living Street View
+### Phase 8 — Living Street View
 
 **Goal:** The full dream. Walk through a historically accurate 3D reconstruction driven by real weather, real soundscapes, real culture.
 
 | Step | Task | Description |
 |------|------|-------------|
-| 7.1 | Walkable city blocks | Navigable street-level experience in Unreal — walk, look around, enter plazas |
-| 7.2 | Acoustic environment modeling | Reverb/reflection characteristics per street width, building height, surface material |
-| 7.3 | Dynamic population | Procedural pedestrians, horse carriages, street vendors — density driven by time-of-day and weather |
-| 7.4 | Period-accurate lighting transitions | Gas lamps lit at dusk (a lamplighter NPC), sunrise through building canyons, candlelight in windows at night |
-| 7.5 | Interactive audio anchoring | Sound sources anchored to world position — walk toward the harbor and harbor sounds grow, walk into a park and bird density increases |
-| 7.6 | Multi-era support | Same city block, different year. 1884 → 1920 → 1955 → 1978 → today. Watch the city transform. |
-| 7.7 | Narrative mode integration | Scripted time-lapse: sunrise to sunset, season to season, decade to decade — maintaining coherence throughout |
+| 8.1 | Walkable city blocks | Navigable street-level experience in Unreal — walk, look around, enter plazas |
+| 8.2 | Acoustic environment modeling | Reverb/reflection characteristics per street width, building height, surface material |
+| 8.3 | Dynamic population | Procedural pedestrians, horse carriages, street vendors — density driven by time-of-day and weather |
+| 8.4 | Period-accurate lighting transitions | Gas lamps lit at dusk (a lamplighter NPC), sunrise through building canyons, candlelight in windows at night |
+| 8.5 | Interactive audio anchoring | Sound sources anchored to world position — walk toward the harbor and harbor sounds grow, walk into a park and bird density increases |
+| 8.6 | Multi-era support | Same city block, different year. 1884 → 1920 → 1955 → 1978 → today. Watch the city transform. |
+| 8.7 | Narrative mode integration | Scripted time-lapse: sunrise to sunset, season to season, decade to decade — maintaining coherence throughout |
 
 **Exit Criteria:** Step into 1884 Manhattan. Walk down Broadway. The sun is where it actually was that day. The weather is what actually happened. Trinity Church towers over everything because nothing taller exists yet. You hear horse hooves on cobblestone, a barrel organ on the corner, sparrows in the trees, and the distant whistle of the elevated railway. A gas lamplighter begins his rounds as the sun sets. It is raining because it actually rained that day, and the rain sounds like rain on cobblestone, not rain on asphalt. Nothing is wrong. Nothing is anachronistic. You are there.
 
@@ -680,18 +796,18 @@ In progress:
 ### Milestone Map
 
 ```
-TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 ─── Phase 4 ─── Phase 5 ─── Phase 6 ─── Phase 7
-          Weather      Audio+       Multi-       Pre-1940     Era          Urban        Agent        Living
-          Loop         Visual       Window       Weather      Soundscapes  Form         Layer        Street
-          (Unreal)     Coherence    + Spatial                                                        View
-          ▲                                      ▲                                     ▲
-          YOU ARE                                 1884 weather                          Autonomous
-          HERE                                   becomes real                          research
+TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 ─── Phase 4 ─── Phase 5 ─── Phase 6 ─── Phase 7 ─── Phase 8
+          Weather      Audio+       Multi-       Pre-1940     Era          Geo Data     Urban        Agent        Living
+          Loop         Visual       Window       Weather      Soundscapes  Pipeline     Form         Layer        Street
+          (Unreal)     Coherence    + Spatial                              (Terrain)                              View
+          ▲                                      ▲            ▲                                     ▲
+          YOU ARE                                 1884 weather Real terrain               Autonomous
+          HERE                                   becomes real in Unreal                  research
 ```
 
-Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 5-6 makes it visual. Phase 7 is the dream state.
+Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 5 gives you real terrain for any location. Phase 6-7 makes it historically visual. Phase 8 is the dream state.
 
-## 22) The Agent-Driven Research Model
+## 23) The Agent-Driven Research Model
 
 The ambition of Time Machine — absolute historical accuracy at arbitrary Place×Time coordinates — is impossible for humans to achieve manually at scale. The volume of archival research required for a single city block in a single year would take a historian months.
 
@@ -729,7 +845,7 @@ The pipeline:
 
 This is the "Google Street View skinned with history" concept. Modern photogrammetry gives us the geometry. Historical photos give us the surfaces. AI bridges the gap.
 
-## 23) What We Decide Next (So This Becomes Buildable)
+## 24) What We Decide Next (So This Becomes Buildable)
 
 ### Immediate (Phase 0 Completion)
 
@@ -749,5 +865,6 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 2. **Sanborn map parsing:** What's the realistic pipeline from scanned Sanborn pages to GIS building footprints?
 3. **Historical ecology data:** How complete are pre-1900 species records for major US cities?
 4. **AI texture generation:** Current state of the art for photo→PBR texture extraction from a single historical image?
+5. **Geographic data pipeline:** Evaluate Cesium for Unreal + Google Photorealistic 3D Tiles as the terrain/building ingestion path. Key questions: API access and licensing for Google 3D Tiles, Cesium Ion tile budgets at scale, DEM resolution for natural terrain (Grand Canyon, coastlines), workflow for converting streamed 3D tiles into editable Unreal Landscape actors (vs. runtime streaming only), and feasibility of selectively replacing modern buildings with historical geometry on top of the same terrain base.
 
 Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.
