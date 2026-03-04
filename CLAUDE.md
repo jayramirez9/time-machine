@@ -17,12 +17,15 @@ See **PRD.md** for the full Time Machine Experience Bible — the product consti
 - Cesium OSM Buildings streaming (~1.4B building volumes over Manhattan)
 - Weather engine dispatch working over Cesium terrain (sun, fog, clouds, sky light)
 
+**What's done in Phase 5** (continued):
+- Location → Unreal automation: geocode → CesiumGeoreference dispatch via `lib/cesiumGeoreference.js`, coordinates in launcher UI + API
+
 **What's next in Phase 5**:
 - Terrain from DEM (USGS 3DEP or Cesium terrain tiles → Unreal Landscape)
 - Satellite imagery base layer
 - Google Photorealistic 3D Tiles evaluation (licensing concerns — see `docs/research-geo-pipeline.md`)
 - Vector data ingestion (OSM roads, water, land-use)
-- Location → Unreal automation (end-to-end geocode → fetch → Landscape actor)
+- CesiumGeoreference objectPath: needs actual actor path from live Unreal level (placeholder in routes.json)
 
 **Key research completed**:
 - Cesium for Unreal architecture, pricing, capabilities (free plugin, optional Cesium Ion cloud)
@@ -305,9 +308,11 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 
 ### Cesium Integration (Phase 5)
 - **Cesium for Unreal** plugin provides real-world geospatial terrain and building data. Installed via Fab/Marketplace.
-- **CesiumGeoreference** actor sets the world origin to a lat/lon. Controllable via Remote Control API: `OriginLatitude`, `OriginLongitude`, `OriginHeight` properties on the actor's objectPath (not RootComponent).
+- **CesiumGeoreference** actor sets the world origin to a lat/lon. Controllable via Remote Control API: `OriginLatitude`, `OriginLongitude`, `OriginHeight` properties on the actor's objectPath (not RootComponent). Automated via `lib/cesiumGeoreference.js` — dispatched automatically by `startEngine()` when `cesiumGeoreference` config is present in the routes JSON.
+- **lib/cesiumGeoreference.js** - One-shot dispatch of lat/lon/height to CesiumGeoreference actor. Called by runtime engine after geocoding. Exports `setCesiumGeoreference()`.
 - **Cesium World Terrain** streams global terrain with satellite imagery. Added via Cesium panel Quick Add.
 - **Cesium OSM Buildings** streams ~1.4B building volumes from OpenStreetMap. Added via Cesium panel Quick Add (asset ID 96188).
+- **Location → Unreal automation**: Type a location in the web launcher → geocode → dispatch lat/lon to CesiumGeoreference → Cesium tiles re-stream around the new origin. Coordinates shown in launcher status bar and `/api/status` response. Configure the actor objectPath in routes JSON under `cesiumGeoreference.objectPath`.
 - Weather engine dispatch (sun, fog, clouds, sky light) works over Cesium terrain — verified with moving shadows on Manhattan.
 - See `docs/research-geo-pipeline.md` for full research on approaches, licensing, and the two-track strategy (Cesium streaming for scouting, USGS heightmaps for production).
 

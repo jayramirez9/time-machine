@@ -1,4 +1,9 @@
 {
+  "cesiumGeoreference": {
+    "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.CesiumGeoreference",
+    "host": "http://localhost:30010",
+    "defaultHeight": 0
+  },
   "endpoints": {
     "unreal": {
       "transport": "unreal",

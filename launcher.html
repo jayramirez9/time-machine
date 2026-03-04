@@ -138,6 +138,7 @@
   <div class="status-bar" id="statusBar">
     <div class="status-line">Status: <span class="val running" id="statusState">running</span></div>
     <div class="status-line">Location: <span class="val" id="statusLoc">--</span></div>
+    <div class="status-line">Coordinates: <span class="val" id="statusGeo">--</span></div>
     <div class="status-line">Sim time: <span class="val" id="statusTime">--</span></div>
     <div class="status-line">Timescale: <span class="val" id="statusScale">--</span></div>
     <div class="links">
@@ -169,6 +170,9 @@ async function checkStatus() {
 function showRunning(data) {
   statusBar.classList.add('visible');
   document.getElementById('statusLoc').textContent = data.location || '--';
+  document.getElementById('statusGeo').textContent = data.geo
+    ? `${data.geo.lat.toFixed(4)}, ${data.geo.lon.toFixed(4)}`
+    : '--';
   document.getElementById('statusTime').textContent = data.simTime || '--';
   document.getElementById('statusScale').textContent = data.timescale ? data.timescale + 'x' : '--';
   btnLaunch.textContent = 'Relaunch';
