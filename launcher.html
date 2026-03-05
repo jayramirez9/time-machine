@@ -66,6 +66,19 @@
   .status-bar .val { color: #888; }
   .status-bar .running { color: #2a6; }
 
+  .unreal-status {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid #1a1a1a;
+    font-size: 11px; color: #555;
+  }
+  .unreal-status .dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  }
+  .dot-green { background: #2a6; }
+  .dot-yellow { background: #a82; }
+  .dot-red { background: #a33; }
+
   .links {
     margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap;
   }
@@ -168,6 +181,7 @@
     <div class="status-line">Location: <span class="val" id="statusLoc">--</span></div>
     <div class="status-line">Sim time: <span class="val" id="statusTime">--</span></div>
     <div class="status-line">Timescale: <span class="val" id="statusScale">--</span></div>
+    <div class="unreal-status" id="unrealStatus"></div>
     <div class="links">
       <a href="/dashboard" target="_blank">Dashboard</a>
       <a href="/audio-engine" target="_blank">Audio Engine</a>
@@ -202,6 +216,39 @@ function showRunning(data) {
   btnLaunch.textContent = 'Relaunch';
   btnLaunch.disabled = false;
   btnLaunch.className = 'btn-launch';
+
+  // Show georeference if present in launch response
+  if (data.georeference) {
+    const g = data.georeference;
+    showGeoref(g);
+  }
+  // Also poll Unreal status
+  pollUnrealStatus();
+}
+
+function showGeoref(g) {
+  const el = document.getElementById('unrealStatus');
+  if (!g) return;
+  const dot = g.ok ? 'dot-green' : 'dot-yellow';
+  const label = g.ok ? 'Cesium teleported' : (g.error || 'Cesium not connected');
+  const coords = g.lat != null ? `${g.lat.toFixed(4)}, ${g.lon.toFixed(4)} @ ${g.height?.toFixed(1) || 0}m` : '';
+  el.innerHTML = `<span class="dot ${dot}"></span>${label}${coords ? '<br><span class="val" style="margin-left:12px">' + coords + '</span>' : ''}`;
+}
+
+async function pollUnrealStatus() {
+  try {
+    const res = await fetch('/api/unreal-status');
+    const data = await res.json();
+    const el = document.getElementById('unrealStatus');
+    if (data.reachable && data.cesiumFound && data.origin) {
+      const o = data.origin;
+      el.innerHTML = `<span class="dot dot-green"></span>Unreal connected<br><span class="val" style="margin-left:12px">${o.lat?.toFixed(4)}, ${o.lon?.toFixed(4)} @ ${o.height?.toFixed(1) || 0}m</span>`;
+    } else if (data.reachable) {
+      el.innerHTML = `<span class="dot dot-yellow"></span>Unreal connected (no Cesium actor)`;
+    } else {
+      el.innerHTML = `<span class="dot dot-red"></span>Unreal not connected`;
+    }
+  } catch (_) {}
 }
 
 function showError(msg) {

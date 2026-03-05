@@ -240,6 +240,7 @@ This is a Node.js ES modules project:
 - **lib/timezone.js** - Zero-dependency timezone utilities using `Intl.DateTimeFormat`. Exports `localToUtc()`, `getLocalHour()`, `getLocalMinutes()`, `formatLocalISO()`, `getLocalDateStr()`
 - **lib/eraData.js** - Shared era anachronisms timeline (~35 entries, 1712–2017). Single source of truth for technology introduction dates, used by `elevenlabs-fetch.js` (prompt exclusions) and `era-audit.js` (attribution auditing). Exports `getExclusionText(year)` and `getAuditPatterns(year)`
 - **lib/math.js** - Shared interpolation utilities: `lerp()`, `lerpAngle()`
+- **lib/demFetcher.js** - USGS 3DEP DEM download and GDAL processing. Exports `computeBoundingBox()`, `nearestLandscapeSize()`, `checkGDAL()`, `fetchDEM()`, `processDEM()`, `slugify()`. Handles bounding box computation, 3DEP ImageServer tile download, GDAL reprojection/conversion to R16, and Unreal Landscape dimension snapping (valid sizes: 127, 253, 505, 1009, 2017, 4033, 8129)
 - **test/noaa.test.js** - Unit tests for the NOAA GHCN-Daily provider
 
 ### Weather Providers
@@ -284,8 +285,18 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **Cesium OSM Buildings** streams ~1.4B building volumes from OpenStreetMap. Added via Cesium panel Quick Add (asset ID 96188).
 - Weather engine dispatch (sun, fog, clouds, sky light) works over Cesium terrain — verified with moving shadows on Manhattan.
 - **Automatic georeference on engine start**: When routes config has an `unreal` endpoint, the engine geocodes the location and calls `setGeoreference()` to teleport the Cesium scene. Also available standalone via `tools/set-location.js`.
-- **`lib/cesiumGeoreference.js`**: Shared module for discovering CesiumGeoreference actor via RC API search and writing OriginLatitude/Longitude/Height. Used by both the CLI tool and the runtime engine.
+- **`lib/cesiumGeoreference.js`**: Shared module for discovering CesiumGeoreference actor via RC API search and writing OriginLatitude/Longitude/Height. Also provides `estimateHeight(lat, lon)` (USGS 3DEP point elevation query), `getGeoreference(host)` (read current origin), and `isUnrealReachable(host)` (connectivity check). Used by CLI tools and the runtime engine.
+- **Auto-height on engine start**: `estimateHeight()` queries USGS 3DEP elevation API to set CesiumGeoreference height to ground level + 2m eye offset, instead of hardcoded 0. Graceful fallback on timeout.
+- **Unreal status endpoint**: `GET /api/unreal-status` pings RC API and reports `{ reachable, cesiumFound, origin }`. Launcher UI shows green/yellow/red status dot.
 - See `docs/research-geo-pipeline.md` for full research on approaches, licensing, and the two-track strategy (Cesium streaming for scouting, USGS heightmaps for production).
+- See `docs/research-historical-built-environment.md` for future research on era-accurate buildings (OSM date filtering, Sanborn maps, landmark models, procedural generation).
+
+### Terrain Pipeline
+- **Two-track strategy**: Cesium streaming for scouting (works now), USGS heightmaps for production Landscape actors.
+- **DEM workflow**: `fetch-dem.js` → `fetch-imagery.js` → `import-terrain.js`. All output to `terrain-data/{location-slug}/` (gitignored).
+- **GDAL required** for DEM processing (`brew install gdal`). Auto-detected; prints install instructions if missing.
+- **Manhattan test data** already fetched: `terrain-data/manhattan-ny/` has 1009×1009 R16 heightmap (15.6m–43.1m elevation) and 2048×2048 NAIP imagery.
+- **Unreal import**: `import-terrain.js` imports heightmap + imagery textures via RC API Python scripting. Programmatic Landscape creation is limited in UE5; tool prints manual Landscape Mode import instructions as fallback.
 
 ### Route Configs
 - **routes.json** - Production routes config. Unreal routes (sun position, fog, clouds, sky light), DSP routes, lighting routes. Actor objectPaths must match the current level — update the level path prefix when switching projects.
@@ -296,7 +307,10 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **tools/freesound-fetch.js** - Legacy Freesound API asset fetcher. Searches for CC-licensed sounds by label keyword, downloads preview MP3s. Lower quality than ElevenLabs, prone to era mismatches (modern traffic in historical profiles). Still useful for natural recordings (birds, weather) where recorded audio may be preferred. Requires `FREESOUND_API_KEY` env var.
 - **tools/elevenlabs-voice-fetch.js** - **Voice generation tool.** Uses ElevenLabs Text-to-Speech API to generate period-appropriate spoken phrases (vendor cries, newsboy calls, children's shouts) for micro-events with `voice` + `phrases` fields. Auto-selects voices from the ElevenLabs library based on profile `voiceConfig` descriptions, caches voice IDs back to the profile. Generated clips are added as additional sources alongside existing SFX — the engine's bag-draw naturally mixes them. Writes VOICE_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-voice-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only <event_id>] [--force] [--list-voices]`
 - **tools/era-audit.js** - Era validation tool. Scans audio profile attributions for anachronistic sounds that don't belong in the target era. Uses shared anachronism data from `lib/eraData.js` for year-precise keyword checks, plus supplementary context and mismatch patterns. Usage: `./tools/era-audit.js audio-profiles/nyc_city_1884.json`
-- **tools/set-location.js** - Cesium location setter. Geocodes a location string and sets CesiumGeoreference origin via Unreal Remote Control API. Supports `--lat`/`--lon` for direct coordinates. Usage: `node tools/set-location.js "Manhattan, NY" [--height 50] [--host http://localhost:30010]`
+- **tools/fetch-dem.js** - USGS 3DEP DEM fetcher. Downloads elevation data for any US location, processes via GDAL into Unreal-compatible R16 heightmap. Requires GDAL (`brew install gdal`). Outputs to `terrain-data/{slug}/`. Usage: `node tools/fetch-dem.js "Manhattan, NY" --radius 500 [--dry-run]`
+- **tools/fetch-imagery.js** - USGS NAIP satellite imagery fetcher. Downloads 1m resolution aerial imagery matching a terrain extent. Can read from existing terrain-data metadata or geocode fresh. Usage: `node tools/fetch-imagery.js terrain-data/manhattan-ny/ [--size 2048]`
+- **tools/import-terrain.js** - Imports heightmap + imagery into Unreal via RC API Python scripting. Reads from `terrain-data/{slug}/`, imports textures as assets, attempts Landscape creation, falls back to manual import instructions. Usage: `node tools/import-terrain.js terrain-data/manhattan-ny/ [--host http://localhost:30010]`
+- **tools/set-location.js** - Cesium location setter. Geocodes a location string and sets CesiumGeoreference origin via Unreal Remote Control API. Auto-queries USGS elevation when `--height` not specified. Supports `--lat`/`--lon` for direct coordinates. Usage: `node tools/set-location.js "Manhattan, NY" [--height 50] [--host http://localhost:30010]`
 - **tools/spawn-greybox.js** - Unreal scene spawner for the 1884 NYC greybox. Spawns 12 brownstone blocks (2 rows of 6 scaled cubes), 4 gas lamp PointLights, and moves PlayerStart to 2nd floor listener position. Uses Unreal Remote Control API directly for objectPath-based actor configuration. Usage: `node tools/spawn-greybox.js [--host http://localhost:30010]`
 - **bin/time-machine** - Shell launcher script. Sources `.env`, starts the daemon, waits for it to be ready, and opens `http://localhost:3000/` in the browser. Detects if already running. Aliased as `time-machine` in user's shell. Usage: `time-machine` or `time-machine --no-open`
 

@@ -4,8 +4,9 @@
     {
       "name": "tm-engine",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["tm-engine.js", "-l", "Cambridge, MA", "-d", "01-13-1969", "--locale", "harvard_square_1969", "--timescale", "60"],
-      "port": 3000
+      "runtimeArgs": ["tm-engine.js", "-l", "Manhattan, NY", "-d", "06-15-1884", "--timescale", "60"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

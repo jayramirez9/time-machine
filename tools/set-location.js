@@ -14,7 +14,7 @@
  */
 
 import { geocode } from '../lib/openmeteo.js';
-import { setGeoreference } from '../lib/cesiumGeoreference.js';
+import { setGeoreference, estimateHeight } from '../lib/cesiumGeoreference.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -27,7 +27,8 @@ function getFlag(name, defaultValue) {
 }
 
 const HOST = getFlag('--host', 'http://localhost:30010');
-const HEIGHT = parseFloat(getFlag('--height', '0'));
+const heightArg = getFlag('--height', null);
+const HEIGHT_EXPLICIT = heightArg !== null ? parseFloat(heightArg) : null;
 const directLat = getFlag('--lat', null);
 const directLon = getFlag('--lon', null);
 
@@ -72,14 +73,25 @@ async function main() {
     }
   }
 
+  // Determine height: explicit flag or auto-estimate from USGS
+  let height;
+  if (HEIGHT_EXPLICIT !== null) {
+    height = HEIGHT_EXPLICIT;
+    console.log(`  Height: ${height}m (explicit)`);
+  } else {
+    console.log('  Estimating ground elevation via USGS 3DEP...');
+    height = await estimateHeight(lat, lon);
+    console.log(`  Height: ${height.toFixed(1)}m (USGS ground + 2m eye)\n`);
+  }
+
   // Set georeference
   console.log('  Setting CesiumGeoreference origin...');
-  const result = await setGeoreference(HOST, lat, lon, HEIGHT);
+  const result = await setGeoreference(HOST, lat, lon, height);
 
   if (result.ok) {
     console.log(`    OriginLatitude:  ${lat}`);
     console.log(`    OriginLongitude: ${lon}`);
-    console.log(`    OriginHeight:    ${HEIGHT}m`);
+    console.log(`    OriginHeight:    ${height.toFixed(1)}m`);
     console.log(`    Actor: ${result.objectPath}`);
     console.log(`\n  Cesium scene teleported to ${name}`);
   } else {

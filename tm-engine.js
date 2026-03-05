@@ -23,6 +23,7 @@ import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
 import { getApiKey as getVCKey } from './lib/visualcrossing.js';
 import { getApiKey as getNOAAKey } from './lib/noaa.js';
 import { getExclusionText } from './lib/eraData.js';
+import { isUnrealReachable, getGeoreference } from './lib/cesiumGeoreference.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -32,7 +33,7 @@ function parseArgs(args) {
     location: 'Baton Rouge, LA',
     startDate: null,
     locale: DEFAULT_LOCALE,
-    port: parseInt(process.env.TM_PORT) || 3000,
+    port: parseInt(process.env.PORT) || parseInt(process.env.TM_PORT) || 3000,
     timescale: 60,
     tickMs: 1000,
     publishEveryMs: 5000,
@@ -303,6 +304,22 @@ function createServer(engineRef) {
       return;
     }
 
+    if (req.method === 'GET' && urlPath === '/api/unreal-status') {
+      const routesConfig = engineRef.routesConfigPath ? JSON.parse(fs.readFileSync(engineRef.routesConfigPath, 'utf8')) : null;
+      const host = routesConfig?.endpoints?.unreal?.host || 'http://localhost:30010';
+      const reachable = await isUnrealReachable(host);
+      let cesiumFound = false;
+      let origin = null;
+      if (reachable) {
+        const geoState = await getGeoreference(host);
+        cesiumFound = geoState.ok;
+        origin = geoState.origin || null;
+      }
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ reachable, cesiumFound, origin, host }));
+      return;
+    }
+
     if (req.method === 'GET' && urlPath === '/api/locales') {
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
@@ -364,7 +381,8 @@ function createServer(engineRef) {
           ok: true,
           location: newEngine.location,
           simTime: newEngine.simTime.toISOString(),
-          timescale: newEngine.timescale
+          timescale: newEngine.timescale,
+          georeference: newEngine.georeference || null
         }));
       } catch (e) {
         console.error('[Engine] Launch failed:', e);
