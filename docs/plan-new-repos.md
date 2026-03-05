@@ -124,3 +124,34 @@ news-engine/
 - How opinionated should the strategy analysis be vs. neutral summarization?
 
 **Not related to `time-machine` runtime** — this is a separate business intelligence tool. Could eventually feed into content prioritization decisions (which Place × Time presets to build next).
+
+---
+
+## 4. Apple TV Port — Single-Viewport Consumer Entry Point
+
+**Purpose:** The simplest possible consumer Time Machine — one screen, spatial audio, no multi-display complexity. Apple TV app with a single "window" viewport and the full audio engine doing the heavy lifting for immersion.
+
+**Why it works:**
+- **Audio carries the experience.** The 5-layer audio engine (base beds, directional beds, micro-events, weather, occlusion) was built to create a believable "outside" — on a single-screen device, that spatial audio layer becomes the primary immersion driver, not a supplement to visuals
+- **Single viewport = simple render pipeline.** One camera, one output, no nDisplay, no multi-GPU sync. Could potentially run on Apple's GPU (A-series / M-series) rather than requiring Unreal on a PC — or stream from a cloud render node
+- **Apple TV has spatial audio built in.** AirPods Pro/Max with head tracking, HomePod surround setups — the platform already supports the kind of spatial rendering the audio engine produces
+- **Low barrier to entry.** No trailer build, no custom hardware, no calibration. Download app, pick a Place × Time, put on headphones, turn on the TV
+
+**Key design questions:**
+- **Render approach:** Native Metal/RealityKit on-device? Unreal pixel streaming from cloud? Pre-rendered video loops driven by weather state? Each has very different quality/cost/latency tradeoffs
+- **Audio delivery:** Web Audio API in a tvOS web view (matching current browser engine)? Native AVAudioEngine with spatial audio framework? The latter unlocks Apple's head-tracked spatial audio
+- **Content scope:** Start with a curated set of Place × Time presets rather than the full open-ended engine. Quality over breadth — a few stunning experiences beat a hundred mediocre ones
+- **Interaction model:** Siri Remote for preset selection, minimal UI during playback. The experience should feel like turning on a window, not operating an app
+- **Time of day:** Could default to "live mode" — synced to your actual local time — so the window always shows the right light and activity level. Pick a place, and it just runs
+
+**Relationship to `viewport-designer` (idea #2):**
+- Apple TV is a degenerate case of the viewport designer — one wall, one window, fixed position
+- Proves the single-viewport pipeline before scaling to multi-window consumer rooms
+- The viewport designer could eventually support "Apple TV mode" as a deployment target
+
+**Relationship to `time-machine`:**
+- Consumes the same WorldState format — states + controls
+- The audio engine HTML/JS could be adapted to a native tvOS audio layer, or run as-is in a WKWebView
+- Weather providers, timeline interpolation, and world state compilation all work unchanged — only the rendering and audio transport layers need platform adaptation
+
+**Product ladder:** Star Waggon (pro trailer) → Consumer multi-window room (viewport designer) → Apple TV single window (this) → Audio-only mode (headphones, no screen — just the soundscape)
