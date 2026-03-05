@@ -910,16 +910,32 @@ Pick the physical specs and Phase 0 is locked. Start the research spikes and Pha
 
 ## 25) Perhaps (Blue Sky Scenarios)
 
-Ideas that push beyond historical reconstruction into fully fictional or fantastical world states. The same engine — world state, audio, multi-window rendering — could drive entirely synthetic environments:
+The physical space becomes a holodeck. The same engine — world state, audio, multi-window rendering — can drive any environment: historical, fictional, fantastical. The windows and speakers don't know or care whether the world outside is real.
 
-1. **Looney Tunes Desert** — Road Runner / Coyote world. You're in a physical Time Machine space but the windows show painted desert mesas, impossible cliffs, and ACME delivery trucks. Audio: roadrunner "meep meep," distant dynamite, desert wind through canyon walls.
+### Sleep Spaces
 
-2. **Disney Castle Turret** — Standing atop the princess castle at Walt Disney World, looking out over the park and the surrounding landscape. Fireworks at night, parade music drifting up, Florida humidity and evening thunderstorms rolling in.
+A place to sleep where the windows show a living world:
 
-3. **Snowy Cabin in the Woods** — Deep winter isolation. Every window shows dense snowfall through pine trees, frozen lake in the distance. Audio: fire crackling (inside), wind howling, branches snapping under ice, occasional distant wolf. Time-of-day drives light through the trees — blue dawn, white noon, amber dusk, dark night with moonlight on snow.
+- **Shrek's Swamp** — Fireflies at dusk, swamp ambience, distant Duloc fanfare. Morning fog burns off as dawn comes through the trees.
+- **World of Warcraft Inn** — Elwynn Forest outside. Murloc gurgling from the river. Hearthstone crackling inside. Rain on the thatched roof.
+- **Snowy Cabin in the Woods** — Deep winter isolation. Dense snowfall through pine trees, frozen lake in the distance. Fire crackling inside, wind howling, branches snapping under ice, occasional distant wolf. Blue dawn, white noon, amber dusk, moonlight on snow.
 
-4. **Star Wars Tatooine** — Binary sunset. Desert homestead moisture farm. Audio: Jawa chatter in the distance, landspeeder hum, sand skittering across duracrete. Twin suns track independently across the sky. Night brings different constellations and Tusken Raider calls from the Jundland Wastes.
+### Trailer / Capsule Environments
+
+A trailer, pod, or small room becomes a location:
+
+- **Mos Eisley Cantina** — The booth where Han shot Greedo. Figrin D'an and the Modal Nodes playing. Alien chatter, blaster-scarred walls, Tatooine heat bleeding through the doorway.
+- **Star Wars Tatooine Homestead** — Binary sunset. Moisture farm. Jawa chatter in the distance, landspeeder hum, sand skittering across duracrete. Twin suns track independently. Night brings Tusken Raider calls from the Jundland Wastes.
+- **The Moon** — Earthrise through the window. Total silence outside, life support hum inside. Slow terminator line crossing the lunar surface as the sun moves.
+- **1930s Rio de Janeiro** — Copacabana before the high-rises. Bossa nova precursors drifting from a nearby bar, tropical rain on tile roofs, ocean breeze, street vendors.
+
+### Big Venue Scenarios
+
+- **Looney Tunes Desert** — Road Runner / Coyote world. Painted desert mesas, impossible cliffs, ACME delivery trucks. Audio: "meep meep," distant dynamite, desert wind through canyon walls.
+- **Disney Castle Turret** — Atop the princess castle at Walt Disney World. Fireworks at night, parade music drifting up, Florida humidity and evening thunderstorms rolling in.
+
+### The Point
 
 No new engine required. These run on the exact same pipeline we're building: world state compiler, environment router, dispatcher, audio engine, renderers. The only difference is the data source — instead of weather APIs, an authored locale preset feeds the timeline. The mock provider already does this for testing; a "Tatooine" preset is just a mock provider that returns "clear, 47°C, sand wind NNW" and a `tatooine.json` audio profile with Jawa chatter instead of birdsong. Everything downstream — `states`, `controls`, `lighting`, `audio`, `atmosphere`, rate limiter, dispatch — works unchanged.
 
-If the engine can drive a convincing Tatooine, the abstraction layer is right.
+If the engine can drive a convincing Tatooine, the abstraction layer is right. And the content library becomes infinite — any world anyone has ever imagined, generated on demand.
