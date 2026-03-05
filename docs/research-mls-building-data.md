@@ -1,162 +1,205 @@
 # Research: MLS & Property Data for Building Reconstruction
 
 **Date:** 2026-03-05
-**Research Spike:** PRD #9 — MLS data as building source
-
-## Key Takeaways
-
-1. **Skip MLS, go straight to county assessor data + open building footprints.** MLS access requires real estate licensing or expensive vendor agreements, and photos are stripped from sold listings within 30-90 days. County assessor/tax records are public, unrestricted, and contain the critical structured fields (year built, sq ft, stories, lot size).
-
-2. **Microsoft Building Footprints + Open City Model = free grey cubes at city scale.** Microsoft has 130M+ US building footprint polygons (free, ODbL license). Open City Model has 125M US buildings as CityGML LOD1 (extruded footprints with heights). These are ready-made 3D block models.
-
-3. **ATTOM Data (~$95/mo) is the best enrichment source.** Aggregates county assessor data from 3,000+ counties. Provides year built, sq ft, stories, building class, lot dimensions via API. 30-day free trial available.
-
-4. **Google Street View fills the photo gap** for facade reference images ($7/1000 requests). Not bulk-friendly but useful for spot-checking material/style for the AI texture pipeline.
-
-5. **Year built is 90%+ complete** across most US markets via tax records — the critical field for era filtering.
+**Status:** Complete
+**Relevance:** Building geometry data for 3D scene reconstruction in Time Machine
 
 ---
 
-## Recommended Stack for Grey-Cube Reconstruction
+## Summary / Key Takeaways
 
-| Layer | Source | Cost | What It Provides |
-|-------|--------|------|-----------------|
-| Building footprints | Microsoft Building Footprints | Free (ODbL) | 130M+ US polygons with some height estimates |
-| LOD1 block models | Open City Model | Free | 125M US buildings as extruded CityGML |
-| Structured enrichment | ATTOM Data API | ~$95/mo | Year built, sq ft, stories, building class, lot size |
-| Parcel geometry | Regrid | Per-county or enterprise | 151M parcels + 156M matched footprints |
-| Building tags | OpenStreetMap | Free | `building:levels`, `building:material`, `roof:shape` (variable coverage) |
-| Facade photos | Google Street View Static API | $7/1K requests | Exterior reference images for texture pipeline |
+- Direct MLS access is **restricted to licensed agents/brokers** -- not a viable path for our use case.
+- **County assessor/tax records** are the best practical path: public record, no licensing restrictions, and provide year built, sq ft, lot size, and stories for 90%+ of US residential properties.
+- **Microsoft Building Footprints** (free, 130M+ US polygons) + **Open City Model** (free, 125M CityGML LOD1 models) provide ready-made building geometry for grey-cube generation.
+- **ATTOM Data** (~$95/mo) is the best value aggregator for enriching footprints with tax assessor data (year built, stories, building class).
+- **CoreLogic** has the richest building detail (exterior materials, roof type) but requires enterprise sales contact.
+- For historical scenes (pre-photography), **year built from tax records** is the critical filter -- cross-reference with **Sanborn fire insurance maps** (Library of Congress, free) for historical footprints and materials.
+- MLS photos are **not usable** for our purposes: restricted by licensing terms, removed after sale, and not standardized.
 
 ---
 
-## MLS Data Access — Why It's Not the Right Path
+## 1. MLS Data Access Methods
 
-### Access Restrictions
-- **RETS is deprecated** (retired 2018). RESO Web API is the modern standard.
-- Direct MLS access requires a real estate license or signed vendor/IDX agreement with a participating broker. No public developer signup.
-- Using MLS photos for 3D reconstruction would likely violate most MLS terms of service.
+### RETS (Deprecated)
 
-### Photo Problem
-- Active listings have 15-40 photos, but **photos are stripped from sold/delisted listings within 30-90 days**.
-- Historical photos are essentially unobtainable programmatically.
-- Photos are not standardized angles — they vary wildly by agent.
+RETS (Real Estate Transaction Standard) is **deprecated**. RESO officially retired it in 2018 and MLSs have been shutting down RETS feeds. It required MLS membership or a data-sharing agreement with a member broker. Not a viable path forward.
+
+### RESO Web API (Current Standard)
+
+The [RESO Web API](https://www.reso.org/reso-web-api/) is the modern replacement -- RESTful, OData v4 query syntax, JSON responses, OAuth 2.0 auth. NAR requires all REALTOR-affiliated MLSs to provide production RESO Web API access.
+
+**How to get access:** You must contact individual MLSs directly. RESO creates standards, not data. Each MLS has its own licensing policies. In practice, **access is restricted to licensed brokers, agents, or technology vendors with a signed data-sharing agreement**. There is no public developer signup.
 
 ### Third-Party Aggregators
 
-| Provider | Coverage | Key Fields | Pricing | Access |
-|----------|----------|------------|---------|--------|
-| Zillow/Bridge Interactive | 148M properties | Year built, sq ft, photos, Zestimates | ~$500/mo | Invite-only |
-| ATTOM Data | 158M properties, 9K+ fields | Year built, sq ft, lot, tax data, permits | ~$95/mo | 30-day free trial |
-| CoreLogic | 99.9% US market | Year built, sq ft, exterior wall type, roof type, construction class | Enterprise ($$$$) | Sales contact |
-| BatchData | 155M properties | Year built, sq ft, tax records, transactions | $500/mo (20K records) | API key |
-| Regrid | 151M parcels + 156M footprints | Parcel geometry, building footprint polygons, land use | Per-county | Self-serve store |
+| Provider | Coverage | Key Building Fields | Pricing | Access |
+|---|---|---|---|---|
+| **[Zillow/Bridge Interactive](https://www.bridgeinteractive.com/developers/bridge-api/)** | 148M properties, 3,200 counties | Year built, sq ft, beds/baths, lot size, photos, Zestimates | From ~$500/mo; enterprise contracts | Invite-only, commercial use |
+| **[ATTOM Data](https://www.attomdata.com/solutions/property-data-api/)** | 158M properties, 9,000+ fields | Year built, sq ft, lot size, ownership, tax data, building permits | From ~$95/mo; enterprise pricing | 30-day free trial, API key |
+| **[CoreLogic](https://www.corelogic.com/360-property-data)** | 99.9% US housing market | Year built, sq ft, **exterior wall type**, **roof type**, construction class, ownership | Enterprise only (no public pricing) | Sales contact required |
+| **[BatchData](https://batchdata.io/pricing)** | 155M properties, 700+ data points | Year built, sq ft, beds/baths, tax records, transaction history | From $500/mo (20K records); $0.01/call | API key, tiered plans |
+| **[Regrid](https://regrid.com/)** | 151M parcels + 156M footprints | Parcel geometry, **building footprint polygons**, land use, tax data | County-level or nationwide bulk; contact for pricing | Self-serve store or enterprise |
 
-**CoreLogic** is the strongest for exterior materials and roof type classification, but it's enterprise-only pricing.
+**Which ones provide the fields we need:**
+- **Year built**: All providers (ATTOM, CoreLogic, BatchData, Zillow)
+- **Square footage**: All providers
+- **Lot dimensions**: ATTOM, CoreLogic, Regrid (parcel geometry)
+- **Stories**: ATTOM, CoreLogic, BatchData
+- **Exterior materials**: **CoreLogic** is the strongest here -- classifies buildings by construction type (Frame, Masonry, Pre-Engineered Metal, etc.)
+- **Roof type**: **CoreLogic** has explicit roof classification
+- **Photos**: MLS listings (via Zillow/Bridge) have photos; tax/assessor records generally do not
 
 ---
 
-## County Assessor / Tax Records — The Better Path
+## 2. Data Fields and Photo Availability
 
-### Why This Works
-- **Public record** — no licensing restrictions. Anyone can access.
-- **Foundational source** — ATTOM, CoreLogic, and others aggregate FROM county assessor data.
-- Year built, sq ft, lot dimensions, stories, building class are consistently available.
-- Some counties include exterior wall material, roof type, foundation type.
-- Some counties provide **improvement sketches** (building footprint drawings with dimensions).
+### Typical MLS Listing Fields
+
+Address, price, sq ft, bedrooms/bathrooms, year built, lot size, property type, exterior construction, roof type, heating/cooling, garage, pool, HOA, days on market, agent info, listing status, and photos.
+
+### Photos
+
+- Active MLS listings typically have **15-40 photos** per property
+- At least one exterior photo is required by most MLSs
+- Photos are **not standardized angles** -- they vary wildly by agent
+- Resolution is typically 1024-2048px on the long edge
+- **Sold/delisted listings**: Photos are usually removed within 30-90 days after closing. Historical photos are extremely difficult to obtain programmatically
+
+### Historical/Sold Data
+
+- MLS data for **sold properties** is available through aggregators like ATTOM and Zillow (transaction history, sale price, date), but **photos are stripped**
+- Tax assessor records persist indefinitely and include year built, sq ft, assessed value
+
+### Year Built Completeness
+
+Year built is one of the most reliably populated fields -- available for **90%+ of residential properties** across most markets via tax assessor records. Coverage is weaker for very old properties (pre-1900) and rural areas.
+
+---
+
+## 3. Licensing and Cost
+
+### MLS Access Restrictions
+
+- **Direct MLS access requires** a real estate license (agent/broker) or a signed vendor/IDX agreement with a participating broker
+- NAR's IDX policy governs how listing data can be displayed; it was **not designed** for 3D reconstruction use cases
+- Using MLS photos for building reconstruction would likely violate most MLS terms of service
+
+### Third-Party Costs Summary
+
+| Provider | Entry Price | Notes |
+|---|---|---|
+| ATTOM | ~$95/mo | 30-day free trial |
+| BatchData | $500/mo (20K records) | Pay-as-you-go at $0.01/call |
+| Zillow/Bridge | ~$500/mo | Invite-only |
+| CoreLogic | Enterprise ($$$$) | Sales contact required |
+| Regrid | Per-county or bulk | Self-serve store available |
+
+### Free/Research Options
+
+- **County assessor websites**: Free manual lookup, rarely have APIs
+- **[Cook County (IL) open data](https://datacatalog.cookcountyil.gov/stories/s/Assessor-2025-Open-Data-Refresh/gzdr-q7c4/)**: Downloadable property characteristics
+- **Microsoft Building Footprints**: Free, open data (ODbL), includes height estimates
+- **OpenStreetMap**: Free building footprints with crowd-sourced height/stories tags
+- **[Open City Model](https://github.com/opencitymodel/opencitymodel)**: Free CityGML LOD1 models for ~125M US buildings
+
+---
+
+## 4. County Assessor / Tax Records as Alternative
+
+This is likely the **best practical path** for structured building data.
+
+### What County Assessors Provide
+
+- Year built, square footage, lot dimensions, number of stories, building class/use code
+- Some counties include: exterior wall material, roof type, foundation type, number of units
+- Assessed value, tax history, ownership records
+- **Improvement sketches** (building footprint drawings with dimensions) -- available from some counties
 
 ### Aggregated Access
 
-| Source | Coverage | Access |
-|--------|----------|--------|
-| ATTOM Assessor Data | 3,000+ counties | API + bulk |
-| TaxNetUSA | 300+ counties (TX, FL focus) | API + bulk, includes improvement sketches |
-| Regrid | 151M parcels | API + bulk + county store |
-| County GIS portals | Varies | Web, sometimes WFS/API |
+| Source | Coverage | Access | Notes |
+|---|---|---|---|
+| **[ATTOM Assessor Data](https://www.attomdata.com/data/property-data/assessor-data/)** | 3,000+ counties | API + bulk | Aggregates county assessor data nationwide |
+| **[TaxNetUSA](https://www.taxnetusa.com/)** | 300+ counties (TX, FL focus) | API (XML/JSON) + bulk | Includes **improvement sketches** with building dimensions |
+| **[Regrid](https://regrid.com/)** | 151M parcels | API + bulk + county store | Parcel geometry + matched building footprints |
+| **County GIS portals** | Varies by county | Web, sometimes WFS/API | Many large counties have open GIS data with parcels |
+
+### Key Advantage
+
+Public record -- **no licensing restrictions**. Anyone can access tax assessor data. It is the foundational source that ATTOM, CoreLogic, and others aggregate from.
 
 ### Completeness vs MLS
-- **Stronger than MLS:** Year built, lot dimensions, building class, assessed value (more consistent)
-- **Weaker than MLS:** No interior photos, no listing descriptions, no real-time market data
-- **Comparable:** Square footage, stories, basic building characteristics
+
+- **Stronger**: Year built, lot dimensions, building class, assessed value (more consistent than MLS)
+- **Weaker**: No interior photos, no listing descriptions, no real-time market data
+- **Comparable**: Square footage, stories, basic building characteristics
 
 ---
 
-## Free / Open Data Sources for 3D Buildings
+## 5. Best Path for 3D Building Reconstruction
 
-### Microsoft Global ML Building Footprints
-- **130M+ US footprint polygons** with height estimates for ~20%
-- Free, ODbL license
-- Download GeoJSON for area of interest
-- https://github.com/microsoft/GlobalMLBuildingFootprints
+### Given an address, can you reliably get footprint, height, year built, material, photos?
 
-### Open City Model
-- **125M US buildings** as CityGML/CityJSON LOD1 (extruded footprints)
-- Free, ready-made 3D block models
-- https://github.com/opencitymodel/opencitymodel
+| Data Point | Best Source | Reliability |
+|---|---|---|
+| **Footprint dimensions** | Microsoft Building Footprints (free) + Regrid parcels | High (AI-derived, 156M+ footprints) |
+| **Height / stories** | Microsoft footprints (height estimate) + ATTOM/CoreLogic (stories) | Medium-High |
+| **Year built** | ATTOM or county assessor | High (90%+) |
+| **Exterior material** | CoreLogic (best), county assessor (varies) | Medium |
+| **Photos** | Google Street View API, Bing Streetside | Medium (exterior only, modern) |
 
-### OpenStreetMap Simple 3D Buildings
-- Crowd-sourced `building:levels`, `building:material`, `roof:shape` tags
-- Excellent in cities, variable elsewhere
-- Supports LOD1/LOD2 generation via OSM2World
-- https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1
+### Recommended Stack for Grey-Cube Reconstruction
 
-### GlobalBuildingAtlas (TU Munich, Dec 2025)
-- Satellite-derived LOD1 3D models globally
-- Building polygons + heights
-- https://essd.copernicus.org/articles/17/6647/2025/
+1. **[Microsoft Global ML Building Footprints](https://github.com/microsoft/GlobalMLBuildingFootprints)** (free, ODbL) -- 130M+ US footprint polygons with height estimates for ~20%. Download GeoJSON for your area of interest. This gives you footprint geometry and estimated height.
 
-### GeoTexBuild (April 2025)
-- AI framework generating textured 3D building models from map footprints
-- Uses ControlNet + Text2Mesh
-- Directly relevant to our grey-cube → skinned-mesh pipeline
-- https://arxiv.org/html/2504.08419v1
+2. **[Open City Model](https://github.com/opencitymodel/opencitymodel)** (free) -- 125M US buildings as CityGML/CityJSON LOD1 (extruded footprints). Ready-made 3D block models.
 
----
+3. **ATTOM API** (~$95/mo) -- Enrich footprints with year built, stories, building class, sq ft from tax assessor records. Query by lat/lon or address.
 
-## Recommended Approach for Time Machine
+4. **OpenStreetMap** (free) -- Crowd-sourced building tags including `building:levels`, `building:material`, `roof:shape`. Coverage varies but is excellent in cities. The [Simple 3D Buildings](https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1) spec supports LOD1/LOD2 generation.
 
-### Present-Day / Modern Scenes
-1. **Microsoft footprints + Open City Model** — free LOD1 block models
-2. **ATTOM** ($95/mo) — enrich with year built for era filtering
-3. **Google Street View** — facade photos for AI texture pipeline
+5. **Google Street View Static API** -- For facade reference images. $7/1000 requests. Not bulk-friendly but useful for spot-checking material/style.
 
-### Historical Scenes (Pre-Photography Era, e.g., 1884 NYC)
-1. Year built from tax records is the critical filter
-2. Cross-reference with **Sanborn fire insurance maps** (Library of Congress, free) for historical footprints and building materials
-3. Sanborn provides what assessor data can't: the actual footprint and material at a specific historical date
+### Existing 3D Reconstruction Projects
 
-### Mid-Century Scenes (1940s-2000s)
-This is where the approach shines — assessor year-built data is near-complete for this era:
-1. Start with Open City Model / Microsoft footprints for current geometry
-2. Filter by year built: remove buildings constructed after target date
-3. Use Street View + any available historical aerial imagery for facade reference
-4. AI texture pipeline: reference photos → PBR materials
-
-### Pipeline Summary
-```
-Location input
-    ↓
-Microsoft Footprints → building polygons + heights (free)
-    ↓
-ATTOM enrichment → year built, stories, sq ft, building class ($95/mo)
-    ↓
-Era filter → remove buildings newer than WorldState date
-    ↓
-Grey cubes placed on terrain (from Phase 5 DEM pipeline)
-    ↓
-Facade reference (Street View / historical photos)
-    ↓
-AI photo→PBR texture extraction
-    ↓
-Skinned buildings in Unreal
-```
+- **[Open City Model](https://github.com/opencitymodel/opencitymodel)**: LOD1 CityGML for all US buildings. Free. Closest existing project to what we need.
+- **[GlobalBuildingAtlas (TU Munich)](https://essd.copernicus.org/articles/17/6647/2025/)**: Satellite-derived LOD1 3D models globally, with building polygons + heights. Published December 2025.
+- **[GeoTexBuild](https://arxiv.org/html/2504.08419v1)**: AI framework that generates textured 3D building models from map footprints using ControlNet + Text2Mesh. Published April 2025.
+- **[awesome-citygml](https://github.com/OloOcki/awesome-citygml)**: Curated list of open CityGML datasets worldwide (many European cities have LOD2 with roof shapes).
+- **OSM-3D / OSM2World**: Generates LOD1/LOD2 buildings from OpenStreetMap data including roof types.
 
 ---
 
-## Next Steps
+## Recommendations
 
-1. **Download Microsoft Building Footprints** for a test area (Baton Rouge or Manhattan) and verify coverage/quality
-2. **Sign up for ATTOM free trial** — test year-built enrichment for a neighborhood
-3. **Evaluate Open City Model** LOD1 output — can it be imported directly into Unreal?
-4. **Test GeoTexBuild** — the AI framework for generating textured buildings from footprints is directly relevant
-5. **Prototype grey-cube pipeline** — footprints → extruded cubes → placed on DEM terrain → year-built filtering
+For generating grey cubes representing historical buildings in Time Machine:
+
+1. **Start with Microsoft footprints + Open City Model** -- free LOD1 block models for any US location
+2. **Enrich with ATTOM** ($95/mo) for year built filtering (exclude buildings built after your target date)
+3. **Use OSM `building:levels`** where available to refine heights
+4. **For historical scenes** (pre-photography era like 1884 NYC): year built from tax records is the critical filter. Cross-reference with Sanborn fire insurance maps (Library of Congress, free) for historical footprints and building materials
+
+This approach avoids MLS licensing entirely, uses public/open data, and provides the footprint + height + year-built data needed for grey-cube generation at city scale.
+
+---
+
+## Sources
+
+- [RESO Web API](https://www.reso.org/reso-web-api/)
+- [NAR RETS/Web API Policy](https://www.nar.realtor/about-nar/policies/mls-policy/real-estate-transaction-standards-rets-web-api)
+- [Zillow/Bridge Interactive API](https://www.bridgeinteractive.com/developers/bridge-api/)
+- [ATTOM Property Data API](https://www.attomdata.com/solutions/property-data-api/)
+- [ATTOM Assessor Data](https://www.attomdata.com/data/property-data/assessor-data/)
+- [CoreLogic 360 Property Data](https://www.corelogic.com/360-property-data)
+- [BatchData Pricing](https://batchdata.io/pricing)
+- [Regrid Parcel Data + Building Footprints](https://regrid.com/)
+- [TaxNetUSA Property Data API](https://www.taxnetusa.com/data/web-service-api/)
+- [Cook County Assessor Open Data 2025](https://datacatalog.cookcountyil.gov/stories/s/Assessor-2025-Open-Data-Refresh/gzdr-q7c4/)
+- [Microsoft US Building Footprints](https://github.com/microsoft/USBuildingFootprints)
+- [Microsoft Global ML Building Footprints](https://github.com/microsoft/GlobalMLBuildingFootprints)
+- [Open City Model (CityGML for US)](https://github.com/opencitymodel/opencitymodel)
+- [GlobalBuildingAtlas (TU Munich)](https://essd.copernicus.org/articles/17/6647/2025/)
+- [GeoTexBuild (arXiv)](https://arxiv.org/html/2504.08419v1)
+- [awesome-citygml](https://github.com/OloOcki/awesome-citygml)
+- [OSM Simple 3D Buildings](https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1)
+- [SimplyRETS (RESO API wrapper)](https://simplyrets.com/)
