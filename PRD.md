@@ -844,6 +844,65 @@ TODAY ─── Phase 0 ─── Phase 1 ─── Phase 2 ─── Phase 3 �
 
 Each phase is independently valuable. Phase 0-1 is a compelling weather simulation. Phase 2 is an installation product. Phase 3-4 makes historical mode real. Phase 4.5 adds period music. Phase 5 gives you real terrain for any location. Phase 6-7 makes it historically visual. Phase 8 is the dream state.
 
+---
+
+### Future Platform Extensions
+
+Beyond the core phased roadmap, these are platform-level ideas that extend Time Machine into new form factors, physical spaces, and business tools.
+
+#### F1 — Physical Space Definitions (`henhouse-adu` repo)
+
+The physical containers where Time Machine operates: trailer builds, room conversions, and portable installations. Separate repo (`henhouse-adu`) focused on specs and simulations, not runtime code.
+
+**Spaces:**
+- **The Star Waggon** — Primary trailer build (the flagship mobile experience)
+- **The Green Room** — Talent/guest holding area with ambient Time Machine
+- **The Podcast Booth** — Audio-optimized enclosed space for recording + immersion
+- Additional container types as the fleet grows
+
+**What it defines per space:** Physical dimensions and floor plans, window/display placement and cardinal orientation, speaker placement maps, electrical and HVAC, material and acoustic treatment specs, compute hardware and network topology, weight budgets (critical for trailers), calibration reference data, cost estimates and vendor lists.
+
+Each room definition produces a **viewport config** (how many windows, what size, what orientation) and a **spatial audio config** (speaker positions, channel assignments) that the `time-machine` software layer consumes.
+
+#### F2 — Consumer Room Configuration UI (Viewport Designer)
+
+A consumer-facing tool where someone enters their room dimensions, places virtual "windows" (displays) on walls in a drag-and-drop UI (like the HomePod spatial audio setup experience), and the system generates the render configuration for Time Machine to drive those displays.
+
+- Enter room dimensions (L × W × H) or scan with phone LiDAR
+- Drag displays onto walls in a top-down or 3D view — each gets cardinal orientation, size, and position automatically
+- Output: a viewport config that tells Unreal where each camera frustum lives
+- Optional speaker placement configures the audio engine's spatial mix
+
+The gap between "pro install" (Star Waggon) and "consumer DIY" is mostly this tool — it replaces manual calibration and config. Becomes viable once the pro install pipeline is proven and stable.
+
+#### F3 — Apple TV Single-Viewport Port
+
+The simplest possible consumer Time Machine — one screen, spatial audio, no multi-display complexity. A single "window" viewport where the audio engine does the heavy lifting for immersion.
+
+**Why it works:**
+- The 5-layer audio engine was built to create a believable "outside" — on a single screen, spatial audio becomes the primary immersion driver
+- Single viewport = no nDisplay, no multi-GPU sync. Could run on Apple GPU (A/M-series) or stream from a cloud render node
+- Apple TV has spatial audio built in (AirPods head tracking, HomePod surround)
+- Low barrier to entry: download app, pick a Place × Time, put on headphones
+
+**Key questions:** Render approach (native Metal vs Unreal pixel streaming vs pre-rendered loops), audio delivery (Web Audio in tvOS web view vs native AVAudioEngine with head-tracked spatial audio), content scope (curated presets first, not the full open engine).
+
+**Product ladder:** Star Waggon (pro trailer) → Consumer multi-window room (viewport designer) → Apple TV single window → Audio-only mode (headphones, no screen — just the soundscape)
+
+#### F4 — News Engine (future, separate repo)
+
+An autonomous agent that monitors news sources (local and international), tracks developing stories over time, and analyzes how events might affect strategy — for Time Machine business decisions, content opportunities, and situational awareness.
+
+- Scans configurable news sources on a schedule (RSS, APIs, web scraping)
+- Categorizes by relevance (entertainment, real estate, tourism, tech, local markets)
+- Tracks story arcs over time, not just one-shot headlines
+- Runs strategy impact analysis (LLM-powered) on how stories play out
+- Produces daily/weekly briefings; alerts on high-relevance breaking stories
+
+Not related to the `time-machine` runtime — separate business intelligence tool. Could eventually feed into content prioritization (which Place × Time presets to build next, market timing for new locations).
+
+---
+
 ## 23) The Agent-Driven Research Model
 
 The ambition of Time Machine — absolute historical accuracy at arbitrary Place×Time coordinates — is impossible for humans to achieve manually at scale. The volume of archival research required for a single city block in a single year would take a historian months.
