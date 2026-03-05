@@ -75,9 +75,22 @@ Metal 2+ is fully available on tvOS. All Metal Performance Shaders work. For max
 
 SceneKit still works on tvOS but is officially deprecated as of WWDC 2025. It supports custom Metal shaders via `SCNProgram` and `SCNTechnique`, but new development should target RealityKit.
 
-### WebView Option (Not Recommended)
+### Pixel Streaming (Alternative — High Fidelity)
 
-WKWebView is available on tvOS but WebGPU support is uncertain, and performance would be poor compared to native Metal. Not recommended for the primary rendering path — though could be useful for a lightweight "preview" mode.
+Instead of rendering on the Apple TV, stream the existing Unreal scene via WebRTC from a local rendering server. The Apple TV decodes video while running native audio.
+
+- **How:** Unreal Pixel Streaming encodes frames → WebRTC → tvOS native WebRTC client decodes
+- **WebRTC on tvOS:** [swarm-cloud/Apple-WebRTC](https://github.com/swarm-cloud/Apple-WebRTC) provides pre-built tvOS binaries
+- **Latency:** 100-250ms on LAN — imperceptible for a passive "window" experience
+- **Bandwidth:** 4K@30fps H.265 needs ~15-25 Mbps on LAN
+- **Advantage:** Zero rendering re-engineering — existing Cesium terrain, volumetric clouds, atmospheric effects stream as-is
+- **Disadvantage:** Requires a GPU server running on the LAN. Not viable for standalone App Store distribution
+
+This is the strongest path for matching the full Unreal visual quality. The Apple TV app becomes a decode + audio client. Could coexist with RealityKit standalone mode (Pixel Streaming when server available, native rendering when standalone).
+
+### WebView Option (Not Viable)
+
+WKWebView is **explicitly prohibited** on tvOS (`__TVOS_PROHIBITED`). No web views of any kind. The existing `viz.html` (WebGPU) and `audio-engine.html` (Web Audio) cannot run on Apple TV — native rewrites are required.
 
 ---
 
@@ -179,12 +192,15 @@ The v2 audio profile schema (HRTF positions, azimuth/elevation/distance, motion 
 
 Audio profiles are the main asset concern. A single profile (e.g., `nyc_city_1884`) is ~50-100 MB of MP3 audio. Even with 50 profiles, that's ~5 GB — well within limits.
 
+**Critical constraint: 500 KB persistent storage.** tvOS allows only 500 KB of persistent local storage per app. Audio assets must be treated as purgeable cache delivered via Background Assets — the system can purge them at any time. The app must gracefully handle missing assets and re-download on next launch.
+
 ### Asset Delivery Strategy
 
 Use the **Background Assets** framework (not legacy On-Demand Resources):
 1. Ship app with 1-2 bundled profiles (e.g., default suburban, NYC) — keeps initial download small
 2. Additional profiles download in background as the user browses available Place×Time options
-3. Audio assets are cached locally and purged LRU when space is tight
+3. Audio assets live in system-managed purgeable cache — accept re-downloads after system purges
+4. WorldState JSON is tiny (~2 KB) — cache last-known state in the 500 KB persistent store for offline fallback
 
 ### Monetization
 
