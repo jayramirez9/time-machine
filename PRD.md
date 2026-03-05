@@ -907,3 +907,17 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 7. **Geographic data pipeline:** Evaluate Cesium for Unreal + Google Photorealistic 3D Tiles as the terrain/building ingestion path. Key questions: API access and licensing for Google 3D Tiles, Cesium Ion tile budgets at scale, DEM resolution for natural terrain (Grand Canyon, coastlines), workflow for converting streamed 3D tiles into editable Unreal Landscape actors (vs. runtime streaming only), and feasibility of selectively replacing modern buildings with historical geometry on top of the same terrain base.
 
 Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.
+
+## 25) Perhaps (Blue Sky Scenarios)
+
+Ideas that push beyond historical reconstruction into fully fictional or fantastical world states. The same engine — world state, audio, multi-window rendering — could drive entirely synthetic environments:
+
+1. **Looney Tunes Desert** — Road Runner / Coyote world. You're in a physical Time Machine space but the windows show painted desert mesas, impossible cliffs, and ACME delivery trucks. Audio: roadrunner "meep meep," distant dynamite, desert wind through canyon walls.
+
+2. **Disney Castle Turret** — Standing atop the princess castle at Walt Disney World, looking out over the park and the surrounding landscape. Fireworks at night, parade music drifting up, Florida humidity and evening thunderstorms rolling in.
+
+3. **Snowy Cabin in the Woods** — Deep winter isolation. Every window shows dense snowfall through pine trees, frozen lake in the distance. Audio: fire crackling (inside), wind howling, branches snapping under ice, occasional distant wolf. Time-of-day drives light through the trees — blue dawn, white noon, amber dusk, dark night with moonlight on snow.
+
+4. **Star Wars Tatooine** — Binary sunset. Desert homestead moisture farm. Audio: Jawa chatter in the distance, landspeeder hum, sand skittering across duracrete. Twin suns track independently across the sky. Night brings different constellations and Tusken Raider calls from the Jundland Wastes.
+
+These are exercises in world-state completeness: if the engine can drive a convincing Tatooine, the abstraction layer is right. Every scenario still needs `states`, `controls`, `lighting`, `audio`, and `atmosphere` — just sourced from authored fiction instead of historical weather APIs.
