@@ -513,6 +513,7 @@ Layer in man-made / period content on top
 | **OpenStreetMap** | Vector: roads, buildings, land use, water | Global | Crowd-sourced, variable |
 | **Bing Maps** | Aerial imagery | Global | 15cm in urban areas |
 | **USDA NAIP** | Aerial ortho-imagery | US agricultural + urban | 60cm |
+| **MLS / Real Estate Listings** | Building specs: year built, sq ft, stories, lot size, materials, roof type + multi-angle exterior/interior photos | US residential (near-total coverage) | Per-parcel structured data + high-res photos |
 
 ### 18.3 Unreal Integration Model
 
@@ -528,13 +529,16 @@ Roads, water bodies, and land-use boundaries from OSM or similar become spline a
 **3D Buildings (Modern Baseline):**
 Google's Photorealistic 3D Tiles or Cesium OSM Buildings provide modern building geometry. For present-day scenes, this is usable directly. For historical scenes, it provides a reference for what's there now — the historical pipeline (Phase 5) replaces buildings with period-accurate versions, but the modern data tells you lot lines, street widths, and general urban density.
 
+**Buildings from MLS Data (Grey Cube → Skinned Mesh):**
+MLS (Multiple Listing Service) real estate data is one of the richest structured sources for residential building specs. Every listing includes year built, square footage, lot dimensions, number of stories, exterior material (brick, siding, stucco), roof type, and — crucially — multiple high-resolution exterior photos from standardized angles. The pipeline: (1) Pull MLS data for a parcel → generate a grey cube with correct footprint, height, and lot placement. (2) Use listing photos as texture references → AI photo-to-PBR pipeline produces diffuse/normal/roughness maps for the actual building exterior. (3) Year-built dates enable era filtering — show only structures that existed at the WorldState date. This fills the gap between Sanborn maps (useful through ~1950s) and modern 3D tiles (present-day only). For mid-century residential neighborhoods — exactly the kind of suburban environments Time Machine targets — MLS data is near-complete.
+
 ### 18.4 The Historical Layering Model
 
 The geographic pipeline and the historical pipeline are complementary:
 
 1. **Terrain is timeless** — The Grand Canyon in 1884 had the same elevation profile as today (geological timescales). Fetch modern DEM, use it directly.
 2. **Street grid is semi-stable** — Manhattan's street grid was laid out by the Commissioners' Plan of 1811. Modern vector data gives you the grid. Historical maps tell you which streets existed and what they were surfaced with.
-3. **Buildings change** — Modern 3D building data is a starting point, not the answer. For historical scenes, Sanborn maps (Phase 6) replace modern buildings with period footprints. For present-day scenes, the 3D tiles are the answer.
+3. **Buildings change** — Modern 3D building data is a starting point, not the answer. For historical scenes, Sanborn maps (Phase 6) replace modern buildings with period footprints. For present-day and mid-century scenes, MLS year-built data enables era-accurate filtering — show only structures that existed at the target date. Listing photos provide texture references for the AI skinning pipeline.
 4. **Vegetation changes** — Modern land cover is a starting point. Historical ecology data (Phase 4) overrides it with period-accurate flora.
 
 The key insight: **fetch the real geography once, then dress it for any era.** The terrain and street grid are the foundation that persists across time. Everything above ground level is era-specific content layered on top.
@@ -964,5 +968,6 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 5. **MusicBrainz date precision:** How complete are exact release dates (day-level) for US releases in the 1970s-80s? What percentage are year-only vs month vs exact day? How does coverage degrade for pre-1950 recordings?
 6. **Streaming API ISRC resolution:** What percentage of MusicBrainz ISRCs resolve to playable tracks on Spotify vs Apple Music? Are there rate limits or licensing gaps that would block a "radio station" use case with continuous playback?
 7. **Geographic data pipeline:** Evaluate Cesium for Unreal + Google Photorealistic 3D Tiles as the terrain/building ingestion path. Key questions: API access and licensing for Google 3D Tiles, Cesium Ion tile budgets at scale, DEM resolution for natural terrain (Grand Canyon, coastlines), workflow for converting streamed 3D tiles into editable Unreal Landscape actors (vs. runtime streaming only), and feasibility of selectively replacing modern buildings with historical geometry on top of the same terrain base.
+8. **MLS data as building source:** Evaluate MLS/real estate data access for building reconstruction. Key questions: API access (RETS/RESO Web API, Zillow, Realtor.com, Redfin), licensing restrictions on bulk parcel data, coverage completeness for year-built and square footage fields, photo availability and resolution by market, feasibility of automated grey-cube generation from structured listing data (footprint from lot + sq ft + stories), and AI photo→PBR texture extraction quality from typical MLS exterior photos (multiple angles but uncontrolled lighting/lens). Secondary question: can county assessor/tax records supplement or replace MLS for the structured fields (year built, sq ft, lot size) without the licensing complexity?
 
 Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.
