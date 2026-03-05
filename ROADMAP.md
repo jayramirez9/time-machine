@@ -100,7 +100,8 @@ Type a location, get real terrain in Unreal. The foundation for every visual sce
 - [ ] Satellite imagery base layer: aerial/satellite imagery as landscape material
 - [ ] Google Photorealistic 3D Tiles: stream through Cesium for terrain + buildings
 - [ ] Vector data ingestion (OSM): roads, water, land-use → spline guides and landscape masks
-- [ ] Location → Unreal automation: end-to-end geocode → fetch → Landscape actor
+- [x] Location → Cesium automation: `tools/set-location.js` geocodes and sets CesiumGeoreference via RC API. Engine auto-sets georeference on start when routes are configured. `engine.georeference` exposed in WorldState.
+- [ ] Location → Unreal Landscape: end-to-end geocode → DEM fetch → Landscape actor import
 - [ ] LOD and scale strategy: city block vs Grand Canyon, streaming tile budget
 - [ ] Historical overlay workflow: modern terrain base + period content swap
 

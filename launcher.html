@@ -80,6 +80,29 @@
     display: none;
   }
   .error-msg.visible { display: block; }
+
+  .btn-generate {
+    width: 100%;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    background: #111; color: #28a;
+    border: 1px solid #28a; padding: 12px;
+    cursor: pointer; margin-top: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  .btn-generate:hover { background: #0d1520; }
+  .btn-generate:disabled { opacity: 0.4; cursor: default; }
+  .btn-generate.loading { color: #a82; border-color: #a82; }
+
+  .image-section {
+    margin-top: 24px;
+    display: none;
+  }
+  .image-section.visible { display: block; }
+  .image-section img {
+    width: 100%;
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -132,8 +155,13 @@
   </div>
 
   <button class="btn-launch" id="btnLaunch">Launch</button>
+  <button class="btn-generate" id="btnGenerate">Generate Image</button>
 
   <div class="error-msg" id="errorMsg"></div>
+
+  <div class="image-section" id="imageSection">
+    <img id="generatedImage" alt="Generated historical scene">
+  </div>
 
   <div class="status-bar" id="statusBar">
     <div class="status-line">Status: <span class="val running" id="statusState">running</span></div>
@@ -242,6 +270,58 @@ btnLaunch.addEventListener('click', async () => {
     connectWS();
   } catch (e) {
     showError(e.message || 'Network error');
+  }
+});
+
+// Generate Image handler
+const btnGenerate = document.getElementById('btnGenerate');
+const imageSection = document.getElementById('imageSection');
+const generatedImage = document.getElementById('generatedImage');
+
+btnGenerate.addEventListener('click', async () => {
+  errorMsg.classList.remove('visible');
+  btnGenerate.disabled = true;
+  btnGenerate.className = 'btn-generate loading';
+  btnGenerate.textContent = 'Generating...';
+
+  const body = {
+    location: document.getElementById('location').value.trim(),
+    date: document.getElementById('date').value.trim(),
+    time: document.getElementById('time').value
+  };
+
+  if (!body.location) {
+    showError('Location is required');
+    btnGenerate.disabled = false;
+    btnGenerate.className = 'btn-generate';
+    btnGenerate.textContent = 'Generate Image';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      showError(data.error || 'Image generation failed');
+      btnGenerate.className = 'btn-generate';
+      btnGenerate.textContent = 'Generate Image';
+      btnGenerate.disabled = false;
+      return;
+    }
+    generatedImage.src = data.image;
+    imageSection.classList.add('visible');
+    btnGenerate.className = 'btn-generate';
+    btnGenerate.textContent = 'Regenerate Image';
+    btnGenerate.disabled = false;
+  } catch (e) {
+    showError(e.message || 'Network error');
+    btnGenerate.className = 'btn-generate';
+    btnGenerate.textContent = 'Generate Image';
+    btnGenerate.disabled = false;
   }
 });
 

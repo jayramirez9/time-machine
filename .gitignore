@@ -5,3 +5,4 @@ node_modules/
 tm-engine.log
 logs/
 audio-assets/
+generated-textures/
