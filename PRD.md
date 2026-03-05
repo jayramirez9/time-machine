@@ -920,4 +920,6 @@ Ideas that push beyond historical reconstruction into fully fictional or fantast
 
 4. **Star Wars Tatooine** — Binary sunset. Desert homestead moisture farm. Audio: Jawa chatter in the distance, landspeeder hum, sand skittering across duracrete. Twin suns track independently across the sky. Night brings different constellations and Tusken Raider calls from the Jundland Wastes.
 
-These are exercises in world-state completeness: if the engine can drive a convincing Tatooine, the abstraction layer is right. Every scenario still needs `states`, `controls`, `lighting`, `audio`, and `atmosphere` — just sourced from authored fiction instead of historical weather APIs.
+No new engine required. These run on the exact same pipeline we're building: world state compiler, environment router, dispatcher, audio engine, renderers. The only difference is the data source — instead of weather APIs, an authored locale preset feeds the timeline. The mock provider already does this for testing; a "Tatooine" preset is just a mock provider that returns "clear, 47°C, sand wind NNW" and a `tatooine.json` audio profile with Jawa chatter instead of birdsong. Everything downstream — `states`, `controls`, `lighting`, `audio`, `atmosphere`, rate limiter, dispatch — works unchanged.
+
+If the engine can drive a convincing Tatooine, the abstraction layer is right.
