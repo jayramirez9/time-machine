@@ -7,7 +7,8 @@
     "weather-engine": "./cli.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "eval": "./tm-eval.js"
   },
   "keywords": ["weather", "simulation", "climate"],
   "author": "",
