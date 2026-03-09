@@ -564,6 +564,26 @@ function createServer(engineRef) {
         res.setHeader('Cache-Control', 'public, max-age=86400');
         res.end(data);
       });
+    } else if (req.method === 'GET' && urlPath.startsWith('/terrain-data/')) {
+      const assetPath = urlPath.replace('/terrain-data/', '');
+      const filePath = path.join(__dirname, 'terrain-data', assetPath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.r16': 'application/octet-stream',
+        '.png': 'image/png',
+        '.tif': 'image/tiff',
+        '.json': 'application/json'
+      };
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.statusCode = 404;
+          res.end('Terrain data not found');
+          return;
+        }
+        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+        res.setHeader('Content-Length', data.length);
+        res.end(data);
+      });
     } else if (req.method === 'GET' && (urlPath === '/viz' || urlPath === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {

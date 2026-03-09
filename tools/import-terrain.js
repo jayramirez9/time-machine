@@ -1,20 +1,25 @@
 #!/usr/bin/env node
 /**
- * import-terrain.js — Terrain import guide for Unreal Landscape Mode
+ * import-terrain.js — Automated terrain import into Unreal via RC API
  *
  * Reads a processed heightmap (and optional imagery) from a terrain-data directory,
- * validates the files, checks Unreal connectivity, and prints step-by-step
- * Landscape Mode import instructions with correct dimensions and scale values.
+ * validates the files, and imports them into Unreal as a Landscape actor via
+ * Python scripting through the Remote Control API.
+ *
+ * Falls back to printing manual instructions when Unreal is not reachable or --manual.
  *
  * Usage:
  *   node tools/import-terrain.js terrain-data/manhattan-ny/
- *   node tools/import-terrain.js terrain-data/baton-rouge-la/ --host http://localhost:30010
+ *   node tools/import-terrain.js terrain-data/manhattan-ny/ --host http://100.96.244.16:30010
+ *   node tools/import-terrain.js terrain-data/manhattan-ny/ --daemon-url http://100.68.243.96:3000
+ *   node tools/import-terrain.js terrain-data/manhattan-ny/ --manual
  *   node tools/import-terrain.js terrain-data/manhattan-ny/ --dry-run
  */
 
 import fs from 'fs';
 import path from 'path';
 import { isUnrealReachable } from '../lib/cesiumGeoreference.js';
+import { importLandscape } from '../lib/landscapeImport.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -29,7 +34,9 @@ function getFlag(name, defaultValue) {
 const hasFlag = (name) => args.includes(name);
 
 const HOST = getFlag('--host', 'http://localhost:30010');
+const DAEMON_URL = getFlag('--daemon-url', null);
 const DRY_RUN = hasFlag('--dry-run');
+const MANUAL = hasFlag('--manual');
 
 // Terrain data directory is the first positional arg
 const terrainDir = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
@@ -38,8 +45,10 @@ if (!terrainDir) {
   console.error('Usage: node tools/import-terrain.js <terrain-data-dir/> [options]');
   console.error('');
   console.error('Options:');
-  console.error('  --host URL    Unreal RC API host (default: http://localhost:30010)');
-  console.error('  --dry-run     Show what would be imported without sending to Unreal');
+  console.error('  --host URL         Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --daemon-url URL   Mac daemon URL reachable from PC (for automated import)');
+  console.error('  --manual           Force manual instructions (skip automated import)');
+  console.error('  --dry-run          Show what would be imported without sending to Unreal');
   process.exit(1);
 }
 
@@ -70,7 +79,6 @@ async function main() {
   if (heightmapInfo?.path && fs.existsSync(heightmapInfo.path)) {
     heightmapPath = path.resolve(heightmapInfo.path);
   } else {
-    // Search for heightmap files
     for (const ext of ['heightmap.r16', 'heightmap.png']) {
       const p = path.join(terrainDir, ext);
       if (fs.existsSync(p)) { heightmapPath = path.resolve(p); break; }
@@ -93,26 +101,61 @@ async function main() {
     console.log(`  Imagery:    ${path.resolve(imageryPath)}`);
   }
 
+  // Check for PNG16 (needed for automated import)
+  const png16Path = path.join(terrainDir, 'heightmap_16bit.png');
+  const hasPng16 = fs.existsSync(png16Path);
+  if (hasPng16) {
+    console.log(`  PNG16:      ${path.resolve(png16Path)}`);
+  }
+
   // Unreal scale factors
   const scale = heightmapInfo?.unrealScale || { x: 100, y: 100, z: 100 };
   console.log(`  Scale:      X=${scale.x?.toFixed(2)}, Y=${scale.y?.toFixed(2)}, Z=${scale.z?.toFixed(2)}`);
 
-  // Check Unreal connectivity (optional — just for status reporting)
-  if (!DRY_RUN) {
+  if (DRY_RUN) {
+    console.log('\n  [Dry run] Would import the above terrain data.');
+    return;
+  }
+
+  // Try automated import (unless --manual)
+  if (!MANUAL) {
     console.log('\n  Checking Unreal connectivity...');
     const reachable = await isUnrealReachable(HOST);
-    if (reachable) {
-      console.log('  Unreal connected.');
+
+    if (reachable && DAEMON_URL && hasPng16) {
+      console.log('  Unreal connected. Starting automated import...\n');
+      const slug = metadata.slug || path.basename(terrainDir);
+
+      const result = await importLandscape({
+        host: HOST,
+        daemonUrl: DAEMON_URL,
+        lat: metadata.lat,
+        lon: metadata.lon,
+        slug,
+        location: metadata.name,
+        radius: metadata.radiusMeters || 500
+      });
+
+      if (result.ok) {
+        console.log(`\n  Import successful! Landscape: ${result.landscape}`);
+        console.log('═══════════════════════════════════════════════');
+        return;
+      } else {
+        console.warn(`\n  Automated import failed: ${result.error}`);
+        console.log('  Falling back to manual instructions...\n');
+      }
+    } else if (reachable && !DAEMON_URL) {
+      console.log('  Unreal connected, but --daemon-url not provided.');
+      console.log('  Provide --daemon-url for automated import, or use manual instructions.\n');
+    } else if (reachable && !hasPng16) {
+      console.log('  Unreal connected, but no PNG16 heightmap found.');
+      console.log('  Re-run fetch-dem.js to regenerate terrain data with PNG16 output.\n');
     } else {
-      console.log('  Unreal not reachable — import instructions still valid.');
+      console.log('  Unreal not reachable. Showing manual instructions.\n');
     }
   }
 
-  // Print import instructions
-  // Note: Programmatic Landscape creation requires the Remote Control Scripting
-  // plugin which has dependency issues. The manual Landscape Mode import is the
-  // most reliable path and what Unreal officially recommends for heightmap import.
-  console.log('\n  ─── Import Instructions ──────────────────────');
+  // Manual instructions fallback
   printManualInstructions(heightmapPath, heightmapInfo, scale, hasImagery ? path.resolve(imageryPath) : null);
   console.log('\n═══════════════════════════════════════════════');
 }
@@ -120,6 +163,7 @@ async function main() {
 function printManualInstructions(heightmapPath, heightmapInfo, scale, imageryPath) {
   const w = heightmapInfo?.dimensions?.w || '?';
   const h = heightmapInfo?.dimensions?.h || '?';
+  console.log(`  ─── Manual Import Instructions ──────────────`);
   console.log(`\n  Unreal Landscape Import:`);
   console.log(`    1. Open Landscape Mode (Shift+3 or Modes panel)`);
   console.log(`    2. Select "Import from File" tab`);
