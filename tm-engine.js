@@ -24,6 +24,7 @@ import { getApiKey as getVCKey } from './lib/visualcrossing.js';
 import { getApiKey as getNOAAKey } from './lib/noaa.js';
 import { getExclusionText } from './lib/eraData.js';
 import { isUnrealReachable, getGeoreference } from './lib/cesiumGeoreference.js';
+import { getTilesetStatus } from './lib/cesiumTileset.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -315,8 +316,13 @@ function createServer(engineRef) {
         cesiumFound = geoState.ok;
         origin = geoState.origin || null;
       }
+      let tileset = null;
+      if (reachable) {
+        const ts = await getTilesetStatus(host);
+        tileset = ts.ok ? { found: ts.found, url: ts.url || null } : null;
+      }
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ reachable, cesiumFound, origin, host }));
+      res.end(JSON.stringify({ reachable, cesiumFound, origin, tileset, host }));
       return;
     }
 

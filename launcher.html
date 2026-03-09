@@ -242,7 +242,8 @@ async function pollUnrealStatus() {
     const el = document.getElementById('unrealStatus');
     if (data.reachable && data.cesiumFound && data.origin) {
       const o = data.origin;
-      el.innerHTML = `<span class="dot dot-green"></span>Unreal connected<br><span class="val" style="margin-left:12px">${o.lat?.toFixed(4)}, ${o.lon?.toFixed(4)} @ ${o.height?.toFixed(1) || 0}m</span>`;
+      const tilesetInfo = data.tileset?.found && data.tileset?.url ? '<br><span class="val" style="margin-left:12px">3D Tiles: streaming</span>' : '';
+      el.innerHTML = `<span class="dot dot-green"></span>Unreal connected<br><span class="val" style="margin-left:12px">${o.lat?.toFixed(4)}, ${o.lon?.toFixed(4)} @ ${o.height?.toFixed(1) || 0}m</span>${tilesetInfo}`;
     } else if (data.reachable) {
       el.innerHTML = `<span class="dot dot-yellow"></span>Unreal connected (no Cesium actor)`;
     } else {

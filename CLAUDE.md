@@ -31,6 +31,7 @@ export VISUALCROSSING_API_KEY="your-key"    # Visual Crossing ($35/mo, no rate l
 export NOAA_API_TOKEN="your-token"          # NOAA Climate Data Online (free, daily back to 1800s)
 export ELEVENLABS_API_KEY="your-key"        # ElevenLabs (preferred, AI sound effects generation)
 export FREESOUND_API_KEY="your-key"         # Freesound (legacy, CC-licensed audio search)
+export GOOGLE_3D_TILES_API_KEY="your-key"  # Google Photorealistic 3D Tiles (scouting/preview only)
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo. Use `--provider visualcrossing`, `--provider openmeteo`, or `--provider noaa` to force a specific provider.
@@ -287,7 +288,9 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **Automatic georeference on engine start**: When routes config has an `unreal` endpoint, the engine geocodes the location and calls `setGeoreference()` to teleport the Cesium scene. Also available standalone via `tools/set-location.js`.
 - **`lib/cesiumGeoreference.js`**: Shared module for discovering CesiumGeoreference actor via RC API search and writing OriginLatitude/Longitude/Height. Also provides `estimateHeight(lat, lon)` (USGS 3DEP point elevation query), `getGeoreference(host)` (read current origin), and `isUnrealReachable(host)` (connectivity check). Used by CLI tools and the runtime engine.
 - **Auto-height on engine start**: `estimateHeight()` queries USGS 3DEP elevation API to set CesiumGeoreference height to ground level + 2m eye offset, instead of hardcoded 0. Graceful fallback on timeout.
-- **Unreal status endpoint**: `GET /api/unreal-status` pings RC API and reports `{ reachable, cesiumFound, origin }`. Launcher UI shows green/yellow/red status dot.
+- **Unreal status endpoint**: `GET /api/unreal-status` pings RC API and reports `{ reachable, cesiumFound, origin, tileset }`. Launcher UI shows green/yellow/red status dot and tileset streaming status.
+- **Google Photorealistic 3D Tiles** (scouting/preview only): Streams photorealistic 3D mesh data for ~2,500 cities via Cesium. **Not for production** — Google ToS restricts to "visualization only", no derivatives, always-online, mandatory attribution. Set `GOOGLE_3D_TILES_API_KEY` env var to enable. Auto-configures on engine start. Launcher has a toggle checkbox. Standalone tool: `tools/set-tileset.js`.
+- **`lib/cesiumTileset.js`**: Discovers Cesium3DTileset actors via RC API search, sets/clears tileset URL. Exports `setTilesetUrl()`, `clearTileset()`, `getTilesetStatus()`, `googleTilesUrl()`. Requires a blank Cesium3DTileset actor in the Unreal scene (add via Cesium panel Quick Add).
 - See `docs/research-geo-pipeline.md` for full research on approaches, licensing, and the two-track strategy (Cesium streaming for scouting, USGS heightmaps for production).
 - See `docs/research-historical-built-environment.md` for future research on era-accurate buildings (OSM date filtering, Sanborn maps, landmark models, procedural generation).
 
@@ -311,6 +314,7 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **tools/fetch-imagery.js** - USGS NAIP satellite imagery fetcher. Downloads 1m resolution aerial imagery matching a terrain extent. Can read from existing terrain-data metadata or geocode fresh. Usage: `node tools/fetch-imagery.js terrain-data/manhattan-ny/ [--size 2048]`
 - **tools/import-terrain.js** - Terrain import guide. Reads from `terrain-data/{slug}/`, validates files, checks Unreal connectivity, and prints step-by-step Landscape Mode import instructions with correct dimensions and scale values. Usage: `node tools/import-terrain.js terrain-data/manhattan-ny/ [--host http://localhost:30010]`
 - **tools/set-location.js** - Cesium location setter. Geocodes a location string and sets CesiumGeoreference origin via Unreal Remote Control API. Auto-queries USGS elevation when `--height` not specified. Supports `--lat`/`--lon` for direct coordinates. Usage: `node tools/set-location.js "Manhattan, NY" [--height 50] [--host http://localhost:30010]`
+- **tools/set-tileset.js** - Cesium 3D Tileset manager. Sets the URL on a Cesium3DTileset actor for Google Photorealistic 3D Tiles or custom tilesets. Usage: `node tools/set-tileset.js google` (needs `GOOGLE_3D_TILES_API_KEY`), `node tools/set-tileset.js --url <url>`, `node tools/set-tileset.js --clear`, `node tools/set-tileset.js --status`
 - **tools/spawn-greybox.js** - Unreal scene spawner for the 1884 NYC greybox. Spawns 12 brownstone blocks (2 rows of 6 scaled cubes), 4 gas lamp PointLights, and moves PlayerStart to 2nd floor listener position. Uses Unreal Remote Control API directly for objectPath-based actor configuration. Usage: `node tools/spawn-greybox.js [--host http://localhost:30010]`
 - **bin/time-machine** - Shell launcher script. Sources `.env`, starts the daemon, waits for it to be ready, and opens `http://localhost:3000/` in the browser. Detects if already running. Aliased as `time-machine` in user's shell. Usage: `time-machine` or `time-machine --no-open`
 

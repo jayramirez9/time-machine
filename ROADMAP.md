@@ -74,8 +74,8 @@ You hear 1884, not 2024 with old buildings.
 - [x] Doppler + reverb tuning pass (listening session validated)
 - [x] Audition panel for debugging individual assets
 - [x] Web launcher with runtime engine restart
-- [ ] **Unreal scene art pass** *(after geo data)*: Materials (brownstone brick, granite sett, cast iron), window geometry, stoops, awnings, period signage
-- [ ] **Gas lamp light configuration** *(after geo data)*: Set warm color temperature (2200K), intensity, and attenuation on the 4 PointLight actors
+- [~] ~~**Unreal scene art pass**~~: Paused — direction changed. Greybox served its purpose for audio development; future visual fidelity comes from Cesium streaming + Phase 6 historical urban form, not hand-dressed cubes.
+- [~] ~~**Gas lamp light configuration**~~: Paused — direction changed. Greybox PointLights superseded by geo pipeline. Period lighting will be placed in context of real geometry in Phase 6.
 
 ## Phase 4.5 — Period Music Streaming
 
@@ -96,12 +96,12 @@ Type a location, get real terrain in Unreal. The foundation for every visual sce
 - [x] Cesium for Unreal integration: plugin installed, georeference set via Remote Control API, verified at Baton Rouge, Manhattan, and Grand Canyon
 - [x] Cesium OSM Buildings: 1.4B building volumes streaming, verified over Manhattan
 - [x] Weather engine dispatch over Cesium terrain: sun position, fog, clouds, sky light driving real geo data — shadows moving correctly
-- [ ] Terrain from DEM: USGS 3DEP or Cesium terrain tiles → Unreal Landscape
-- [ ] Satellite imagery base layer: aerial/satellite imagery as landscape material
-- [ ] Google Photorealistic 3D Tiles: stream through Cesium for terrain + buildings
+- [x] Terrain from DEM: USGS 3DEP → Unreal Landscape (`lib/landscapeImport.js`, `lib/demFetcher.js`, `tools/fetch-dem.js`, `tools/import-terrain.js`). Automated end-to-end: DEM fetch, GDAL processing, HTTP transfer, Unreal import. Hooked into `startEngine()`.
+- [x] Satellite imagery base layer: NAIP aerial imagery fetched via `tools/fetch-imagery.js`, matched to terrain extent
+- [x] Google Photorealistic 3D Tiles: stream through Cesium for scouting/preview. `lib/cesiumTileset.js`, `tools/set-tileset.js`. Auto-configures on engine start when `GOOGLE_3D_TILES_API_KEY` is set. Launcher UI toggle. Not for production use (Google ToS).
 - [ ] Vector data ingestion (OSM): roads, water, land-use → spline guides and landscape masks
 - [x] Location → Cesium automation: `tools/set-location.js` geocodes and sets CesiumGeoreference via RC API. Engine auto-sets georeference on start when routes are configured. `engine.georeference` exposed in WorldState.
-- [ ] Location → Unreal Landscape: end-to-end geocode → DEM fetch → Landscape actor import
+- [x] Location → Unreal Landscape: end-to-end geocode → DEM fetch → Landscape actor import (automated in `startEngine()` when routes configured)
 - [ ] LOD and scale strategy: city block vs Grand Canyon, streaming tile budget
 - [ ] Historical overlay workflow: modern terrain base + period content swap
 
