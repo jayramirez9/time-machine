@@ -12,11 +12,13 @@
  *   node tools/fetch-dem.js "Manhattan, NY" --radius 1000
  *   node tools/fetch-dem.js --lat 40.71 --lon -74.00 --radius 500
  *   node tools/fetch-dem.js "Grand Canyon, AZ" --radius 2000 --resolution 10
+ *   node tools/fetch-dem.js "Grand Canyon, AZ" --scale canyon
  *   node tools/fetch-dem.js "Baton Rouge, LA" --dry-run
  */
 
 import { geocode } from '../lib/openmeteo.js';
 import { fetchDEM, processDEM, checkGDAL, slugify } from '../lib/demFetcher.js';
+import { resolveScale, SCALE_PRESETS } from '../lib/scalePresets.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -32,12 +34,24 @@ function getFlag(name, defaultValue) {
 
 const hasFlag = (name) => args.includes(name);
 
-const RADIUS = parseInt(getFlag('--radius', '500'));
-const RESOLUTION = parseInt(getFlag('--resolution', '1'));
+const SCALE_NAME = getFlag('--scale', null);
+let RADIUS = parseInt(getFlag('--radius', '500'));
+let RESOLUTION = parseInt(getFlag('--resolution', '1'));
 const FORMAT = getFlag('--format', 'r16');
 const DRY_RUN = hasFlag('--dry-run');
 const directLat = getFlag('--lat', null);
 const directLon = getFlag('--lon', null);
+
+// Scale preset overrides radius and resolution
+if (SCALE_NAME) {
+  const { key, preset } = resolveScale(SCALE_NAME);
+  if (key !== SCALE_NAME) {
+    console.error(`Unknown scale preset "${SCALE_NAME}". Available: ${Object.keys(SCALE_PRESETS).join(', ')}`);
+    process.exit(1);
+  }
+  RADIUS = preset.radiusMeters;
+  RESOLUTION = preset.demResolution;
+}
 
 // Location is the first positional arg (not a flag)
 const locationArg = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
@@ -49,6 +63,8 @@ if (!locationArg && !directLat) {
   console.error('Options:');
   console.error('  --radius N      Radius in meters (default: 500)');
   console.error('  --resolution N  Target resolution in meters/pixel (default: 1)');
+  console.error('  --scale NAME    Use scale preset (overrides --radius and --resolution)');
+  console.error(`                  Available: ${Object.keys(SCALE_PRESETS).join(', ')}`);
   console.error('  --format r16|png16  Output format (default: r16)');
   console.error('  --dry-run       Show what would be fetched without downloading');
   process.exit(1);
@@ -99,6 +115,10 @@ async function main() {
   const slug = locationArg ? slugify(locationArg) : `${lat.toFixed(2)}_${lon.toFixed(2)}`;
   const outputDir = path.join('terrain-data', slug);
 
+  if (SCALE_NAME) {
+    const { preset } = resolveScale(SCALE_NAME);
+    console.log(`\n  Scale preset: ${SCALE_NAME} (${preset.label})`);
+  }
   console.log(`\n  Radius: ${RADIUS}m`);
   console.log(`  Resolution: ${RESOLUTION}m/px`);
   console.log(`  Format: ${FORMAT}`);

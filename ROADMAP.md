@@ -89,7 +89,7 @@ Turn on the radio and only hear music that existed on this exact day. See PRD Se
 - [ ] Pre-recording era music (barrel organ, brass band, parlor piano)
 - [ ] Baton Rouge 1978 integration test (20+ transitions, zero date violations)
 
-## Phase 5 — Geographic Data Pipeline (NEXT)
+## Phase 5 — Geographic Data Pipeline (DONE)
 
 Type a location, get real terrain in Unreal. The foundation for every visual scene. See PRD Section 18 and `docs/research-geo-pipeline.md` for full spec and research.
 
@@ -102,8 +102,8 @@ Type a location, get real terrain in Unreal. The foundation for every visual sce
 - [x] Vector data ingestion (OSM): roads, water, land-use → spline guides and landscape masks. `lib/osmVectors.js`, `tools/fetch-vectors.js`. Overpass API fetch, GeoJSON conversion, Douglas-Peucker simplification, scanline polygon rasterization to landscape masks, road spline extraction. Auto-imports into Unreal on engine start via Python RC API scripts.
 - [x] Location → Cesium automation: `tools/set-location.js` geocodes and sets CesiumGeoreference via RC API. Engine auto-sets georeference on start when routes are configured. `engine.georeference` exposed in WorldState.
 - [x] Location → Unreal Landscape: end-to-end geocode → DEM fetch → Landscape actor import (automated in `startEngine()` when routes configured)
-- [ ] LOD and scale strategy: city block vs Grand Canyon, streaming tile budget
-- [ ] Historical overlay workflow: modern terrain base + period content swap
+- [x] LOD and scale strategy: six named scale tiers (city_block→region), Cesium tile budget config, dual-layer model. `lib/scalePresets.js`, `docs/lod-scale-strategy.md`. `--scale` flag on `fetch-dem.js`, `startEngine()` reads from locale preset.
+- [x] Historical overlay workflow: overlay metadata schema (terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter), confidence tracking, height anchoring rules. `lib/historicalOverlay.js`, `docs/historical-overlay-workflow.md`, `docs/overlay-example-nyc-1884.json`.
 
 ## Phase 6 — Historical Urban Form
 

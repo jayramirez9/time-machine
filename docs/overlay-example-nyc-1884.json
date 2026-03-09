@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "location": "Manhattan, NY",
+  "targetYear": 1884,
+  "baseTerrainSlug": "manhattan-ny",
+  "createdAt": "2026-03-10T00:00:00.000Z",
+  "modifications": [
+    {
+      "id": "battery-park-landfill",
+      "type": "terrain_delta",
+      "description": "Battery Park City landfill not yet created (1970s-80s). Area was water in 1884.",
+      "extent": {
+        "type": "Polygon",
+        "coordinates": [[[-74.0170, 40.7075], [-74.0145, 40.7075], [-74.0145, 40.7115], [-74.0170, 40.7115], [-74.0170, 40.7075]]]
+      },
+      "heightDeltaMeters": -5,
+      "replaceWith": "water",
+      "confidence": "verified",
+      "source": "NOAA Historical Shoreline Survey 1879"
+    },
+    {
+      "id": "fdr-drive",
+      "type": "feature_remove",
+      "description": "FDR Drive (East River Drive) built 1934-42. Did not exist in 1884.",
+      "confidence": "verified",
+      "source": "NYC DOT historical records"
+    },
+    {
+      "id": "cobblestone-streets-lower",
+      "type": "surface_swap",
+      "description": "All Manhattan streets below 14th St were granite block or cobblestone in 1884.",
+      "extent": {
+        "type": "Polygon",
+        "coordinates": [[[-74.02, 40.700], [-73.97, 40.700], [-73.97, 40.738], [-74.02, 40.738], [-74.02, 40.700]]]
+      },
+      "modernMaterial": "asphalt",
+      "historicalMaterial": "granite_cobblestone",
+      "confidence": "verified",
+      "source": "Bromley Atlas 1879, NYC Municipal Archives street records"
+    },
+    {
+      "id": "elevated-railway-2nd-ave",
+      "type": "feature_add",
+      "description": "Second Avenue Elevated Railway, opened 1878, demolished 1940. Steam-powered.",
+      "extent": {
+        "type": "LineString",
+        "coordinates": [[-73.9898, 40.7128], [-73.9845, 40.7350], [-73.9820, 40.7590]]
+      },
+      "featureType": "elevated_railway",
+      "constructedYear": 1878,
+      "demolishedYear": 1940,
+      "confidence": "verified",
+      "source": "NYC Transit Authority historical records, engineering drawings"
+    },
+    {
+      "id": "elevated-railway-3rd-ave",
+      "type": "feature_add",
+      "description": "Third Avenue Elevated Railway, opened 1878, demolished 1955.",
+      "extent": {
+        "type": "LineString",
+        "coordinates": [[-73.9912, 40.7100], [-73.9870, 40.7320], [-73.9840, 40.7560]]
+      },
+      "featureType": "elevated_railway",
+      "constructedYear": 1878,
+      "demolishedYear": 1955,
+      "confidence": "verified",
+      "source": "NYC Transit Authority historical records"
+    },
+    {
+      "id": "elevated-railway-6th-ave",
+      "type": "feature_add",
+      "description": "Sixth Avenue Elevated Railway, opened 1878, demolished 1938-39.",
+      "extent": {
+        "type": "LineString",
+        "coordinates": [[-74.0050, 40.7100], [-74.0010, 40.7350], [-73.9980, 40.7550]]
+      },
+      "featureType": "elevated_railway",
+      "constructedYear": 1878,
+      "demolishedYear": 1939,
+      "confidence": "verified",
+      "source": "NYC Transit Authority historical records"
+    },
+    {
+      "id": "elevated-railway-9th-ave",
+      "type": "feature_add",
+      "description": "Ninth Avenue Elevated Railway (first NYC el), opened 1868, demolished 1940.",
+      "extent": {
+        "type": "LineString",
+        "coordinates": [[-74.0080, 40.7080], [-74.0050, 40.7320], [-74.0030, 40.7550]]
+      },
+      "featureType": "elevated_railway",
+      "constructedYear": 1868,
+      "demolishedYear": 1940,
+      "confidence": "verified",
+      "source": "NYC Transit Authority historical records"
+    },
+    {
+      "id": "east-river-waterfront-1884",
+      "type": "coastline",
+      "description": "1884 East River waterfront — piers and wharves, no FDR Drive, narrower landfill.",
+      "extent": {
+        "type": "Polygon",
+        "coordinates": [[[-73.9720, 40.7000], [-73.9700, 40.7100], [-73.9710, 40.7200], [-73.9730, 40.7200], [-73.9740, 40.7100], [-73.9730, 40.7000], [-73.9720, 40.7000]]]
+      },
+      "confidence": "estimated",
+      "source": "NOAA Historical Shoreline Survey 1879, Bromley Atlas 1879"
+    },
+    {
+      "id": "osm-building-date-filter",
+      "type": "osm_filter",
+      "description": "Hide all OSM buildings constructed after 1884. Coverage is sparse (~5-10% have start_date).",
+      "confidence": "estimated",
+      "source": "OSM start_date metadata"
+    }
+  ],
+  "heightAnchoring": {
+    "strategy": "modern_ground",
+    "gradeToleranceMeters": 2,
+    "historicalDEMAvailable": false,
+    "notes": "Manhattan street grades have changed <2m in most locations since 1884. Notable exceptions: Murray Hill was historically higher, landfill areas differ significantly."
+  },
+  "osmBuildingFilter": {
+    "enabled": true,
+    "maxConstructionYear": 1884
+  },
+  "sources": [
+    { "id": "bromley-1879", "name": "Bromley Atlas of NYC, 1879", "type": "atlas", "url": "https://digitalcollections.nypl.org/" },
+    { "id": "sanborn-1885", "name": "Sanborn Fire Insurance Maps, NYC 1885", "type": "insurance_map", "url": "https://www.loc.gov/collections/sanborn-maps/" },
+    { "id": "noaa-shoreline-1879", "name": "NOAA Historical Shoreline Survey 1879", "type": "survey", "url": "https://shoreline.noaa.gov/" },
+    { "id": "viele-1865", "name": "Viele Topographical Map 1865", "type": "topo_map" },
+    { "id": "nyc-transit", "name": "NYC Transit Authority Historical Records", "type": "archive" }
+  ]
+}
