@@ -109,8 +109,8 @@ Type a location, get real terrain in Unreal. The foundation for every visual sce
 
 The 3D world looks like 1884, not just sounds like it. See PRD Phase 6.
 
-- [ ] Sanborn map ingestion (footprints, heights, materials from LOC archive)
-- [ ] Block massing generation (procedural volumes from Sanborn data on Phase 5 terrain)
+- [x] Sanborn map ingestion (footprints, heights, materials from LOC archive): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI. Fetches sheet images via IIIF, builds sheet index, generates seed template for building footprint tracing. NYC 1890 volumes (9 items, 400+ sheets) verified. Earliest digitized NYC maps are 1890 (not 1884) — 6-year gap is acceptable for building stock accuracy.
+- [x] Block massing generation: `lib/buildingMassing.js` polygon→spawn conversion, `tools/spawn-buildings.js` CLI. 29 building footprints traced from Sanborn Vol.1 1894 (Bowling Green / Financial District). Footprints georeferenced via OSM street intersection anchors (±5m). Spawns scaled cubes with correct position, rotation, and height (350cm/floor, 4-9 stories). Python batch script via RC API. Dry-run verified.
 - [ ] Era-appropriate street layout (cobblestone, granite sidewalks, gas lamp placement)
 - [ ] Architectural style library (brownstone, Italianate, cast-iron, Federal, Greek Revival)
 - [ ] Hero building modeling (Trinity Church, Brooklyn Bridge, City Hall, Grand Central Depot)
