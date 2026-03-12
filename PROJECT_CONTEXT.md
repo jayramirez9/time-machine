@@ -2,21 +2,17 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 5 — Geographic Data Pipeline
+Version: Phase 6 in progress — 6.1 (Sanborn ingestion) and 6.2 (block massing) complete
 HQ: Henhouse
 
 ## Current Sprint
-Phase 5 nearing completion (9 of 11 items done). Current state:
-- World state engine drives Unreal scene (sun, fog, clouds, rain, sky light, heat haze, ground wetness)
-- 5-layer spatial audio engine with HRTF, doppler, convolution reverb, occlusion
-- Cesium streaming georeference auto-sets on engine start
-- USGS 3DEP DEM → GDAL → PNG16 → Unreal Landscape import fully automated
-- Terrain + satellite imagery import via Remote Control API Python scripting
-- Google Photorealistic 3D Tiles auto-stream when `GOOGLE_3D_TILES_API_KEY` is set (scouting only)
-- Manhattan test data verified (1009×1009, 15.6m–43.1m elevation)
-- OSM vector data: roads, water, landuse fetched from Overpass API → GeoJSON → landscape masks + road splines → Unreal import via RC API Python scripting. Manhattan verified (508 roads, 4 water, 12 landuse → 253 splines, 1373 control points)
+Phase 6 (Historical Urban Form) in progress. 6.1 and 6.2 complete:
+- **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI. Fetches sheet images via IIIF, builds sheet index. NYC 1890 volumes (earliest digitized) verified.
+- **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js` polygon→spawn conversion, `tools/spawn-buildings.js` CLI. 29 buildings traced from Sanborn Vol.1 1894 (Bowling Green / Financial District). Georeferenced via OSM street intersection anchors (±5m). Spawns scaled cubes with height = stories × 350cm. Dry-run verified.
+- Full geo pipeline: Cesium streaming + USGS DEM + satellite imagery + OSM vectors, all auto-importing on engine start
+- Historical overlay schema (`lib/historicalOverlay.js`): terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter
 
-Next: LOD/scale strategy, historical overlay workflow. Phase 4 greybox items (art pass, gas lamps) permanently paused — superseded by geo pipeline.
+Next: Phase 6.3 (era-appropriate street layout), 6.4 (architectural style library), or Phase 4.5 (Period Music).
 
 ## Key Constraints
 - Solo builder, evenings/weekends only (full-time Director role at CFA)
@@ -46,5 +42,5 @@ Next: LOD/scale strategy, historical overlay workflow. Phase 4 greybox items (ar
 - dispatch.js unreal transport still uses direct property writes (rcProp) — may also be blocked by getter/setter protection on UE 5.4+. Needs testing.
 
 ## Last Updated
-**Date:** 2026-03-09
-**What changed:** Added OSM vector data ingestion pipeline — `lib/osmVectors.js` (Overpass API fetch, GeoJSON conversion, Douglas-Peucker simplification, scanline rasterization to landscape masks, road spline extraction), `tools/fetch-vectors.js` CLI, Unreal import scripts for spline actors and mask textures. Hooked into `startEngine()` for automatic import. Manhattan verified end-to-end (524 features, 253 splines).
+**Date:** 2026-03-10
+**What changed:** Completed Phase 6.1 (Sanborn map ingestion) and Phase 6.2 (block massing generation). New files: `lib/sanborn.js`, `tools/fetch-sanborn.js`, `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 building footprints traced from 1894 Sanborn plates for lower Manhattan. Spawn data verified via --dry-run. 262 tests passing. Commit `2d5d939` pushed to main.

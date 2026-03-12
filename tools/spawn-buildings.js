@@ -17,7 +17,8 @@
 import fs from 'fs';
 import path from 'path';
 import { loadBuildingFootprints } from '../lib/sanborn.js';
-import { buildingsToSpawnList, buildSpawnScript, ACTOR_PREFIX, FLOOR_HEIGHT_CM } from '../lib/buildingMassing.js';
+import { buildingsToSpawnList, buildSpawnScript, ACTOR_PREFIX } from '../lib/buildingMassing.js';
+import { classifyBuilding, listEras, getEraInfo, resolveEra } from '../lib/architectureStyles.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -34,8 +35,16 @@ const hasFlag = (name) => args.includes(name);
 const HOST = getFlag('--host', 'http://localhost:30010');
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
+const ERA_FLAG = getFlag('--era', null);
+const YEAR_FLAG = getFlag('--year', null);
 const originLat = getFlag('--origin-lat', null);
 const originLon = getFlag('--origin-lon', null);
+
+// Resolve era: explicit --era > --year > current year
+const ERA = ERA_FLAG || (YEAR_FLAG ? resolveEra(parseInt(YEAR_FLAG, 10)) : null);
+const CLASSIFY_OPTS = ERA_FLAG ? { era: ERA_FLAG }
+  : YEAR_FLAG ? { year: parseInt(YEAR_FLAG, 10) }
+  : { year: new Date().getFullYear() };
 
 // First positional arg: terrain-data directory
 const positionalArg = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
@@ -49,6 +58,8 @@ if (!positionalArg) {
   console.error('  --clear             Remove all TM_Building_* actors from the level');
   console.error('  --origin-lat N      Override georeference latitude');
   console.error('  --origin-lon N      Override georeference longitude');
+  console.error(`  --era KEY           Architectural era. Available: ${listEras().join(', ')}`);
+  console.error('  --year N            Year for automatic era resolution (default: current year)');
   process.exit(1);
 }
 
@@ -147,27 +158,46 @@ async function main() {
     console.log(`  Origin:     ${origin.lat.toFixed(5)}, ${origin.lon.toFixed(5)} (centroid of footprints)`);
   }
 
-  // Convert to spawn data
-  const spawnList = buildingsToSpawnList(geojson, origin);
+  // Classify and convert to spawn data
+  const resolvedEra = ERA || resolveEra(new Date().getFullYear());
+  const eraInfo = getEraInfo(resolvedEra);
+  const eraSource = ERA_FLAG ? '(from --era)' : YEAR_FLAG ? `(year ${YEAR_FLAG})` : '(current year)';
+  console.log(`  Era:        ${resolvedEra}${eraInfo ? ` (${eraInfo.label})` : ''} ${eraSource}`);
+
+  const classifyFn = (feature) => {
+    const props = feature.properties || {};
+    // Manual style override in GeoJSON properties trumps classifier
+    if (props.style) {
+      const { classifyBuilding: _ , ...rest } = classifyBuilding(props.material || 'brick', props.use || 'unknown', props.stories || 3, CLASSIFY_OPTS);
+      // Still classify to get params, but override styleName
+      return { ...rest, styleName: props.style };
+    }
+    const result = classifyBuilding(props.material || 'brick', props.use || 'unknown', props.stories || 3, CLASSIFY_OPTS);
+    return result;
+  };
+
+  const spawnList = buildingsToSpawnList(geojson, origin, { classifyFn });
 
   // Compute stats
   const materials = {};
   const uses = {};
-  let minStories = Infinity, maxStories = 0, totalHeight = 0;
+  const styles = {};
+  let minStories = Infinity, maxStories = 0, totalStories = 0;
   for (const b of spawnList) {
     materials[b.material] = (materials[b.material] || 0) + 1;
     uses[b.use] = (uses[b.use] || 0) + 1;
+    if (b.styleName) styles[b.styleName] = (styles[b.styleName] || 0) + 1;
     if (b.stories < minStories) minStories = b.stories;
     if (b.stories > maxStories) maxStories = b.stories;
-    totalHeight += b.stories * FLOOR_HEIGHT_CM;
+    totalStories += b.stories;
   }
 
   console.log(`\n  ─── Spawn Summary ─────────────────────────`);
   console.log(`  Buildings:   ${spawnList.length}`);
-  console.log(`  Stories:     ${minStories}–${maxStories} (avg ${(totalHeight / spawnList.length / FLOOR_HEIGHT_CM).toFixed(1)})`);
+  console.log(`  Stories:     ${minStories}–${maxStories} (avg ${(totalStories / spawnList.length).toFixed(1)})`);
   console.log(`  Materials:   ${Object.entries(materials).map(([k, v]) => `${k}:${v}`).join(', ')}`);
   console.log(`  Uses:        ${Object.entries(uses).map(([k, v]) => `${k}:${v}`).join(', ')}`);
-  console.log(`  Floor ht:    ${FLOOR_HEIGHT_CM}cm (${FLOOR_HEIGHT_CM / 100}m)`);
+  console.log(`  Styles:      ${Object.entries(styles).map(([k, v]) => `${k}:${v}`).join(', ') || '(none classified)'}`);
 
   if (DRY_RUN) {
     console.log('\n  [DRY RUN] Spawn data for each building:\n');
