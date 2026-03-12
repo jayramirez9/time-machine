@@ -22,18 +22,11 @@ import path from 'path';
 import { streetsToSpawnList, buildStreetSpawnScript, STREET_PREFIX, SIDEWALK_PREFIX } from '../lib/streetMeshing.js';
 import { placeLamps, buildLampSpawnScript, LAMP_PREFIX } from '../lib/lampPlacement.js';
 import { SURFACE_TYPES } from '../lib/streetLayout.js';
+import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
-const args = process.argv.slice(2);
-
-function getFlag(name, defaultValue) {
-  const idx = args.indexOf(name);
-  if (idx === -1) return defaultValue;
-  return args[idx + 1];
-}
-
-const hasFlag = (name) => args.includes(name);
+const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
 const HOST = getFlag('--host', 'http://localhost:30010');
 const DRY_RUN = hasFlag('--dry-run');
@@ -43,9 +36,6 @@ const NO_SIDEWALKS = hasFlag('--no-sidewalks');
 const ERA = getFlag('--era', 'nyc_1884');
 const originLat = getFlag('--origin-lat', null);
 const originLon = getFlag('--origin-lon', null);
-
-// First positional arg: terrain-data directory
-const positionalArg = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
 
 if (!positionalArg) {
   console.error('Usage: node tools/spawn-streets.js terrain-data/<slug>/  [options]');
@@ -62,32 +52,7 @@ if (!positionalArg) {
   process.exit(1);
 }
 
-// ─── RC API helpers ──────────────────────────────────────────────
-
-async function rc(endpoint, body) {
-  const res = await fetch(`${HOST}/remote/${endpoint}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const text = await res.text();
-  return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : {} };
-}
-
-async function runPython(script) {
-  return rc('object/call', {
-    objectPath: '/Script/PythonScriptPlugin.Default__PythonScriptLibrary',
-    functionName: 'ExecutePythonScript',
-    parameters: { PythonScript: script }
-  });
-}
-
-async function isUnrealReachable() {
-  try {
-    const res = await fetch(`${HOST}/remote/info`, { signal: AbortSignal.timeout(3000) });
-    return res.ok;
-  } catch { return false; }
-}
+const { runPython, isUnrealReachable } = createRcClient(HOST);
 
 // ─── Main ────────────────────────────────────────────────────────
 
@@ -130,20 +95,12 @@ async function main() {
       process.exit(1);
     }
 
-    const clearScript = [
-      'import unreal',
-      'all_actors = unreal.EditorLevelLibrary.get_all_level_actors()',
-      'count = 0',
-      'for actor in all_actors:',
-      '    label = actor.get_actor_label()',
-      `    if label.startswith("${STREET_PREFIX}") or label.startswith("${SIDEWALK_PREFIX}") or label.startswith("${LAMP_PREFIX}"):`,
-      '        actor.destroy()',
-      '        count += 1',
-      'unreal.log(f"Cleared {count} street/sidewalk/lamp actors")'
-    ].join('\n');
-
-    const result = await runPython(clearScript);
-    console.log(`  ${result.ok ? '✓' : '✗'} Clear command sent`);
+    // Clear streets + sidewalks via street script, lamps via lamp script
+    const streetClear = buildStreetSpawnScript([], { clearExisting: true });
+    const lampClear = buildLampSpawnScript([], { clearExisting: true });
+    const r1 = await runPython(streetClear);
+    const r2 = await runPython(lampClear);
+    console.log(`  ${r1.ok && r2.ok ? '✓' : '✗'} Clear command sent`);
     console.log('═══════════════════════════════════════════════');
     return;
   }

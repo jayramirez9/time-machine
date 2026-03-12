@@ -19,18 +19,11 @@ import path from 'path';
 import { loadBuildingFootprints } from '../lib/sanborn.js';
 import { buildingsToSpawnList, buildSpawnScript, ACTOR_PREFIX } from '../lib/buildingMassing.js';
 import { classifyBuilding, listEras, getEraInfo, resolveEra } from '../lib/architectureStyles.js';
+import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
-const args = process.argv.slice(2);
-
-function getFlag(name, defaultValue) {
-  const idx = args.indexOf(name);
-  if (idx === -1) return defaultValue;
-  return args[idx + 1];
-}
-
-const hasFlag = (name) => args.includes(name);
+const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
 const HOST = getFlag('--host', 'http://localhost:30010');
 const DRY_RUN = hasFlag('--dry-run');
@@ -46,9 +39,6 @@ const CLASSIFY_OPTS = ERA_FLAG ? { era: ERA_FLAG }
   : YEAR_FLAG ? { year: parseInt(YEAR_FLAG, 10) }
   : { year: new Date().getFullYear() };
 
-// First positional arg: terrain-data directory
-const positionalArg = args.find((a, i) => !a.startsWith('--') && (i === 0 || !args[i - 1].startsWith('--')));
-
 if (!positionalArg) {
   console.error('Usage: node tools/spawn-buildings.js terrain-data/<slug>/  [options]');
   console.error('');
@@ -63,32 +53,7 @@ if (!positionalArg) {
   process.exit(1);
 }
 
-// ─── RC API helpers ──────────────────────────────────────────────
-
-async function rc(endpoint, body) {
-  const res = await fetch(`${HOST}/remote/${endpoint}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const text = await res.text();
-  return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : {} };
-}
-
-async function runPython(script) {
-  return rc('object/call', {
-    objectPath: '/Script/PythonScriptPlugin.Default__PythonScriptLibrary',
-    functionName: 'ExecutePythonScript',
-    parameters: { PythonScript: script }
-  });
-}
-
-async function isUnrealReachable() {
-  try {
-    const res = await fetch(`${HOST}/remote/info`, { signal: AbortSignal.timeout(3000) });
-    return res.ok;
-  } catch { return false; }
-}
+const { runPython, isUnrealReachable } = createRcClient(HOST);
 
 // ─── Main ────────────────────────────────────────────────────────
 
@@ -228,18 +193,7 @@ async function main() {
       process.exit(1);
     }
 
-    const clearScript = [
-      'import unreal',
-      'all_actors = unreal.EditorLevelLibrary.get_all_level_actors()',
-      'count = 0',
-      'for actor in all_actors:',
-      `    if actor.get_actor_label().startswith("${ACTOR_PREFIX}"):`,
-      '        actor.destroy()',
-      '        count += 1',
-      'unreal.log(f"Cleared {count} building actors")'
-    ].join('\n');
-
-    const result = await runPython(clearScript);
+    const result = await runPython(buildSpawnScript([], { clearExisting: true }));
     console.log(`  ${result.ok ? '✓' : '✗'} Clear command sent`);
     console.log('═══════════════════════════════════════════════');
     return;
