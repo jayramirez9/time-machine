@@ -2,17 +2,20 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 6 in progress — 6.1 (Sanborn ingestion) and 6.2 (block massing) complete
+Version: Phase 6 in progress — 6.1–6.5 complete (Sanborn, massing, streets, styles, landmarks)
 HQ: Henhouse
 
 ## Current Sprint
-Phase 6 (Historical Urban Form) in progress. 6.1 and 6.2 complete:
+Phase 6 (Historical Urban Form) in progress. 6.1–6.5 complete:
 - **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI. Fetches sheet images via IIIF, builds sheet index. NYC 1890 volumes (earliest digitized) verified.
 - **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js` polygon→spawn conversion, `tools/spawn-buildings.js` CLI. 29 buildings traced from Sanborn Vol.1 1894 (Bowling Green / Financial District). Georeferenced via OSM street intersection anchors (±5m). Spawns scaled cubes with height = stories × 350cm. Dry-run verified.
+- **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js` surface classification, `lib/streetMeshing.js` spline→mesh, `lib/lampPlacement.js` gas lamps with intersection de-dup, `tools/spawn-streets.js` CLI. 1,118 street segments, 192 sidewalks, 328 gas lamps. Zero asphalt.
+- **6.4 Architectural Style Library** (DONE): `lib/architectureStyles.js` — 10 NYC 1884 styles, skeleton eras (chicago_1920, sf_1908), 8 general American styles, 8 era presets (~1700–present). Style-aware floor heights, cornice, roof types. Integrated into spawn-buildings.js.
+- **6.5 Hero Building Modeling** (DONE): `lib/landmarks.js` multi-primitive compositions, `tools/spawn-landmarks.js` CLI. 6 NYC 1884 landmarks (Trinity Church, Brooklyn Bridge tower, Western Union, City Hall, Tribune, Grand Central Depot) as basic shape arrangements (cube/cone/cylinder/sphere). Era filtering by yearBuilt/yearDemolished. 23 primitives total.
 - Full geo pipeline: Cesium streaming + USGS DEM + satellite imagery + OSM vectors, all auto-importing on engine start
 - Historical overlay schema (`lib/historicalOverlay.js`): terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter
 
-Next: Phase 6.3 (era-appropriate street layout), 6.4 (architectural style library), or Phase 4.5 (Period Music).
+Next: Phase 6.6 (historical photo → texture pipeline), 6.7 (street-level props), or Phase 4.5 (Period Music).
 
 ## Key Constraints
 - Solo builder, evenings/weekends only (full-time Director role at CFA)
@@ -42,5 +45,5 @@ Next: Phase 6.3 (era-appropriate street layout), 6.4 (architectural style librar
 - dispatch.js unreal transport still uses direct property writes (rcProp) — may also be blocked by getter/setter protection on UE 5.4+. Needs testing.
 
 ## Last Updated
-**Date:** 2026-03-10
-**What changed:** Completed Phase 6.1 (Sanborn map ingestion) and Phase 6.2 (block massing generation). New files: `lib/sanborn.js`, `tools/fetch-sanborn.js`, `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 building footprints traced from 1894 Sanborn plates for lower Manhattan. Spawn data verified via --dry-run. 262 tests passing. Commit `2d5d939` pushed to main.
+**Date:** 2026-03-11
+**What changed:** Completed Phase 6.3 (street layout), 6.4 (architecture styles), and 6.5 (hero landmarks). New files: `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`, `lib/architectureStyles.js`, `lib/landmarks.js`, `tools/spawn-landmarks.js`, `lib/worldStateContract.js`, `lib/audioProfileValidator.js`, `tm-eval.js`, plus tests. 6 NYC 1884 landmarks modeled as multi-primitive compositions (23 shapes total). 386 tests passing. Commit `6a2ec49` pushed to main.
