@@ -2,20 +2,36 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 6 in progress — 6.1–6.5 complete (Sanborn, massing, streets, styles, landmarks)
+Version: Phase 6 in progress — 6.1–6.5 complete, Meshy integration done, 6.6 in progress
 HQ: Henhouse
 
 ## Current Sprint
-Phase 6 (Historical Urban Form) in progress. 6.1–6.5 complete:
-- **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI. Fetches sheet images via IIIF, builds sheet index. NYC 1890 volumes (earliest digitized) verified.
-- **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js` polygon→spawn conversion, `tools/spawn-buildings.js` CLI. 29 buildings traced from Sanborn Vol.1 1894 (Bowling Green / Financial District). Georeferenced via OSM street intersection anchors (±5m). Spawns scaled cubes with height = stories × 350cm. Dry-run verified.
-- **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js` surface classification, `lib/streetMeshing.js` spline→mesh, `lib/lampPlacement.js` gas lamps with intersection de-dup, `tools/spawn-streets.js` CLI. 1,118 street segments, 192 sidewalks, 328 gas lamps. Zero asphalt.
-- **6.4 Architectural Style Library** (DONE): `lib/architectureStyles.js` — 10 NYC 1884 styles, skeleton eras (chicago_1920, sf_1908), 8 general American styles, 8 era presets (~1700–present). Style-aware floor heights, cornice, roof types. Integrated into spawn-buildings.js.
-- **6.5 Hero Building Modeling** (DONE): `lib/landmarks.js` multi-primitive compositions, `tools/spawn-landmarks.js` CLI. 6 NYC 1884 landmarks (Trinity Church, Brooklyn Bridge tower, Western Union, City Hall, Tribune, Grand Central Depot) as basic shape arrangements (cube/cone/cylinder/sphere). Era filtering by yearBuilt/yearDemolished. 23 primitives total.
+Phase 6 (Historical Urban Form) in progress. 6.1–6.5 complete, Meshy pipeline built, 6.6 texture pipeline underway:
+- **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI.
+- **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 buildings from Sanborn Vol.1 1894.
+- **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`. 1,118 segments, 192 sidewalks, 328 gas lamps.
+- **6.4 Architectural Style Library** (DONE): `lib/architectureStyles.js` — 25+ styles, 12 era rulesets (~1700–present).
+- **6.5 Hero Building Modeling** (DONE): `lib/landmarks.js`, `tools/spawn-landmarks.js`. 6 NYC 1884 landmarks.
+- **Meshy AI Integration** (DONE): `lib/meshyClient.js` API client, `tools/meshy-generate.js` CLI. Text-to-3D, Image-to-3D, Retexture. API-tested: Second Empire building with PBR textures. Pro plan $20/mo.
+- **6.6 Texture Pipeline** (IN PROGRESS): `lib/texturePromptBuilder.js` generates era-aware Meshy prompts from architecture style metadata. `tools/preview-textures.js` for offline prompt tuning. `tools/texture-buildings.js` for batch generation. Quality tiers (hero 300K / foreground 150K / background 50K / distant 15K). Remaining: Nano Banana → Meshy reference image pipeline, Unreal import automation.
 - Full geo pipeline: Cesium streaming + USGS DEM + satellite imagery + OSM vectors, all auto-importing on engine start
 - Historical overlay schema (`lib/historicalOverlay.js`): terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter
 
-Next: Phase 6.6 (historical photo → texture pipeline), 6.7 (street-level props), or Phase 4.5 (Period Music).
+### 3D Asset Pipeline (new this session)
+Three-tier pipeline for period-accurate 3D buildings:
+1. Historical photo → Meshy Image-to-3D (best fidelity, archival photos)
+2. Nano Banana (Gemini) → Meshy Image-to-3D (AI reference image when no photo exists)
+3. Meshy Text-to-3D from architecture style metadata (prompt-only fallback)
+
+Pipeline strategy by decade documented in `docs/research-unreal-pipeline-by-decade.md`. Key insight: pipeline stays the same, data mix changes. Cesium goes from ground truth (2020s) to terrain-only (pre-1900).
+
+### Instant Image Generator: REMOVED
+Nano Banana (Gemini image gen) removed from launcher/engine as standalone feature. Role shifted to reference image generator feeding into Meshy Image-to-3D pipeline. Removed: `buildImagePrompt()`, `pushBackdropToUnreal()`, `POST /api/generate-image`, `POST /api/push-backdrop`, `tools/spawn-backdrop.js`, texture dispatch type.
+
+### Next Test Scene
+**1980s Baton Rouge** — 12877 Erin Ave (user's childhood neighborhood). Validates "any Place×Time" pipeline beyond hand-built 1884 NYC. Cesium terrain + historical overlay (user-curated) + Meshy generation.
+
+Next: Continue 6.6 (Nano Banana → Meshy pipeline), or stand up Baton Rouge 1980s scene, or 6.7 (street-level props).
 
 ## Key Constraints
 - Solo builder, evenings/weekends only (full-time Director role at CFA)
@@ -34,6 +50,8 @@ Next: Phase 6.6 (historical photo → texture pipeline), 6.7 (street-level props
 - Python script execution via `ExecutePythonScript` on `PythonScriptLibrary` through RC API `/remote/object/call`
 - UE 5.7 API: `RenderingLibrary` (not `KismetRenderingLibrary`), canvas-based RT drawing
 - Two-track terrain: Cesium streaming for scouting, USGS heightmaps for production Landscape actors
+- Meshy 6 API for AI 3D building generation (text-to-3D, image-to-3D, retexture). Pro tier ($20/mo). Output: FBX/GLB with PBR maps.
+- Pipeline > vendor tools: design for tool swappability (Meshy, ElevenLabs, Gemini are all replaceable; metadata and prompt builders survive)
 - 6-phase roadmap: prototype → launchable MVP (~6-9 months at full-time pace)
 
 ## Open Questions
@@ -42,8 +60,11 @@ Next: Phase 6.6 (historical photo → texture pipeline), 6.7 (street-level props
 - When does Henhouse need its first non-Jay contributor? What role?
 - Multi-window rendering approach — depends on frozen physical specs (Phase 0.5)
 - el_train era prompt contradiction: pre-1900 exclusion says "no motors/engines" but 1884 NYC is steam era
-- dispatch.js unreal transport still uses direct property writes (rcProp) — may also be blocked by getter/setter protection on UE 5.4+. Needs testing.
+- Will hero-quality (300K poly) Meshy output match the 2.5M face web UI test? Server busy — needs retry.
+- How to handle Cesium OSM buildings with no `start_date` tag for 1980s/1990s filtering?
+- UX for "personal knowledge curation" — how does a user annotate historical overlay data?
+- Nano Banana → Meshy: single tool or two-step pipeline?
 
 ## Last Updated
-**Date:** 2026-03-11
-**What changed:** Completed Phase 6.3 (street layout), 6.4 (architecture styles), and 6.5 (hero landmarks). New files: `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`, `lib/architectureStyles.js`, `lib/landmarks.js`, `tools/spawn-landmarks.js`, `lib/worldStateContract.js`, `lib/audioProfileValidator.js`, `tm-eval.js`, plus tests. 6 NYC 1884 landmarks modeled as multi-primitive compositions (23 shapes total). 386 tests passing. Commit `6a2ec49` pushed to main.
+**Date:** 2026-03-16
+**What changed:** Built Meshy AI 3D generation pipeline (client, CLI, research doc). Built texture prompt builder with architecture style metadata → Meshy prompts, quality tiers, offline preview tool, batch generation tool. Removed instant image generator (Nano Banana shifting to reference image role in 3D pipeline). Added decade pipeline research doc. Added 1980s Baton Rouge as next test scene. Added international support roadmap (global DEM, non-US architecture styles, culture-aware audio, regional street surfaces). 448 tests passing. Commits `d8b63bd`, `c7be8c0`, `9a1d174` pushed to main.
