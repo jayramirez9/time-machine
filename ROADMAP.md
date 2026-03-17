@@ -116,6 +116,10 @@ The 3D world looks like 1884, not just sounds like it. See PRD Phase 6.
 - [x] Hero building modeling: `lib/landmarks.js` multi-primitive compositions, `tools/spawn-landmarks.js` CLI. 6 NYC 1884 landmarks authored as basic shape arrangements (cube/cone/cylinder/sphere): Trinity Church (nave + transept + tower + spire, 86m), Brooklyn Bridge Manhattan tower (tower + arches + roadway, 84m), Western Union Building (body + cornice + mansard), City Hall (body + balustrade + cupola + dome), NY Tribune Building (body + clock tower + cap), Grand Central Depot (shed + vault + facade + tower + cap). Era filtering by yearBuilt/yearDemolished. Actor prefix TM_Landmark_. Dry-run verified: 23 primitives across 6 landmarks, year 1870 correctly filters to 2.
 - [ ] Historical photo → texture pipeline (AI-assisted PBR extraction)
 - [ ] Street-level props (hitching posts, awnings, period signage, horse troughs)
+- [x] **Meshy AI integration** — `lib/meshyClient.js` API client + `tools/meshy-generate.js` CLI. Text-to-3D, Image-to-3D, and Retexture via Meshy 6 API. Research spike validated: text prompt produced architecturally correct 1880s Italianate brownstone with PBR textures. Pro plan ($20/mo, 1,000 credits). See `docs/research-meshy.md`.
+- [ ] **Historical skyline accuracy** — OSM Buildings and Google 3D Tiles show present-day skyline. Need date-filtered building set or manual add/remove overlay per era. Critical for any era before ~2000 (Twin Towers, missing skyscrapers, demolished landmarks). Extends `lib/historicalOverlay.js` overlay schema.
+- [ ] **Sub-daily weather reconstruction (pre-1970)** — NOAA daily obs (high/low/precip) → plausible hourly arc. Current timeline interpolator synthesizes a curve but it's a guess. ERA5/20CRv3 reanalysis datasets could provide real sub-daily data back to 1940 (ERA5) or 1806 (20CRv3).
+- [ ] **Location-specific audio profiles** — Procedural profile generator produces plausible-but-generic era sounds. Location-tuned profiles (specific taxi horns for NYC, specific bird species for region, specific church bells) require either hand-curation or agent-driven research (Phase 7).
 
 ## Phase 7 — The Agent Layer
 
@@ -136,11 +140,12 @@ The full dream. Walk through a historically accurate 3D reconstruction. See PRD 
 
 - [ ] Walkable city blocks (navigable street-level Unreal experience)
 - [ ] Acoustic environment modeling (per-street reverb/reflection)
-- [ ] Dynamic population (procedural pedestrians, carriages, vendors)
+- [ ] Dynamic population (procedural pedestrians, carriages, vendors — era-appropriate: horses & carriages for 1880s, mixed traffic for 1970s, modern for 2000s)
 - [ ] Period-accurate lighting transitions (lamplighter NPC, sunrise through canyons)
 - [ ] Interactive audio anchoring (spatial audio tied to world position)
 - [ ] Multi-era support (same block, different year)
 - [ ] Narrative mode (scripted time-lapse: sunrise→sunset, decade→decade)
+- [ ] **Street-level inhabited feel** — the empty-city problem. Parked vehicles, window displays, laundry lines, trash, street vendors, market stalls. The difference between "accurate geometry" and "a place where people live." Hardest for pre-photographic eras where reference is sparse.
 
 ---
 
@@ -159,3 +164,5 @@ Ideas that would improve quality but don't belong to a specific phase.
 - [ ] **Crowd simulation**: Persistent ambient human presence — murmur layers, footstep density tied to activityLevel, crowd noise responding to time-of-day and weather.
 
 - [ ] **Dynamic music / score layer**: Generative or adaptive musical underscore that responds to weather state, time of day, and dramatic arc.
+
+- [ ] **Era-appropriate ground truth for any city×year**: The fundamental scaling problem. Sanborn maps cover ~12,000 US cities but require manual footprint tracing. OSM has modern footprints but no date metadata. Need a strategy for rapidly assembling "what buildings existed here in year X" for arbitrary locations — likely an agent task (Phase 7).

@@ -26,6 +26,7 @@
   }
   .dot.ok { background: #2a6; }
   .dot.err { background: #a33; }
+  .dot.warn { background: #a82; }
   .dot.loading { background: #a82; }
 
   .info { font-size: 11px; color: #555; margin-bottom: 16px; }
@@ -216,7 +217,7 @@
 const WS_URL = `ws://${location.host}/stream`;
 const MASTER_MAX_GAIN = 0.25;   // Guardrail per PRD
 const RAMP = 0.4;               // Gain ramp time constant (sec)
-const DEFAULT_PROFILE_ID = 'baton_rouge_suburb_1978';
+const DEFAULT_PROFILE_ID = null; // no default — wait for engine to provide profile
 const SPEED_OF_SOUND_KM_S = 0.343; // km per second
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -2034,7 +2035,13 @@ class OcclusionProcessor {
 // ═══════════════════════════════════════════════════════════════
 
 async function startEngine() {
-  if (!profile) await loadProfile(currentProfileId || DEFAULT_PROFILE_ID);
+  if (!profile && currentProfileId) await loadProfile(currentProfileId);
+  if (!profile) {
+    logEvent('engine', 'no audio profile — weather-only mode');
+    profileDot.className = 'dot warn';
+    profileLabel.textContent = 'no profile — weather only';
+    return;
+  }
   if (!ctx) initAudioContext();
   if (ctx.state === 'suspended') await ctx.resume();
 
@@ -2135,6 +2142,10 @@ async function onWorldState(state) {
         await loadProfile(currentProfileId);
       }
       return; // state will update on next message after reload
+    }
+    if (!serverProfileId && !currentProfileId && !profile) {
+      profileDot.className = 'dot warn';
+      profileLabel.textContent = 'no profile — weather only';
     }
   }
   showStates(state.states);
@@ -2290,7 +2301,9 @@ function scheduleReconnect() {
 
 // ── Init ─────────────────────────────────────────────────────
 connectWs();
-loadProfile(DEFAULT_PROFILE_ID).then(() => { currentProfileId = DEFAULT_PROFILE_ID; });
+// No default profile load — wait for engine to provide audioProfileId via WebSocket
+profileDot.className = 'dot warn';
+profileLabel.textContent = 'waiting for engine...';
 </script>
 </body>
 </html>

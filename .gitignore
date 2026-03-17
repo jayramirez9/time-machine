@@ -7,4 +7,5 @@ logs/
 audio-assets/
 generated-textures/
 terrain-data/
+mesh-data/
 .claude/worktrees/

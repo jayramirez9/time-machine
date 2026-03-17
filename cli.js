@@ -8,7 +8,7 @@
 import readline from 'readline';
 import { getWeatherTimeline, selectProvider } from './lib/weatherTimeline.js';
 import { compileWorldState } from './lib/worldStateCompiler.js';
-import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
+import { LOCALES, DEFAULT_LOCALE, resolveLocale } from './lib/localePresets.js';
 import { geocode } from './lib/openmeteo.js';
 import { localToUtc } from './lib/timezone.js';
 
@@ -19,7 +19,7 @@ function parseArgs(args) {
     help: false,
     mock: false,
     mode: 'raw',
-    locale: DEFAULT_LOCALE,
+    locale: null,
     provider: 'auto'
   };
 
@@ -71,11 +71,12 @@ function parseArgs(args) {
     } else if (arg === '--locale') {
       const value = args[++i];
       if (!value || value.startsWith('-')) {
-        errors.push(`--locale requires a value. Available: ${Object.keys(LOCALES).join(', ')}`);
+        errors.push(`--locale requires a value. Available: ${Object.keys(LOCALES).join(', ')}, or omit for auto-inference`);
         i--;
-      } else if (!LOCALES[value]) {
-        errors.push(`Unknown locale "${value}". Available: ${Object.keys(LOCALES).join(', ')}`);
       } else {
+        if (!LOCALES[value]) {
+          console.warn(`[CLI] Unknown locale "${value}" — engine will infer from location + date`);
+        }
         parsed.locale = value;
       }
     }
@@ -98,7 +99,7 @@ Options:
   -d, --date       Date in MM-DD-YYYY format (e.g., "07-04-1978")
                    Defaults to current date/time if not specified
   --mode           Output mode: raw, timeline, or world (default: raw)
-  --locale         Locale preset for environment tuning (default: baton_rouge_suburb)
+  --locale         Locale preset for environment tuning (auto-inferred if omitted)
   --provider       Weather provider: auto, visualcrossing, openmeteo, or noaa (default: auto)
   -m, --mock       Use mock weather provider (offline/testing)
   -h, --help       Show this help message
@@ -324,10 +325,23 @@ async function outputWeather(location, dateComponents, useMock = false, mode = '
       geo,
       provider
     });
-    const localePreset = LOCALES[locale] || LOCALES[DEFAULT_LOCALE];
+    let localeObj;
+    if (locale && LOCALES[locale]) {
+      localeObj = LOCALES[locale];
+    } else if (geo) {
+      const year = date.getFullYear();
+      const result = resolveLocale(geo, year);
+      localeObj = result.locale;
+      if (!locale) {
+        const pop = geo.population ? `${(geo.population / 1000).toFixed(0)}k` : 'unknown';
+        console.warn(`[CLI] Inferred locale from population (${pop}) + year (${year})`);
+      }
+    } else {
+      localeObj = LOCALES[DEFAULT_LOCALE];
+    }
     const worldState = compileWorldState({
       timeline,
-      locale: localePreset,
+      locale: localeObj,
       now: date
     });
     console.log(JSON.stringify(worldState, null, 2));

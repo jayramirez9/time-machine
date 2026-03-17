@@ -32,6 +32,7 @@ export NOAA_API_TOKEN="your-token"          # NOAA Climate Data Online (free, da
 export ELEVENLABS_API_KEY="your-key"        # ElevenLabs (preferred, AI sound effects generation)
 export FREESOUND_API_KEY="your-key"         # Freesound (legacy, CC-licensed audio search)
 export GOOGLE_3D_TILES_API_KEY="your-key"  # Google Photorealistic 3D Tiles (scouting/preview only)
+export MESHY_API_KEY="your-key"            # Meshy (AI 3D model generation, $20/mo Pro)
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo. Use `--provider visualcrossing`, `--provider openmeteo`, or `--provider noaa` to force a specific provider.
@@ -249,6 +250,7 @@ This is a Node.js ES modules project:
 - **lib/streetMeshing.js** - Converts road spline control points (from roads-splines.json) to flat Cube mesh spawn data. Each segment between two points becomes a 10cm-thick slab at correct width and rotation. Optionally generates sidewalk actors (15cm raised, offset from road edge). Exports `splineToStreetSegments()`, `streetsToSpawnList()`, `buildStreetSpawnScript()`, `STREET_PREFIX`, `SIDEWALK_PREFIX`
 - **lib/lampPlacement.js** - Gas lamp position computation along road splines. Walks splines at era-configured intervals, offsets to sidewalk positions, de-duplicates at intersections (8m radius). PointLight at 4.2m, 2200K warm gas color. Exports `placeLamps()`, `buildLampSpawnScript()`, `LAMP_PREFIX`
 - **lib/landmarks.js** - Multi-primitive hero building compositions. Loads `landmarks.json` definitions (hand-authored basic shape compositions for recognizable landmark silhouettes), validates fields, filters by era year, converts to Unreal spawn data with per-shape mesh assignment. Completely separate from the buildings.geojson massing pipeline. Exports `loadLandmarks()`, `filterByYear()`, `landmarkToSpawnList()`, `landmarksToSpawnList()`, `buildLandmarkSpawnScript()`, `LANDMARK_PREFIX`, `SHAPE_ASSETS`
+- **lib/meshyClient.js** - Meshy AI API client for 3D asset generation. Three modes: Text-to-3D (two-stage preview+refine), Image-to-3D, Retexture. Async task model with polling. Exports `createTextTo3D()`, `createImageTo3D()`, `createRetexture()`, `pollTask()`, `downloadModel()`, `getBalance()`
 - **lib/rcHelpers.js** - Shared Unreal Remote Control API client and CLI arg parsing for spawn tools. `createRcClient(host)` returns `{ rc, runPython, isUnrealReachable }`. `parseSpawnArgs(argv)` returns `{ getFlag, hasFlag, positionalArg }`. Used by `spawn-buildings.js`, `spawn-streets.js`, `spawn-landmarks.js`
 - **lib/spawnScript.js** - Python script generation primitives for Unreal RC API spawn scripts. Shared by `buildingMassing.js`, `streetMeshing.js`, `landmarks.js`, `lampPlacement.js`. Exports `scriptHeader()`, `scriptClear()`, `scriptCounterStart()`, `scriptCounterEnd()`, `scriptStaticMeshItem()`, `scriptPointLightItem()`, `joinScript()`
 - **test/noaa.test.js** - Unit tests for the NOAA GHCN-Daily provider
@@ -313,12 +315,23 @@ The audio engine supports two spatial modes, auto-selected based on profile sche
 - **Manhattan test data** already fetched: `terrain-data/manhattan-ny/` has 1009×1009 R16 heightmap (15.6m–43.1m elevation) and 2048×2048 NAIP imagery.
 - **Unreal import**: `import-terrain.js` validates terrain data files, checks Unreal connectivity, and prints step-by-step Landscape Mode import instructions with correct dimensions and scale values.
 
+### 3D Asset Generation (Meshy)
+- **AI-powered 3D building generation** using Meshy 6 API. Text-to-3D and Image-to-3D for historical building assets.
+- **Three generation modes**: text prompt → 3D model, reference image → 3D model, retexture existing geometry with period-appropriate materials.
+- **Output**: FBX/GLB with PBR texture maps (base color, metallic, roughness). Configurable poly count (100–300K).
+- **Pipeline hierarchy**: (1) Historical photo → Image-to-3D for hero buildings, (2) Sanborn footprint + Text-to-3D for block buildings, (3) Procedural massing + Retexture API for background buildings.
+- **Asset workflow**: `meshy-generate.js` → downloads to `mesh-data/{name}/` (gitignored) → import to Unreal.
+- **Credit costs**: Preview 20 credits, texture 10 credits, image-to-3D with texture 30 credits. Pro plan: 1,000 credits/month ($20).
+- **`lib/meshyClient.js`**: Shared API client. Exports `createTextTo3D()`, `createImageTo3D()`, `createRetexture()`, `pollTask()`, `downloadModel()`, `getBalance()`.
+- See `docs/research-meshy.md` for full research spike and decision framework.
+
 ### Route Configs
 - **routes.json** - Production routes config. Unreal routes (sun position, fog, clouds, sky light), DSP routes, lighting routes. Actor objectPaths must match the current level — update the level path prefix when switching projects.
 - **routes.example.json** - Annotated example routes config showing all transform types and actor dispatch configurations.
 
 ### Tools
 - **tools/elevenlabs-fetch.js** - **Primary audio asset generator.** Uses ElevenLabs Text-to-Sound Effects API to generate era-appropriate audio from text prompts. Prompts are built from profile context (era, description, surface, motion) — no anachronism risk. Generates MP3 at 44.1kHz/128kbps (WAV for impulse responses), writes a GENERATION_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only beds|micro|weather|ir] [--force]`
+- **tools/meshy-generate.js** - **3D building asset generator.** Uses Meshy 6 API to generate textured 3D models from text prompts, reference images, or retexture existing geometry. Outputs FBX/GLB with PBR maps to `mesh-data/{name}/`. Writes GENERATION_MANIFEST.json. Three modes: `--text` (text-to-3D), `--image`/`--image-url` (image-to-3D), `--retexture` (apply textures to existing mesh). Requires `MESHY_API_KEY` env var. Usage: `MESHY_API_KEY=xxx node tools/meshy-generate.js --text "1880s brownstone rowhouse..." --name brownstone-01 [--polycount 50000] [--dry-run]`
 - **tools/freesound-fetch.js** - Legacy Freesound API asset fetcher. Searches for CC-licensed sounds by label keyword, downloads preview MP3s. Lower quality than ElevenLabs, prone to era mismatches (modern traffic in historical profiles). Still useful for natural recordings (birds, weather) where recorded audio may be preferred. Requires `FREESOUND_API_KEY` env var.
 - **tools/elevenlabs-voice-fetch.js** - **Voice generation tool.** Uses ElevenLabs Text-to-Speech API to generate period-appropriate spoken phrases (vendor cries, newsboy calls, children's shouts) for micro-events with `voice` + `phrases` fields. Auto-selects voices from the ElevenLabs library based on profile `voiceConfig` descriptions, caches voice IDs back to the profile. Generated clips are added as additional sources alongside existing SFX — the engine's bag-draw naturally mixes them. Writes VOICE_MANIFEST.json. Requires `ELEVENLABS_API_KEY` env var. Usage: `ELEVENLABS_API_KEY=xxx ./tools/elevenlabs-voice-fetch.js audio-profiles/nyc_city_1884.json [--dry-run] [--only <event_id>] [--force] [--list-voices]`
 - **tools/era-audit.js** - Era validation tool. Scans audio profile attributions for anachronistic sounds that don't belong in the target era. Uses shared anachronism data from `lib/eraData.js` for year-precise keyword checks, plus supplementary context and mismatch patterns. Usage: `./tools/era-audit.js audio-profiles/nyc_city_1884.json`

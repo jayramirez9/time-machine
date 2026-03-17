@@ -31,9 +31,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Parse arguments
 function parseArgs(args) {
   const parsed = {
-    location: 'Baton Rouge, LA',
+    location: null,
     startDate: null,
-    locale: DEFAULT_LOCALE,
+    locale: null,
     port: parseInt(process.env.PORT) || parseInt(process.env.TM_PORT) || 3000,
     timescale: 60,
     tickMs: 1000,
@@ -330,7 +330,9 @@ function createServer(engineRef) {
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({
         locales: Object.keys(LOCALES),
-        default: DEFAULT_LOCALE
+        default: DEFAULT_LOCALE,
+        autoInference: true,
+        autoInferenceNote: 'Omit locale to auto-infer from location population + year'
       }));
       return;
     }
@@ -354,7 +356,7 @@ function createServer(engineRef) {
         const config = {
           location: body.location,
           startDate: body.date || null,
-          locale: body.locale || DEFAULT_LOCALE,
+          locale: body.locale || null,
           timescale: body.timescale || 60,
           provider: body.provider || 'auto',
           mock: body.provider === 'mock'
@@ -606,7 +608,11 @@ async function main() {
   const quiet = args.quiet;
 
   console.log(`[Engine] Initializing...`);
-  console.log(`[Engine] Location: ${args.location}`);
+  if (args.location) {
+    console.log(`[Engine] Location: ${args.location}`);
+  } else {
+    console.log(`[Engine] No location specified — start via launcher UI or POST /api/launch`);
+  }
   console.log(`[Engine] Time scale: ${args.timescale}x`);
   const providerName = args.mock ? 'mock' : args.provider === 'visualcrossing' ? 'Visual Crossing' : args.provider === 'openmeteo' ? 'Open-Meteo' : args.provider === 'noaa' ? 'NOAA GHCN-Daily' : (getNOAAKey() ? 'NOAA (auto, pre-1940)' : getVCKey() ? 'Visual Crossing (auto)' : 'Open-Meteo (auto)');
   console.log(`[Engine] Weather provider: ${providerName}`);
@@ -678,29 +684,31 @@ async function main() {
   }
   engineRef.wirePublish = wirePublish;
 
-  // Start initial engine
-  const engine = await startEngine({
-    location: args.location,
-    startLocalISO: args.startDate,
-    timescale: args.timescale,
-    tickMs: args.tickMs,
-    publishEveryMs: args.publishEveryMs,
-    localePreset: args.locale,
-    routesConfigPath: args.routesConfigPath,
-    useMock: args.mock,
-    provider: args.provider
-  });
-  engineRef.engine = engine;
-
-  console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);
-  console.log(`[Engine] Ready.`);
-
   const server = createServer(engineRef);
   const wss = new WebSocketServer(server);
   server.wss = wss;
 
-  // Wire initial engine publish
-  engineRef.unwire = wirePublish(engine, wss);
+  // Start initial engine (only if location provided via CLI)
+  if (args.location) {
+    const engine = await startEngine({
+      location: args.location,
+      startLocalISO: args.startDate,
+      timescale: args.timescale,
+      tickMs: args.tickMs,
+      publishEveryMs: args.publishEveryMs,
+      localePreset: args.locale,
+      routesConfigPath: args.routesConfigPath,
+      useMock: args.mock,
+      provider: args.provider
+    });
+    engineRef.engine = engine;
+    engineRef.unwire = wirePublish(engine, wss);
+
+    console.log(`[Engine] Start time: ${engine.simTime.toISOString()}`);
+    console.log(`[Engine] Ready.`);
+  } else {
+    console.log(`[Engine] Idle — waiting for launch command`);
+  }
 
   // SIGINT/SIGTERM handler — print summary
   function printSummary() {
