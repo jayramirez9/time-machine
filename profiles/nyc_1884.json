@@ -1,0 +1,519 @@
+{
+  "schemaVersion": 1,
+  "id": "nyc_1884",
+  "name": "New York City — June 1884",
+  "description": "Lower Manhattan during the Gilded Age. Horse-drawn traffic on granite setts, elevated steam railway overhead, street vendor cries, church bells, harbor foghorns. No automobiles, no subway, no electric street lighting south of 14th Street. Listener at 2nd-floor brownstone window facing east toward a commercial avenue.",
+
+  "location": {
+    "name": "Manhattan, New York, NY",
+    "lat": 40.7128,
+    "lon": -74.006,
+    "timezone": "America/New_York",
+    "countryCode": "US"
+  },
+
+  "date": {
+    "year": 1884,
+    "month": 6,
+    "day": 15
+  },
+
+  "layers": {
+    "terrain": {
+      "data": {
+        "demSource": "usgs_3dep",
+        "demResolution": "1m",
+        "landscapeSize": 1009,
+        "elevationRange": [15.64, 43.08],
+        "scalePreset": "neighborhood",
+        "terrainDataPath": "terrain-data/manhattan-ny/",
+        "heightmapPath": "terrain-data/manhattan-ny/heightmap.r16",
+        "imageryPath": "terrain-data/manhattan-ny/imagery.png",
+        "vectorsPath": "terrain-data/manhattan-ny/vectors.geojson",
+        "historicalOverlay": null
+      },
+      "confidence": 0.95,
+      "sources": [
+        {
+          "id": "usgs_3dep",
+          "type": "online_database",
+          "name": "USGS 3D Elevation Program",
+          "url": "https://www.usgs.gov/3d-elevation-program",
+          "citation": "USGS 3DEP 1m DEM via ImageServer"
+        },
+        {
+          "id": "naip_imagery",
+          "type": "online_database",
+          "name": "USDA NAIP Aerial Imagery",
+          "citation": "National Agriculture Imagery Program, 1m resolution"
+        }
+      ],
+      "knownCompromises": [
+        "Satellite imagery is present-day, not period",
+        "Terrain is modern — landfill areas (Battery Park City) did not exist in 1884"
+      ]
+    },
+
+    "weather": {
+      "data": {
+        "provider": "noaa",
+        "stationId": "USW00094728",
+        "stationName": "NY CITY CENTRAL PARK",
+        "stationDistance": "~5km from Financial District",
+        "dataType": "daily",
+        "dateRange": ["1884-01-01", "1884-12-31"],
+        "interpolation": "solar_position",
+        "fallbackProvider": "openmeteo",
+        "providerConfig": {
+          "provider": "noaa",
+          "token": "env:NOAA_API_TOKEN"
+        }
+      },
+      "confidence": 0.8,
+      "sources": [
+        {
+          "id": "noaa_ghcn_usw00094728",
+          "type": "weather_station",
+          "name": "NOAA GHCN-Daily — NY CITY CENTRAL PARK",
+          "url": "https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00094728",
+          "citation": "NOAA Climate Data Online, GHCN-Daily dataset"
+        }
+      ],
+      "knownCompromises": [
+        "Sub-daily interpolation is synthetic — NOAA provides only daily high/low/precip for 1884",
+        "Wind data sparse for this era — estimated from regional patterns",
+        "Station is ~5km from target area — microclimate differences possible near harbor"
+      ]
+    },
+
+    "soundscape": {
+      "data": {
+        "audioProfileId": "nyc_city_1884",
+        "audioProfilePath": "audio-profiles/nyc_city_1884.json",
+        "generationMethod": "hand_authored",
+        "assetStatus": "complete",
+        "eventCount": 40,
+        "voiceCount": 12,
+        "layerCoverage": {
+          "baseBed": true,
+          "directionalBeds": true,
+          "microEvents": true,
+          "weather": true,
+          "occlusion": true
+        }
+      },
+      "confidence": 0.7,
+      "sources": [
+        {
+          "id": "elevenlabs_sfx",
+          "type": "ai_generation",
+          "name": "ElevenLabs Sound Effects API",
+          "citation": "AI-generated from era-aware text prompts (40 SFX assets)"
+        },
+        {
+          "id": "elevenlabs_tts",
+          "type": "ai_generation",
+          "name": "ElevenLabs Text-to-Speech API",
+          "citation": "AI-generated period voice clips (12 voice assets across 5 events)"
+        }
+      ],
+      "knownCompromises": [
+        "AI-generated sounds, not field recordings or period recordings (none exist for 1884)",
+        "Generic Gilded Age NYC sounds — not specific to this exact block/street",
+        "el_train micro-event may have prompt contradiction (see known issues)"
+      ]
+    },
+
+    "urbanForm": {
+      "data": {
+        "buildingSource": "sanborn_1890",
+        "footprintsPath": "terrain-data/manhattan-ny/buildings.geojson",
+        "footprintCount": 29,
+        "architectureEra": "nyc_1884",
+        "streetsPath": "terrain-data/manhattan-ny/roads-splines.json",
+        "streetCount": 253,
+        "streetSurfaceRules": "nyc_1884",
+        "landmarksPath": "terrain-data/manhattan-ny/landmarks.json",
+        "landmarkCount": 6,
+        "landmarks": [
+          "Trinity Church", "Brooklyn Bridge Manhattan Tower",
+          "Western Union Building", "City Hall",
+          "NY Tribune Building", "Grand Central Depot"
+        ],
+        "propYear": 1884,
+        "propTypes": [
+          "hitching_post", "horse_trough", "fire_hydrant", "bollard",
+          "awning", "hanging_sign", "fire_alarm_box", "mailbox",
+          "telegraph_pole", "newsstand"
+        ]
+      },
+      "confidence": 0.7,
+      "sources": [
+        {
+          "id": "sanborn_1890_vol1",
+          "type": "historical_map",
+          "name": "Sanborn Fire Insurance Map — New York, Vol. 1, 1890",
+          "url": "https://www.loc.gov/collections/sanborn-maps/",
+          "citation": "Library of Congress, Sanborn Maps Collection. 15 sheets downloaded, 29 building footprints traced from Vol. 1 (Bowling Green / Financial District)."
+        },
+        {
+          "id": "osm_roads",
+          "type": "online_database",
+          "name": "OpenStreetMap road network",
+          "citation": "OSM road data via Overpass API, 253 road splines extracted"
+        }
+      ],
+      "knownCompromises": [
+        "Sanborn maps from 1890, not 1884 — 6-year gap (building stock largely stable but some structures may differ)",
+        "Only 29 of ~200+ buildings traced — Bowling Green / Financial District only",
+        "Street splines from modern OSM — road alignment stable but widths may differ",
+        "Landmark silhouettes are multi-primitive approximations, not architectural models"
+      ]
+    },
+
+    "ecology": {
+      "data": {
+        "species": [
+          {
+            "commonName": "House Sparrow",
+            "scientificName": "Passer domesticus",
+            "type": "bird",
+            "introduced": 1851,
+            "native": false,
+            "seasonal": { "spring": 0.8, "summer": 0.9, "fall": 0.7, "winter": 0.5 },
+            "diurnal": { "dawn": 0.9, "day": 0.7, "dusk": 0.8, "night": 0.1 },
+            "habitat": ["urban", "residential"],
+            "density": 0.9
+          },
+          {
+            "commonName": "Rock Pigeon",
+            "scientificName": "Columba livia",
+            "type": "bird",
+            "introduced": 1606,
+            "native": false,
+            "seasonal": { "spring": 0.9, "summer": 0.9, "fall": 0.9, "winter": 0.8 },
+            "diurnal": { "dawn": 0.8, "day": 0.9, "dusk": 0.7, "night": 0.1 },
+            "habitat": ["urban"],
+            "density": 0.95
+          },
+          {
+            "commonName": "European Starling",
+            "scientificName": "Sturnus vulgaris",
+            "type": "bird",
+            "introduced": 1890,
+            "native": false,
+            "seasonal": {},
+            "diurnal": {},
+            "habitat": ["urban"],
+            "density": 0,
+            "note": "Not yet introduced in 1884 — excluded from soundscape"
+          },
+          {
+            "commonName": "American Robin",
+            "scientificName": "Turdus migratorius",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": { "spring": 0.7, "summer": 0.6, "fall": 0.3, "winter": 0.1 },
+            "diurnal": { "dawn": 0.9, "day": 0.5, "dusk": 0.7, "night": 0.0 },
+            "habitat": ["urban", "suburban", "park"],
+            "density": 0.4
+          },
+          {
+            "commonName": "Norway Rat",
+            "scientificName": "Rattus norvegicus",
+            "type": "mammal",
+            "introduced": 1776,
+            "native": false,
+            "seasonal": { "spring": 0.8, "summer": 0.8, "fall": 0.8, "winter": 0.7 },
+            "diurnal": { "dawn": 0.3, "day": 0.1, "dusk": 0.5, "night": 0.9 },
+            "habitat": ["urban"],
+            "density": 0.8
+          },
+          {
+            "commonName": "Horse",
+            "scientificName": "Equus caballus",
+            "type": "mammal_domestic",
+            "introduced": null,
+            "native": false,
+            "seasonal": { "spring": 1.0, "summer": 1.0, "fall": 1.0, "winter": 0.8 },
+            "diurnal": { "dawn": 0.3, "day": 0.9, "dusk": 0.7, "night": 0.1 },
+            "habitat": ["urban"],
+            "density": 0.95,
+            "note": "~150,000 horses in NYC in 1880s — primary transport"
+          }
+        ],
+        "vegetation": [
+          {
+            "type": "street_trees",
+            "species": ["American Elm", "London Plane", "Norway Maple"],
+            "coverage": "major_avenues_and_parks",
+            "seasonalCanopy": { "spring": 0.6, "summer": 1.0, "fall": 0.5, "winter": 0.0 }
+          },
+          {
+            "type": "park",
+            "species": ["Oak", "Maple", "Tulip Tree"],
+            "coverage": "Battery Park, City Hall Park, Bowling Green",
+            "seasonalCanopy": { "spring": 0.7, "summer": 1.0, "fall": 0.6, "winter": 0.0 }
+          }
+        ]
+      },
+      "confidence": 0.5,
+      "sources": [
+        {
+          "id": "audubon_historical",
+          "type": "ornithological_survey",
+          "name": "Audubon historical bird records, NYC region",
+          "citation": "General Audubon Society historical data for northeastern US urban areas"
+        },
+        {
+          "id": "nyc_horse_census",
+          "type": "census_record",
+          "name": "NYC horse population estimates, 1880s",
+          "citation": "Various published estimates of ~150,000 horses in NYC by 1880"
+        }
+      ],
+      "knownCompromises": [
+        "Species pool inferred from regional data, not site-specific 1884 surveys",
+        "Seasonal/diurnal weights are estimated, not observed",
+        "European Starling included with density 0 as documentation (introduced 1890)",
+        "Insect species not cataloged"
+      ]
+    },
+
+    "culture": {
+      "data": {
+        "languages": {
+          "primary": "English",
+          "secondary": ["German", "Italian", "Yiddish", "Irish English"],
+          "signage": "English"
+        },
+        "commerce": {
+          "currency": "USD",
+          "streetVendors": [
+            "oyster seller", "hot corn girl", "ice man", "rag picker",
+            "organ grinder", "newsboy", "boot black", "flower girl",
+            "milk man", "knife grinder"
+          ],
+          "markets": ["Fulton Fish Market", "Washington Market", "Gansevoort Market"]
+        },
+        "dailyLife": {
+          "workday": { "start": "07:00", "end": "18:00" },
+          "peakActivity": ["07:00-09:00", "12:00-13:00", "17:00-18:00"],
+          "sabbath": "Sunday"
+        },
+        "newspapers": [
+          "New York Times", "New York Tribune", "New York World",
+          "New York Herald", "New York Sun", "New York Evening Post"
+        ],
+        "notableEvents": []
+      },
+      "confidence": 0.4,
+      "sources": [
+        {
+          "id": "lowe_2008",
+          "type": "published_book",
+          "name": "Gilded Age New York street life",
+          "citation": "General published accounts of 1880s NYC street vendors and commerce"
+        }
+      ],
+      "knownCompromises": [
+        "Street vendor types from general Gilded Age NYC sources, not date-specific",
+        "Daily life patterns are typical, not verified for June 15 1884 specifically",
+        "Secondary languages based on general immigration patterns, not block-level census"
+      ]
+    },
+
+    "music": {
+      "data": {
+        "era": "pre_recording",
+        "formats": [
+          "barrel_organ", "brass_band", "parlor_piano",
+          "street_musician", "church_organ", "music_box"
+        ],
+        "catalog": [],
+        "genreWeights": {
+          "popular": 0.5,
+          "classical": 0.2,
+          "folk": 0.2,
+          "sacred": 0.1
+        },
+        "performanceVenues": [
+          "street_corner", "church", "beer_garden",
+          "theater", "parlor", "concert_hall"
+        ],
+        "notableSongs": [
+          "Swanee River (Old Folks at Home)",
+          "Camptown Races",
+          "Beautiful Dreamer",
+          "Silver Threads Among the Gold",
+          "When the Robins Nest Again"
+        ]
+      },
+      "confidence": 0.3,
+      "sources": [
+        {
+          "id": "sheet_music_archives",
+          "type": "online_database",
+          "name": "Published sheet music catalogs, pre-1884",
+          "citation": "General published song catalogs available by 1884"
+        }
+      ],
+      "knownCompromises": [
+        "Pre-recording era — no audio recordings exist from 1884",
+        "Song catalog based on published sheet music popularity, not verified street performance data",
+        "No MusicBrainz data available for pre-recording era"
+      ]
+    },
+
+    "materials": {
+      "data": {
+        "roads": {
+          "primary": "belgian_block",
+          "secondary": "cobblestone",
+          "residential": "cobblestone",
+          "service": "dirt",
+          "footway": "granite_flag"
+        },
+        "sidewalks": "granite_flag",
+        "buildingFacades": [
+          "brownstone", "cast_iron", "brick",
+          "limestone", "granite", "marble"
+        ],
+        "roofing": ["slate", "tin", "copper", "wood_shingle"],
+        "acousticProperties": {
+          "belgian_block": { "reverbSend": 3, "impactHardness": 0.8 },
+          "cobblestone": { "reverbSend": 2, "impactHardness": 0.7 },
+          "granite_flag": { "reverbSend": 1, "impactHardness": 0.6 },
+          "dirt": { "reverbSend": -4, "impactHardness": 0.2 },
+          "brownstone": { "reverbSend": 1, "impactHardness": 0.5 },
+          "cast_iron": { "reverbSend": 2, "impactHardness": 0.9 },
+          "brick": { "reverbSend": 1, "impactHardness": 0.6 }
+        }
+      },
+      "confidence": 0.7,
+      "sources": [
+        {
+          "id": "street_layout_rules",
+          "type": "procedural_generation",
+          "name": "streetLayout.js nyc_1884 era rules",
+          "citation": "Era-specific road surface classification from lib/streetLayout.js"
+        },
+        {
+          "id": "architecture_styles",
+          "type": "procedural_generation",
+          "name": "architectureStyles.js nyc_1884 styles",
+          "citation": "Building material data from lib/architectureStyles.js (10 NYC 1884 styles)"
+        }
+      ],
+      "knownCompromises": [
+        "Road surface assignments from era rules, not per-street historical records",
+        "Acoustic properties are modeled values, not measured"
+      ]
+    },
+
+    "infrastructure": {
+      "data": {
+        "lighting": {
+          "primary": "gas",
+          "electric": ["Broadway below 14th St (Pearl Street Station, 1882)"],
+          "lampSpacing": "30-40m",
+          "lamplighterSchedule": "dusk"
+        },
+        "transport": {
+          "modes": [
+            "pedestrian", "horse_drawn_carriage", "horse_car",
+            "elevated_railway", "ferry", "hansom_cab", "omnibus"
+          ],
+          "elevatedRailway": {
+            "routes": ["2nd Ave", "3rd Ave", "6th Ave", "9th Ave"],
+            "fuel": "steam",
+            "operator": "Manhattan Railway Company",
+            "schedule": "5am-midnight approx"
+          },
+          "horseCar": {
+            "routes": ["Broadway", "Bowery", "Bleecker St", "Grand St"],
+            "operator": "various"
+          },
+          "ferry": {
+            "terminals": ["South Ferry", "Fulton Ferry", "Whitehall Terminal"],
+            "destinations": ["Brooklyn", "Staten Island", "Jersey City", "Hoboken"]
+          }
+        },
+        "utilities": {
+          "water": "Croton Aqueduct",
+          "sewage": "combined_sewer",
+          "telegraph": true,
+          "telephone": "limited (first NYC exchange 1878, ~5000 subscribers by 1884)",
+          "electricity": "limited (Pearl Street Station since Sept 1882, ~500 customers)"
+        },
+        "publicServices": {
+          "fire": "FDNY (professional since 1865)",
+          "police": "NYPD",
+          "streetCleaning": "manual (Col. Waring's reforms not until 1895)"
+        }
+      },
+      "confidence": 0.6,
+      "sources": [
+        {
+          "id": "manhattan_railway",
+          "type": "published_book",
+          "name": "Manhattan elevated railway system records",
+          "citation": "General published accounts of NYC elevated railway operations, 1878-1940"
+        },
+        {
+          "id": "edison_pearl_st",
+          "type": "published_book",
+          "name": "Edison Pearl Street Station records",
+          "citation": "Edison Electric Illuminating Company, Pearl Street Station opened Sept 4, 1882"
+        }
+      ],
+      "knownCompromises": [
+        "Elevated railway routes verified; exact 1884 schedules not located",
+        "Horse car routes from general references, not 1884-specific timetables",
+        "Telephone subscriber count is an estimate",
+        "Ferry schedules not researched"
+      ]
+    }
+  },
+
+  "accuracyManifest": {
+    "profileId": "nyc_1884",
+    "overallConfidence": 0.63,
+    "generatedAt": "2026-03-17T00:00:00.000Z",
+    "layerSummary": {
+      "terrain":        { "confidence": 0.95, "status": "verified" },
+      "weather":        { "confidence": 0.8,  "status": "complete" },
+      "soundscape":     { "confidence": 0.7,  "status": "complete" },
+      "urbanForm":      { "confidence": 0.7,  "status": "complete" },
+      "ecology":        { "confidence": 0.5,  "status": "partial" },
+      "culture":        { "confidence": 0.4,  "status": "interpolated" },
+      "music":          { "confidence": 0.3,  "status": "assumed" },
+      "materials":      { "confidence": 0.7,  "status": "complete" },
+      "infrastructure": { "confidence": 0.6,  "status": "likely" }
+    },
+    "gaps": [
+      "Ecology: No site-specific bird/wildlife surveys found for 1884 Lower Manhattan",
+      "Ecology: Insect species not cataloged",
+      "Culture: Street vendor types not verified for June 15, 1884 specifically",
+      "Culture: Block-level language/ethnicity data not researched (would require census ward records)",
+      "Music: Pre-recording era — no audio source material exists for 1884",
+      "Urban Form: Only 29 of ~200+ buildings traced from Sanborn maps",
+      "Urban Form: Landmark silhouettes are multi-primitive approximations",
+      "Infrastructure: Ferry and horse car schedules not located",
+      "Infrastructure: Exact telephone subscriber list not located",
+      "Weather: Sub-daily data is synthetic interpolation from daily observations"
+    ],
+    "reviewChecklist": [
+      "Verify building footprint accuracy against Sanborn sheets",
+      "Confirm elevated railway routes operational in June 1884",
+      "Review ecology species pool for plausibility (especially: was the Norway rat this prevalent?)",
+      "Check cultural customs against period newspaper archives (Chronicling America)",
+      "Validate that European Starling is correctly excluded (introduced 1890)",
+      "Review el_train audio for known prompt contradiction issue"
+    ]
+  },
+
+  "generatedAt": "2026-03-17T00:00:00.000Z",
+  "generatedBy": "hand_authored"
+}

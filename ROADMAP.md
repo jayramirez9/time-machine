@@ -126,14 +126,15 @@ The 3D world looks like 1884, not just sounds like it. See PRD Phase 6.
 
 AI agents autonomously research and assemble Place×Time profiles. See PRD Phase 7.
 
-- [ ] Profile schema specification (formal JSON schema with confidence ratings + citations)
-- [ ] Weather research agent
-- [ ] Ecology research agent
-- [ ] Urban form research agent
-- [ ] Cultural research agent
-- [ ] Photo archive agent
-- [ ] Profile assembler (orchestrator)
-- [ ] Accuracy manifest generator
+- [x] Profile schema specification: `docs/environment-profile-schema.md` (9 PRD layers, confidence/citation envelope per layer, accuracy manifest). `lib/environmentProfile.js` validation + helpers. `profiles/nyc_1884.json` first complete profile (all 9 layers, hand-authored from existing Phase 5-6 data).
+- [x] Weather research agent: `lib/agents/weatherAgent.js`. Ranks providers (NOAA/VC/Open-Meteo/mock) by year + API key availability, probes NOAA stations for distance/coverage, calculates confidence scores (resolution, station distance, year degradation), generates source citations and known compromises. Returns Environment Profile weather layer. 44 tests.
+- [x] Ecology research agent: `lib/agents/ecologyAgent.js`. 25+ species database (birds, mammals, insects) with introduction dates, regional coverage, seasonal/diurnal weights. Filters by year, region, habitat (population-based). Includes vegetation data.
+- [x] Urban form research agent: `lib/agents/urbanFormAgent.js`. Reads terrain-data metadata, assesses Sanborn coverage (24 US cities), resolves architecture era, surveys available props. Confidence scales with data completeness.
+- [x] Cultural research agent: `lib/agents/culturalAgent.js`. Produces both culture + music layers. 8 era brackets (colonial through modern) with commerce, daily life, languages, newspapers, street vendors. Music era classification (pre_recording through streaming) with genre weights and performance venues.
+- [x] Photo archive agent: `lib/agents/photoArchiveAgent.js`. Catalogs 8 US digitized photo collections (NYPL, LOC, MCNY, Detroit Publishing, etc.) with API availability, geographic/temporal coverage. Matches archives to location + year, assesses photo availability by era.
+- [x] Materials & infrastructure agent: `lib/agents/materialsInfraAgent.js`. Road surfaces by era (8 eras, pre-1800 through modern), building facade materials, acoustic properties, 24-item infrastructure timeline (lighting, transport, communication, utilities). Produces both materials + infrastructure layers.
+- [x] Profile assembler (orchestrator): `lib/agents/profileAssembler.js`. Geocodes location, runs 7 research agents in parallel, merges into complete Environment Profile, generates accuracy manifest with review checklist. `tools/generate-environment-profile.js` CLI.
+- [x] Accuracy manifest generator: Integrated into `lib/environmentProfile.js` (`generateAccuracyManifest()`) and the profile assembler. Auto-generates layer summaries, confidence rollup, gap list, and review checklist from layer metadata.
 
 ## Phase 8 — Living Street View
 

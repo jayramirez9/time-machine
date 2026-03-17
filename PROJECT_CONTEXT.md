@@ -2,11 +2,25 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 6 in progress — 6.1–6.7 complete, Meshy integration done
+Version: Phase 7 complete — Agent Layer built. 978 tests pass.
 HQ: Henhouse
 
 ## Current Sprint
-Phase 6 (Historical Urban Form) in progress. 6.1–6.7 complete, Meshy pipeline built:
+Phase 7 (The Agent Layer) complete. Phase 6 (Historical Urban Form) 6.1–6.7 complete.
+
+### Phase 7 — The Agent Layer (DONE)
+- **7.1 Profile Schema**: `docs/environment-profile-schema.md`, `lib/environmentProfile.js` — 9 PRD layers, confidence/citation envelope, accuracy manifest. `profiles/nyc_1884.json` first complete profile.
+- **7.2 Weather Agent**: `lib/agents/weatherAgent.js` — provider ranking, NOAA station probing, confidence scoring.
+- **7.3 Ecology Agent**: `lib/agents/ecologyAgent.js` — 25+ species database, year/region/habitat filtering.
+- **7.4 Urban Form Agent**: `lib/agents/urbanFormAgent.js` — terrain data assessment, Sanborn coverage (24 cities), architecture era resolution.
+- **7.5 Cultural Agent**: `lib/agents/culturalAgent.js` — culture + music layers, 8 era brackets, street vendors, music formats.
+- **7.6 Photo Archive Agent**: `lib/agents/photoArchiveAgent.js` — 8 US digitized photo collections catalog.
+- **7.7 Profile Assembler**: `lib/agents/profileAssembler.js` — orchestrator, parallel agent execution, accuracy manifest generation.
+- **7.8 Accuracy Manifest**: Integrated into environmentProfile.js + assembler. Auto-generates from layer metadata.
+- **CLI**: `tools/generate-environment-profile.js` — full pipeline, `--dry-run`, `--terrain`, `--skip`.
+- **Decisions parking lot**: 8 open decisions in memory (profile ID format, live API integration, confidence thresholds, startEngine integration).
+
+### Phase 6 (Historical Urban Form) — 6.1–6.7 complete:
 - **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI.
 - **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 buildings from Sanborn Vol.1 1894.
 - **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`. 1,118 segments, 192 sidewalks, 328 gas lamps.
