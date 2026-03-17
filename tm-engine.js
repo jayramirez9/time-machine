@@ -389,6 +389,27 @@ function createServer(engineRef) {
         res.setHeader('Content-Length', data.length);
         res.end(data);
       });
+    } else if (req.method === 'GET' && urlPath.startsWith('/mesh-data/')) {
+      const assetPath = urlPath.replace('/mesh-data/', '');
+      const filePath = path.join(__dirname, 'mesh-data', assetPath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeTypes = {
+        '.fbx': 'application/octet-stream',
+        '.glb': 'model/gltf-binary',
+        '.obj': 'text/plain',
+        '.png': 'image/png',
+        '.json': 'application/json',
+      };
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.statusCode = 404;
+          res.end('Mesh data not found');
+          return;
+        }
+        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+        res.setHeader('Content-Length', data.length);
+        res.end(data);
+      });
     } else if (req.method === 'GET' && (urlPath === '/viz' || urlPath === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {

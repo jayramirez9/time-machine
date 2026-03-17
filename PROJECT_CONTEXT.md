@@ -2,18 +2,18 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 6 in progress — 6.1–6.5 complete, Meshy integration done, 6.6 in progress
+Version: Phase 6 in progress — 6.1–6.6 complete, Meshy integration done
 HQ: Henhouse
 
 ## Current Sprint
-Phase 6 (Historical Urban Form) in progress. 6.1–6.5 complete, Meshy pipeline built, 6.6 texture pipeline underway:
+Phase 6 (Historical Urban Form) in progress. 6.1–6.6 complete, Meshy pipeline built:
 - **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI.
 - **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 buildings from Sanborn Vol.1 1894.
 - **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`. 1,118 segments, 192 sidewalks, 328 gas lamps.
 - **6.4 Architectural Style Library** (DONE): `lib/architectureStyles.js` — 25+ styles, 12 era rulesets (~1700–present).
 - **6.5 Hero Building Modeling** (DONE): `lib/landmarks.js`, `tools/spawn-landmarks.js`. 6 NYC 1884 landmarks.
 - **Meshy AI Integration** (DONE): `lib/meshyClient.js` API client, `tools/meshy-generate.js` CLI. Text-to-3D, Image-to-3D, Retexture. API-tested: Second Empire building with PBR textures. Pro plan $20/mo.
-- **6.6 Texture Pipeline** (IN PROGRESS): `lib/texturePromptBuilder.js` generates era-aware Meshy prompts from architecture style metadata. `tools/preview-textures.js` for offline prompt tuning. `tools/texture-buildings.js` for batch generation. Quality tiers (hero 300K / foreground 150K / background 50K / distant 15K). Remaining: Nano Banana → Meshy reference image pipeline, Unreal import automation.
+- **6.6 Texture Pipeline** (DONE): `lib/texturePromptBuilder.js` generates era-aware Meshy prompts + Gemini reference image prompts. `tools/preview-textures.js` for offline prompt tuning. `tools/texture-buildings.js` for batch Text-to-3D. `lib/geminiImageGen.js` + `tools/generate-building-refs.js` for Gemini → Meshy Image-to-3D reference image pipeline (tier 2 assets). `lib/meshImport.js` + `tools/spawn-meshes.js` for Unreal mesh import (FBX download from daemon, Content Browser import, geo-positioned spawn with PBR textures). Quality tiers (hero 300K / foreground 150K / background 50K / distant 15K).
 - Full geo pipeline: Cesium streaming + USGS DEM + satellite imagery + OSM vectors, all auto-importing on engine start
 - Historical overlay schema (`lib/historicalOverlay.js`): terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter
 
@@ -31,7 +31,7 @@ Nano Banana (Gemini image gen) removed from launcher/engine as standalone featur
 ### Next Test Scene
 **1980s Baton Rouge** — 12877 Erin Ave (user's childhood neighborhood). Validates "any Place×Time" pipeline beyond hand-built 1884 NYC. Cesium terrain + historical overlay (user-curated) + Meshy generation.
 
-Next: Continue 6.6 (Nano Banana → Meshy pipeline), or stand up Baton Rouge 1980s scene, or 6.7 (street-level props).
+Next: 6.7 (street-level props), or stand up Baton Rouge 1980s scene.
 
 ## Key Constraints
 - Solo builder, evenings/weekends only (full-time Director role at CFA)
@@ -63,7 +63,7 @@ Next: Continue 6.6 (Nano Banana → Meshy pipeline), or stand up Baton Rouge 198
 - Will hero-quality (300K poly) Meshy output match the 2.5M face web UI test? Server busy — needs retry.
 - How to handle Cesium OSM buildings with no `start_date` tag for 1980s/1990s filtering?
 - UX for "personal knowledge curation" — how does a user annotate historical overlay data?
-- Nano Banana → Meshy: single tool or two-step pipeline?
+- Nano Banana → Meshy: RESOLVED — single tool (`generate-building-refs.js`) with `--image-only` flag for two-step use
 
 ## Last Updated
 **Date:** 2026-03-16

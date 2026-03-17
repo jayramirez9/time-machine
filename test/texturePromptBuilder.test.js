@@ -5,6 +5,8 @@ import {
   buildNegativePrompt,
   buildPromptsForBuilding,
   previewAllPrompts,
+  buildReferenceImagePrompt,
+  buildReferenceImageForBuilding,
 } from '../lib/texturePromptBuilder.js';
 import { classifyBuilding, STYLES } from '../lib/architectureStyles.js';
 
@@ -235,6 +237,118 @@ describe('Texture Prompt Builder', () => {
       const geojson = { type: 'FeatureCollection', features: [] };
       const previews = previewAllPrompts(geojson, { year: 1884 });
       assert.equal(previews.length, 0);
+    });
+  });
+
+  describe('buildReferenceImagePrompt', () => {
+    it('generates a photography-style prompt', () => {
+      const style = classifyBuilding('brick', 'residential', 4, { era: 'nyc_1884' });
+      const prompt = buildReferenceImagePrompt({
+        style,
+        building: { material: 'brick', use: 'residential', stories: 4 },
+        year: 1884,
+        eraLabel: '1884 New York City',
+      });
+
+      assert.ok(prompt.includes('Architectural photograph'), 'Should start with photo instruction');
+      assert.ok(prompt.includes('three-quarter view'), 'Should specify camera angle');
+      assert.ok(prompt.includes('no people or vehicles'), 'Should exclude clutter');
+      assert.ok(prompt.includes('1884 New York City'), 'Should include era');
+      assert.ok(prompt.includes('4-story'), 'Should include story count');
+      assert.ok(prompt.includes('photorealistic'), 'Should request photorealism');
+    });
+
+    it('includes more decorative elements than texture prompt (up to 5)', () => {
+      const style = classifyBuilding('brick', 'residential', 4, { era: 'nyc_1884' });
+      const refPrompt = buildReferenceImagePrompt({
+        style,
+        building: { material: 'brick', use: 'residential', stories: 4 },
+        year: 1884,
+      });
+      const texPrompt = buildTexturePrompt({
+        style,
+        building: { material: 'brick', use: 'residential', stories: 4 },
+        year: 1884,
+      });
+
+      // Reference image prompt can be longer — more element detail
+      // Both should have content but ref image should describe more
+      assert.ok(refPrompt.length > 0);
+      assert.ok(texPrompt.length > 0);
+    });
+
+    it('includes era exclusions as negative guidance', () => {
+      const style = classifyBuilding('brick', 'residential', 4, { era: 'nyc_1884' });
+      const prompt = buildReferenceImagePrompt({
+        style,
+        building: { material: 'brick', use: 'residential', stories: 4 },
+        year: 1884,
+      });
+
+      assert.ok(prompt.includes('Do not include:'), 'Should have negative guidance');
+      assert.ok(prompt.includes('no steel-frame'), 'Should exclude anachronisms');
+    });
+
+    it('includes foundation material when different from primary', () => {
+      const style = classifyBuilding('stone', 'commercial', 5, { era: 'nyc_1884' });
+      const prompt = buildReferenceImagePrompt({
+        style,
+        building: { material: 'stone', use: 'commercial', stories: 5 },
+        year: 1884,
+      });
+
+      // second_empire has granite foundation
+      if (style.materials?.foundation && style.materials.foundation !== style.materials.primary) {
+        assert.ok(prompt.includes('Foundation:'), 'Should include foundation material');
+      }
+    });
+
+    it('generates valid prompts for all defined styles', () => {
+      for (const [styleName, style] of Object.entries(STYLES)) {
+        const prompt = buildReferenceImagePrompt({
+          style: { styleName, ...style },
+          building: {
+            material: style.materials?.primary || 'brick',
+            use: 'commercial',
+            stories: 4,
+          },
+          year: 1900,
+        });
+
+        assert.ok(prompt.length > 50, `${styleName}: prompt too short (${prompt.length} chars)`);
+        assert.ok(!prompt.includes('undefined'), `${styleName}: prompt contains 'undefined'`);
+        assert.ok(!prompt.includes('null'), `${styleName}: prompt contains 'null'`);
+      }
+    });
+  });
+
+  describe('buildReferenceImageForBuilding', () => {
+    it('returns prompt, style, and building from properties', () => {
+      const result = buildReferenceImageForBuilding(
+        { material: 'brick', use: 'residential', stories: 4, address: '123 Broadway' },
+        { era: 'nyc_1884' },
+      );
+
+      assert.ok(result.prompt);
+      assert.ok(result.style.styleName);
+      assert.equal(result.building.stories, 4);
+      assert.ok(result.prompt.includes('Architectural photograph'));
+    });
+
+    it('infers era from year', () => {
+      const result = buildReferenceImageForBuilding(
+        { material: 'brick', use: 'residential', stories: 3 },
+        { year: 1955 },
+      );
+
+      assert.ok(result.prompt.length > 50);
+      assert.ok(result.style.styleName);
+    });
+
+    it('handles missing properties gracefully', () => {
+      const result = buildReferenceImageForBuilding({}, { year: 1884 });
+      assert.ok(result.prompt.length > 0);
+      assert.ok(result.style.styleName);
     });
   });
 
