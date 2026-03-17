@@ -5,7 +5,7 @@ node_modules/
 tm-engine.log
 logs/
 audio-assets/
-generated-textures/
+
 terrain-data/
 mesh-data/
 .claude/worktrees/
