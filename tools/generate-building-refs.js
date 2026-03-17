@@ -35,21 +35,13 @@ import {
   downloadModel,
   getBalance,
 } from '../lib/meshyClient.js';
+import { parseSpawnArgs } from '../lib/rcHelpers.js';
 
 // ---------------------------------------------------------------------------
 // Arg parsing
 // ---------------------------------------------------------------------------
 
-const args = process.argv.slice(2);
-
-function getFlag(name, defaultValue = null) {
-  const idx = args.indexOf(name);
-  if (idx === -1) return defaultValue;
-  return args[idx + 1] || defaultValue;
-}
-const hasFlag = (name) => args.includes(name);
-
-const terrainDir = args.find(a => !a.startsWith('-'));
+const { getFlag, hasFlag, positionalArg: terrainDir } = parseSpawnArgs(process.argv.slice(2));
 const era = getFlag('--era');
 const year = getFlag('--year');
 const quality = getFlag('--quality', 'foreground');
@@ -260,7 +252,8 @@ async function main() {
   let skipped = 0;
   let failed = 0;
 
-  for (const b of buildings) {
+  for (let bi = 0; bi < buildings.length; bi++) {
+    const b = buildings[bi];
     console.log(`━━━ Building ${b.index}: ${b.address} (${b.styleName}) ━━━`);
 
     try {
@@ -282,7 +275,7 @@ async function main() {
     }
 
     // Brief pause between buildings to avoid rate limits
-    if (buildings.indexOf(b) < buildings.length - 1) {
+    if (bi < buildings.length - 1) {
       await new Promise(r => setTimeout(r, 1000));
     }
   }

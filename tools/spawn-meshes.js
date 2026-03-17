@@ -166,10 +166,10 @@ async function main() {
 
     // Write spawn data for reference
     const spawnDataPath = path.join(terrainDir, 'meshes-spawn.json');
-    fs.writeFileSync(spawnDataPath, JSON.stringify(filtered, null, 2, (key, value) => {
+    fs.writeFileSync(spawnDataPath, JSON.stringify(filtered, (key, value) => {
       if (key === 'feature') return undefined; // skip GeoJSON blob
       return value;
-    }));
+    }, 2));
     console.log(`\n  Wrote ${spawnDataPath}`);
     console.log('═══════════════════════════════════════════════');
     return;

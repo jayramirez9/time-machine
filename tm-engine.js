@@ -173,6 +173,28 @@ function serveHtml(res, filePath) {
   });
 }
 
+// Static file serving helper (audio-assets, terrain-data, mesh-data)
+function serveStaticDir(res, dirName, assetPath, extraMimes = {}, opts = {}) {
+  if (assetPath.includes('..')) {
+    res.statusCode = 400;
+    res.end('Invalid path');
+    return;
+  }
+  const filePath = path.join(__dirname, dirName, assetPath);
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes = { '.json': 'application/json', '.png': 'image/png', ...extraMimes };
+  const stream = fs.createReadStream(filePath);
+  stream.on('error', () => {
+    res.statusCode = 404;
+    res.end('Not found');
+  });
+  stream.on('open', () => {
+    res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+    if (opts.cacheControl) res.setHeader('Cache-Control', opts.cacheControl);
+    stream.pipe(res);
+  });
+}
+
 // JSON body parser helper
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -349,66 +371,19 @@ function createServer(engineRef) {
         res.end(data);
       });
     } else if (req.method === 'GET' && urlPath.startsWith('/audio-assets/')) {
-      const assetPath = urlPath.replace('/audio-assets/', '');
-      const filePath = path.join(__dirname, 'audio-assets', assetPath);
-      const ext = path.extname(filePath).toLowerCase();
-      const mimeTypes = {
-        '.mp3': 'audio/mpeg',
-        '.ogg': 'audio/ogg',
-        '.wav': 'audio/wav',
-        '.flac': 'audio/flac',
-        '.m4a': 'audio/mp4'
-      };
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          res.statusCode = 404;
-          res.end('Asset not found');
-          return;
-        }
-        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-        res.end(data);
-      });
+      serveStaticDir(res, 'audio-assets', urlPath.slice('/audio-assets/'.length), {
+        '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav',
+        '.flac': 'audio/flac', '.m4a': 'audio/mp4',
+      }, { cacheControl: 'public, max-age=86400' });
     } else if (req.method === 'GET' && urlPath.startsWith('/terrain-data/')) {
-      const assetPath = urlPath.replace('/terrain-data/', '');
-      const filePath = path.join(__dirname, 'terrain-data', assetPath);
-      const ext = path.extname(filePath).toLowerCase();
-      const mimeTypes = {
-        '.r16': 'application/octet-stream',
-        '.png': 'image/png',
-        '.tif': 'image/tiff',
-        '.json': 'application/json'
-      };
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          res.statusCode = 404;
-          res.end('Terrain data not found');
-          return;
-        }
-        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-        res.setHeader('Content-Length', data.length);
-        res.end(data);
+      serveStaticDir(res, 'terrain-data', urlPath.slice('/terrain-data/'.length), {
+        '.r16': 'application/octet-stream', '.png': 'image/png',
+        '.tif': 'image/tiff', '.json': 'application/json',
       });
     } else if (req.method === 'GET' && urlPath.startsWith('/mesh-data/')) {
-      const assetPath = urlPath.replace('/mesh-data/', '');
-      const filePath = path.join(__dirname, 'mesh-data', assetPath);
-      const ext = path.extname(filePath).toLowerCase();
-      const mimeTypes = {
-        '.fbx': 'application/octet-stream',
-        '.glb': 'model/gltf-binary',
-        '.obj': 'text/plain',
-        '.png': 'image/png',
-        '.json': 'application/json',
-      };
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          res.statusCode = 404;
-          res.end('Mesh data not found');
-          return;
-        }
-        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-        res.setHeader('Content-Length', data.length);
-        res.end(data);
+      serveStaticDir(res, 'mesh-data', urlPath.slice('/mesh-data/'.length), {
+        '.fbx': 'application/octet-stream', '.glb': 'model/gltf-binary',
+        '.obj': 'text/plain', '.png': 'image/png', '.json': 'application/json',
       });
     } else if (req.method === 'GET' && (urlPath === '/viz' || urlPath === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));

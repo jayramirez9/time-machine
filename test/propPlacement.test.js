@@ -17,10 +17,6 @@ import {
 
 // 100m primary road (straight, east-west)
 const primarySpline = { category: 'primary', points: [[0, 0, 10], [10000, 0, 10]] };
-// 200m secondary road
-const secondarySpline = { category: 'secondary', points: [[0, 5000, 10], [20000, 5000, 10]] };
-// 100m residential road
-const residentialSpline = { category: 'residential', points: [[0, 10000, 10], [10000, 10000, 10]] };
 // Three roads meeting at a point (intersection)
 const intersectionSplines = [
   { category: 'primary', points: [[0, 0, 10], [10000, 0, 10]] },
