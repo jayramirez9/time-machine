@@ -2,11 +2,11 @@
 
 ## Project
 Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 6 in progress — 6.1–6.6 complete, Meshy integration done
+Version: Phase 6 in progress — 6.1–6.7 complete, Meshy integration done
 HQ: Henhouse
 
 ## Current Sprint
-Phase 6 (Historical Urban Form) in progress. 6.1–6.6 complete, Meshy pipeline built:
+Phase 6 (Historical Urban Form) in progress. 6.1–6.7 complete, Meshy pipeline built:
 - **6.1 Sanborn Map Ingestion** (DONE): `lib/sanborn.js` LOC API client, `tools/fetch-sanborn.js` CLI.
 - **6.2 Block Massing Generation** (DONE): `lib/buildingMassing.js`, `tools/spawn-buildings.js`. 29 buildings from Sanborn Vol.1 1894.
 - **6.3 Era-Appropriate Street Layout** (DONE): `lib/streetLayout.js`, `lib/streetMeshing.js`, `lib/lampPlacement.js`, `tools/spawn-streets.js`. 1,118 segments, 192 sidewalks, 328 gas lamps.
@@ -14,6 +14,7 @@ Phase 6 (Historical Urban Form) in progress. 6.1–6.6 complete, Meshy pipeline 
 - **6.5 Hero Building Modeling** (DONE): `lib/landmarks.js`, `tools/spawn-landmarks.js`. 6 NYC 1884 landmarks.
 - **Meshy AI Integration** (DONE): `lib/meshyClient.js` API client, `tools/meshy-generate.js` CLI. Text-to-3D, Image-to-3D, Retexture. API-tested: Second Empire building with PBR textures. Pro plan $20/mo.
 - **6.6 Texture Pipeline** (DONE): `lib/texturePromptBuilder.js` generates era-aware Meshy prompts + Gemini reference image prompts. `tools/preview-textures.js` for offline prompt tuning. `tools/texture-buildings.js` for batch Text-to-3D. `lib/geminiImageGen.js` + `tools/generate-building-refs.js` for Gemini → Meshy Image-to-3D reference image pipeline (tier 2 assets). `lib/meshImport.js` + `tools/spawn-meshes.js` for Unreal mesh import (FBX download from daemon, Content Browser import, geo-positioned spawn with PBR textures). Quality tiers (hero 300K / foreground 150K / background 50K / distant 15K).
+- **6.7 Street-Level Props** (DONE): `lib/propCatalog.js` (16 prop types with era ranges, placement rules, density), `lib/propPlacement.js` (spline-walking placement with intersection props, deterministic PRNG, de-duplication), `tools/spawn-props.js` CLI. Era-filtered: 1884 gets hitching posts/horse troughs, 1978 gets parking meters/traffic lights.
 - Full geo pipeline: Cesium streaming + USGS DEM + satellite imagery + OSM vectors, all auto-importing on engine start
 - Historical overlay schema (`lib/historicalOverlay.js`): terrain deltas, surface swaps, feature add/remove, coastlines, OSM date filter
 
@@ -31,7 +32,7 @@ Nano Banana (Gemini image gen) removed from launcher/engine as standalone featur
 ### Next Test Scene
 **1980s Baton Rouge** — 12877 Erin Ave (user's childhood neighborhood). Validates "any Place×Time" pipeline beyond hand-built 1884 NYC. Cesium terrain + historical overlay (user-curated) + Meshy generation.
 
-Next: 6.7 (street-level props), or stand up Baton Rouge 1980s scene.
+Next: 1980s Baton Rouge test scene, or historical skyline accuracy, or Phase 7 (agent layer).
 
 ## Key Constraints
 - Solo builder, evenings/weekends only (full-time Director role at CFA)
