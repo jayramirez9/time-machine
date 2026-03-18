@@ -117,6 +117,39 @@ describe('generateProfile', () => {
     assert.equal(profile.assetGeneration.status, 'pending');
   });
 
+  it('microEvents is a true Array with correct event structure', () => {
+    const profile = generateProfile(baseOpts);
+    assert.ok(Array.isArray(profile.microEvents), 'microEvents must be an Array, not an object with numeric keys');
+    assert.ok(profile.microEvents.length > 0, 'should have at least one micro-event');
+
+    // Verify it survives JSON round-trip as an array
+    const roundTripped = JSON.parse(JSON.stringify(profile));
+    assert.ok(Array.isArray(roundTripped.microEvents), 'microEvents must remain an Array after JSON round-trip');
+
+    // Verify each event has the required fields
+    for (const evt of profile.microEvents) {
+      assert.ok(typeof evt.id === 'string', `event must have string id, got ${typeof evt.id}`);
+      assert.ok(typeof evt.description === 'string', `event ${evt.id}: must have description`);
+      assert.ok(Array.isArray(evt.sources), `event ${evt.id}: sources must be an Array`);
+      assert.ok(evt.sources.length > 0, `event ${evt.id}: must have at least one source`);
+      assert.ok(typeof evt.avgCooldownSec === 'number', `event ${evt.id}: must have numeric avgCooldownSec`);
+      assert.ok(typeof evt.gainDb === 'number', `event ${evt.id}: must have numeric gainDb`);
+      assert.ok(evt.spatial && typeof evt.spatial === 'object', `event ${evt.id}: must have spatial object`);
+      assert.ok(evt.motion && typeof evt.motion === 'object', `event ${evt.id}: must have motion object`);
+      assert.ok(evt.timeOfDay && typeof evt.timeOfDay === 'object', `event ${evt.id}: must have timeOfDay object`);
+      assert.ok(Array.isArray(evt.activityRange), `event ${evt.id}: activityRange must be an Array`);
+      assert.equal(evt.activityRange.length, 2, `event ${evt.id}: activityRange must have 2 elements`);
+    }
+
+    // Verify for-of iteration works (would fail on object with numeric keys)
+    let count = 0;
+    for (const evt of profile.microEvents) {
+      count++;
+      assert.ok(evt.id);
+    }
+    assert.equal(count, profile.microEvents.length);
+  });
+
   it('all sources have url: null', () => {
     const profile = generateProfile(baseOpts);
     const allSources = [];
