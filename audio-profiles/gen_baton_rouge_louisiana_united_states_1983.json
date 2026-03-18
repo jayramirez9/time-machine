@@ -1,0 +1,556 @@
+{
+  "schemaVersion": 2,
+  "id": "gen_baton_rouge_louisiana_united_states_1983",
+  "name": "Baton Rouge, Louisiana, United States — 1983",
+  "description": "Urban soundscape of Baton Rouge, Louisiana, United States in 1983. Modern era with paved streets and highways. Climate sounds: warm breeze, cicadas, diverse birdlife. Pedestrians, activity, and nearby commerce.",
+  "generated": true,
+  "era": {
+    "year": 1983,
+    "period": "Modern",
+    "confidence": 0.5
+  },
+  "listener": {
+    "position": "ground floor window",
+    "elevation": 2.5,
+    "facing": "E",
+    "enclosure": "open_window"
+  },
+  "spatialConfig": {
+    "order": "HOA3",
+    "irProfile": {
+      "id": "gen_baton_rouge_louisiana_united_states_1983_ir",
+      "file": "ir-gen_baton_rouge_louisiana_united_states_1983.wav",
+      "fallback": "synthetic"
+    }
+  },
+  "assetGeneration": {
+    "status": "pending",
+    "generator": "elevenlabs",
+    "promptContext": "Urban soundscape of Baton Rouge, Louisiana, United States in 1983. Modern era with paved streets and highways. Climate sounds: warm breeze, cicadas, diverse birdlife. Pedestrians, activity, and nearby commerce."
+  },
+  "beds": {
+    "base": {
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/ambient-1.mp3",
+          "label": "ambient-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton\"",
+          "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton Rouge, Louisiana, United States in 1983. Modern era with paved streets and highways. Climate sounds: warm breeze, cicadas, diverse birdlife. Pedestrians, activity, and nearby Focus on distant activity and general atmosphere.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up modem sou..."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/ambient-2.mp3",
+          "label": "ambient-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton\"",
+          "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton Rouge, Louisiana, United States in 1983. Modern era with paved streets and highways. Climate sounds: warm breeze, cicadas, diverse birdlife. Pedestrians, activity, and nearby Focus on close surface textures and immediate surroundings.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up..."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/ambient-3.mp3",
+          "label": "ambient-3",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton\"",
+          "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Urban soundscape of Baton Rouge, Louisiana, United States in 1983. Modern era with paved streets and highways. Climate sounds: warm breeze, cicadas, diverse birdlife. Pedestrians, activity, and nearby Focus on mid-range ambience — voices, animal sounds, wind.. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up ..."
+        }
+      ],
+      "crossfadeSec": 14,
+      "gainDb": -20
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          {
+            "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/dir-north.mp3",
+            "label": "dir-north",
+            "spatial": {
+              "azimuth": 0,
+              "elevation": -5,
+              "distance": 0.6,
+              "spread": 40
+            },
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Residential street — occa\"",
+            "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Residential street — occasional passersby. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+          }
+        ],
+        "gainDb": -26,
+        "description": "Residential street — occasional passersby"
+      },
+      "E": {
+        "sources": [
+          {
+            "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/dir-east.mp3",
+            "label": "dir-east",
+            "spatial": {
+              "azimuth": 90,
+              "elevation": -5,
+              "distance": 0.4,
+              "spread": 60
+            },
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Commercial street — shops\"",
+            "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Commercial street — shops and traffic. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+          }
+        ],
+        "gainDb": -22,
+        "description": "Commercial street — shops and traffic"
+      },
+      "S": {
+        "sources": [
+          {
+            "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/dir-south.mp3",
+            "label": "dir-south",
+            "spatial": {
+              "azimuth": 180,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 50
+            },
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Cross street — moderate a\"",
+            "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Cross street — moderate activity. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+          },
+          {
+            "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/insect_chorus-1.mp3",
+            "label": "insect_chorus-1",
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX"
+          }
+        ],
+        "gainDb": -34,
+        "description": "Cross street — moderate activity"
+      },
+      "W": {
+        "sources": [
+          {
+            "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/dir-west.mp3",
+            "label": "dir-west",
+            "spatial": {
+              "azimuth": -90,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 30
+            },
+            "license": "elevenlabs-generated",
+            "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Ambient background soundscape: Quiet side — courtyards, \"",
+            "generatedPrompt": "Modern era, circa 1983. Ambient background soundscape: Quiet side — courtyards, distant sounds. Steady, loopable, no sudden events. Suitable as a continuous background bed. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+          }
+        ],
+        "gainDb": -28,
+        "description": "Quiet side — courtyards, distant sounds"
+      }
+    }
+  },
+  "weather": {
+    "wind": {
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/wind-1.mp3",
+          "label": "wind-1",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": 0,
+            "distance": 0.3,
+            "spread": 90
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: wind 1. Natural, organic, no modern artif\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: wind 1. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/wind-2.mp3",
+          "label": "wind-2",
+          "spatial": {
+            "azimuth": -45,
+            "elevation": 5,
+            "distance": 0.2,
+            "spread": 60
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: wind 2. Natural, organic, no modern artif\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: wind 2. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "gustFilterRange": [
+        250,
+        2200
+      ],
+      "gustSweepPeriod": [
+        7,
+        18
+      ]
+    },
+    "rain": {
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/rain-1.mp3",
+          "label": "rain-1",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": -10,
+            "distance": 0.4,
+            "spread": 120
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: rain 1. Natural, organic, no modern artif\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: rain 1. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/rain-2.mp3",
+          "label": "rain-2",
+          "spatial": {
+            "azimuth": -30,
+            "elevation": 5,
+            "distance": 0.3,
+            "spread": 60
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: rain 2. Natural, organic, no modern artif\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: rain 2. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ]
+    },
+    "thunder": {
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/thunder-1.mp3",
+          "label": "thunder-1",
+          "spatial": {
+            "azimuth": 0,
+            "elevation": 60,
+            "distance": 0.8,
+            "spread": 180
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: thunder 1. Natural, organic, no modern ar\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: thunder 1. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/thunder-2.mp3",
+          "label": "thunder-2",
+          "spatial": {
+            "azimuth": 30,
+            "elevation": 70,
+            "distance": 0.7,
+            "spread": 120
+          },
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Weather sound: thunder 2. Natural, organic, no modern ar\"",
+          "generatedPrompt": "Modern era, circa 1983. Weather sound: thunder 2. Natural, organic, no modern artifacts. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "cooldownRange": [
+        50,
+        150
+      ]
+    }
+  },
+  "microEvents": [
+    {
+      "id": "bird_song",
+      "description": "Songbirds calling — local species, natural birdsong",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/bird_song-1.mp3",
+          "label": "bird_song-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Songbirds calling — local species, natural\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Songbirds calling — local species, natural birdsong. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/bird_song-2.mp3",
+          "label": "bird_song-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Songbirds calling — local species, natural\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Songbirds calling — local species, natural birdsong. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 17,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": -30,
+        "elevation": 15,
+        "distance": 0.5,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.85
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "dog_bark",
+      "description": "Dog barking — stray or domestic",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/dog_bark-1.mp3",
+          "label": "dog_bark-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Dog barking — stray or domestic. No cell p\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Dog barking — stray or domestic. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 38,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 30,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "church_bell",
+      "description": "Church bell tolling — quarter-hour or hourly",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/church_bell-1.mp3",
+          "label": "church_bell-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Church bell tolling — quarter-hour or hour\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Church bell tolling — quarter-hour or hourly. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/church_bell-2.mp3",
+          "label": "church_bell-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Church bell tolling — quarter-hour or hour\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Church bell tolling — quarter-hour or hourly. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 153,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": -45,
+        "elevation": 30,
+        "distance": 0.8,
+        "spread": 60
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "wind_gust",
+      "description": "Wind gust — natural breeze through surroundings",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/wind_gust-1.mp3",
+          "label": "wind_gust-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Wind gust — natural breeze through surroun\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Wind gust — natural breeze through surroundings. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 26,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 0,
+        "elevation": 5,
+        "distance": 0.3,
+        "spread": 90
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "car_traffic",
+      "description": "Passing traffic — multiple cars, varied speeds",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/car_traffic-1.mp3",
+          "label": "car_traffic-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Passing traffic — multiple cars, varied sp\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Passing traffic — multiple cars, varied speeds. Surface material: asphalt. Movement: passby — sound passes by the listener. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        },
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/car_traffic-2.mp3",
+          "label": "car_traffic-2",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Passing traffic — multiple cars, varied sp\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Passing traffic — multiple cars, varied speeds. Surface material: asphalt. Movement: passby — sound passes by the listener. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 12,
+      "gainDb": -30,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 25
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -60,
+        "azimuthEnd": 60,
+        "durationSec": 5,
+        "dopplerFactor": 0.3
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.95
+      },
+      "activityRange": [
+        0.2,
+        1
+      ],
+      "surface": "asphalt"
+    },
+    {
+      "id": "jet_overhead",
+      "description": "Jet aircraft passing high overhead — distant rumble",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/jet_overhead-1.mp3",
+          "label": "jet_overhead-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Jet aircraft passing high overhead — dista\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Jet aircraft passing high overhead — distant rumble. Movement: passby — sound passes by the listener. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 306,
+      "gainDb": -32,
+      "spatial": {
+        "azimuth": 0,
+        "elevation": 70,
+        "distance": 1,
+        "spread": 60
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -90,
+        "azimuthEnd": 90,
+        "durationSec": 15,
+        "dopplerFactor": 0.1
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.92
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "hvac_hum",
+      "description": "HVAC unit humming — rooftop air conditioning compressor",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/hvac_hum-1.mp3",
+          "label": "hvac_hum-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: HVAC unit humming — rooftop air conditioni\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: HVAC unit humming — rooftop air conditioning compressor. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 77,
+      "gainDb": -30,
+      "spatial": {
+        "azimuth": 20,
+        "elevation": 20,
+        "distance": 0.4,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "construction",
+      "description": "Construction site — hammering, power tools, backup alarm",
+      "sources": [
+        {
+          "url": "/audio-assets/gen_baton_rouge_louisiana_united_states_1983/construction-1.mp3",
+          "label": "construction-1",
+          "license": "elevenlabs-generated",
+          "attribution": "ElevenLabs SFX: \"Modern era, circa 1983. Sound effect: Construction site — hammering, power tools\"",
+          "generatedPrompt": "Modern era, circa 1983. Sound effect: Construction site — hammering, power tools, backup alarm. No cell phones or digital ringtones, internet dial-up modem sounds, drone aircraft buzzing, electric vehicle whine, electric scooter sounds. Only sounds that existed in 1983. Sounds typical of life in 1983."
+        }
+      ],
+      "avgCooldownSec": 51,
+      "gainDb": -34,
+      "spatial": {
+        "azimuth": -50,
+        "elevation": 10,
+        "distance": 0.7,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.7
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    }
+  ],
+  "mix": {
+    "masterGainDb": -18,
+    "layerGains": {
+      "baseBed": -6,
+      "directionalBeds": -8,
+      "microEvents": -6,
+      "weather": -1,
+      "occlusion": 0
+    },
+    "reverbSend": 0.1
+  },
+  "scheduling": {
+    "maxConcurrentEvents": 3,
+    "globalCooldownSec": 1.5,
+    "densityMultipliers": {
+      "subtle": 0.5,
+      "present": 1,
+      "demo": 2.5
+    }
+  }
+}

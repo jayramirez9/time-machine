@@ -105,25 +105,18 @@
       "transform": { "type": "passthrough" }
     },
     {
-      "source": "controls.lighting.exteriorLuminance",
-      "endpoint": "unreal",
-      "param": "SkyLight.Intensity",
-      "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [0.5, 4.0] },
-      "rateLimit": { "maxDelta": 0.3, "ema": 0.3 }
-    },
-    {
       "source": "controls.atmosphere.cloudDensity",
       "endpoint": "unreal",
       "param": "Cloud_GlobalCoverage",
       "transform": { "type": "scale", "inputRange": [0, 1], "outputRange": [-0.5, 1.0] },
-      "rateLimit": { "maxDelta": 0.1, "ema": 0.3 }
+      "rateLimit": { "maxDelta": 0.02, "ema": 0.1 }
     },
     {
       "source": "controls.audio.thunderProb",
       "endpoint": "unreal",
       "param": "StormClouds",
       "transform": { "type": "curve", "gamma": 0.5, "outputRange": [0, 1.0] },
-      "rateLimit": { "maxDelta": 0.05, "ema": 0.4 }
+      "rateLimit": { "maxDelta": 0.02, "ema": 0.15 }
     },
     {
       "source": "controls.atmosphere.haze",
