@@ -19,12 +19,14 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
+import { smartGeocode } from './lib/openmeteo.js';
 import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
 import { getApiKey as getVCKey } from './lib/visualcrossing.js';
 import { getApiKey as getNOAAKey } from './lib/noaa.js';
 
 import { isUnrealReachable, getGeoreference } from './lib/cesiumGeoreference.js';
 import { getTilesetStatus } from './lib/cesiumTileset.js';
+import { loadProfile, generateAccuracyManifest } from './lib/environmentProfile.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,7 +44,8 @@ function parseArgs(args) {
     quiet: false,
     overnight: false,
     mock: false,
-    provider: 'auto'
+    provider: 'auto',
+    profile: null
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -68,6 +71,8 @@ function parseArgs(args) {
       parsed.mock = true;
     } else if (arg === '--provider') {
       parsed.provider = args[++i];
+    } else if (arg === '--profile') {
+      parsed.profile = args[++i];
     }
   }
 
@@ -274,6 +279,12 @@ function createServer(engineRef) {
       return;
     }
 
+    if (req.method === 'GET' && urlPath === '/api/profile') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(engineRef.profileManifest || null));
+      return;
+    }
+
     if (req.method === 'POST' && urlPath === '/api/launch') {
       try {
         const body = await readBody(req);
@@ -290,14 +301,54 @@ function createServer(engineRef) {
           console.log('[Engine] Stopped for relaunch');
         }
 
+        // If explicit lat/lon provided, pre-resolve geocode to skip geocoding
+        let preGeo = null;
+        if (body.lat != null && body.lon != null) {
+          preGeo = {
+            lat: parseFloat(body.lat),
+            lon: parseFloat(body.lon),
+            name: body.location,
+            population: 0,
+            timezone: body.timezone || null,
+            countryCode: null
+          };
+          // Fill in timezone via smartGeocode if not provided
+          if (!preGeo.timezone) {
+            try {
+              const resolved = await smartGeocode(body.location);
+              preGeo.timezone = resolved.timezone;
+              preGeo.population = resolved.population;
+              preGeo.countryCode = resolved.countryCode;
+              if (!preGeo.name || preGeo.name === body.location) {
+                preGeo.name = resolved.name;
+              }
+            } catch (_e) { /* timezone stays null */ }
+          }
+        }
+
         const config = {
           location: body.location,
           startDate: body.date || null,
           locale: body.locale || null,
           timescale: body.timescale || 60,
           provider: body.provider || 'auto',
-          mock: body.provider === 'mock'
+          mock: body.provider === 'mock',
+          profilePath: body.profilePath || null,
+          preGeo
         };
+
+        // Load environment profile if provided
+        if (config.profilePath) {
+          try {
+            const profile = loadProfile(config.profilePath);
+            engineRef.profileManifest = generateAccuracyManifest(profile);
+          } catch (e) {
+            console.warn(`[Engine] Profile load failed: ${e.message}`);
+            engineRef.profileManifest = null;
+          }
+        } else {
+          engineRef.profileManifest = null;
+        }
 
         console.log(`[Engine] Launching: ${config.location} @ ${config.startDate || 'now'} (${config.locale})`);
 
@@ -310,7 +361,9 @@ function createServer(engineRef) {
           localePreset: config.locale,
           routesConfigPath: engineRef.routesConfigPath,
           useMock: config.mock,
-          provider: config.provider
+          provider: config.provider,
+          environmentProfilePath: config.profilePath || undefined,
+          preGeo: config.preGeo || undefined
         });
 
         // Swap engine reference and re-wire publish
@@ -327,7 +380,8 @@ function createServer(engineRef) {
           location: newEngine.location,
           simTime: newEngine.simTime.toISOString(),
           timescale: newEngine.timescale,
-          georeference: newEngine.georeference || null
+          georeference: newEngine.georeference || null,
+          profile: engineRef.profileManifest || null
         }));
       } catch (e) {
         console.error('[Engine] Launch failed:', e);
@@ -412,6 +466,18 @@ async function main() {
   if (quiet) console.log(`[Engine] Quiet mode — only violations will be printed`);
   if (args.overnight) console.log(`[Engine] Overnight soak mode — summary on exit`);
 
+  // Load environment profile if provided via CLI
+  let profileManifest = null;
+  if (args.profile) {
+    try {
+      const profile = loadProfile(args.profile);
+      profileManifest = generateAccuracyManifest(profile);
+      console.log(`[Engine] Profile: ${profile.id} (${Math.round(profileManifest.overallConfidence * 100)}% confidence)`);
+    } catch (e) {
+      console.error(`[Engine] Profile load failed: ${e.message}`);
+    }
+  }
+
   // Mutable engine container — shared with server route handlers
   const engineRef = {
     engine: null,
@@ -423,6 +489,7 @@ async function main() {
       provider: args.provider
     },
     routesConfigPath: args.routesConfigPath,
+    profileManifest,
     unwire: null,
     wirePublish: null   // set below
   };
@@ -438,6 +505,15 @@ async function main() {
   // Wire an engine's onPublish to the WebSocket broadcast + console logging
   function wirePublish(engine, wss) {
     return engine.onPublish((state) => {
+      // Attach profile summary if loaded (lightweight — no gaps array)
+      if (engineRef.profileManifest) {
+        const m = engineRef.profileManifest;
+        state.profile = {
+          id: m.profileId,
+          overallConfidence: m.overallConfidence,
+          layerSummary: m.layerSummary
+        };
+      }
       wss.broadcast(state);
       stats.publishCount++;
 
@@ -492,7 +568,8 @@ async function main() {
       localePreset: args.locale,
       routesConfigPath: args.routesConfigPath,
       useMock: args.mock,
-      provider: args.provider
+      provider: args.provider,
+      environmentProfilePath: args.profile || undefined
     });
     engineRef.engine = engine;
     engineRef.unwire = wirePublish(engine, wss);
