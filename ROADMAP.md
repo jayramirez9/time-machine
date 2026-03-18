@@ -29,25 +29,16 @@ Sound and picture agree. Weather you see is weather you hear.
 - [x] Rain surface audio matched to precipDensity
 - [x] Thunder model with distance-based delay
 
-## Phase 2 — Multi-Window + Spatial Audio (PARTIAL)
+## Phase 2 — Spatial Audio (DONE)
 
-The room becomes a portal. Multiple windows, directional audio, spatial coherence.
+Sound exists in 3D space. Directional audio, reverb, occlusion.
 
-Done (spatial audio):
 - [x] HRTF spatial panning (v2 audio profiles)
 - [x] Doppler pitch shift on micro-events
 - [x] Synthetic convolution reverb (enclosure-aware, surface-aware sends)
 - [x] Real convolution IRs (file-based loading with synthetic fallback)
 - [x] Occlusion layer (Layer 5): building-edge diffraction, room LPF, urban canyon filter
 - [x] HRTF panner refDistance fix (micro-events audible in mix)
-
-Not started (installation hardware):
-- [ ] Multi-camera Unreal scene (N/E/S/W)
-- [ ] Exposure/color matching across cameras
-- [ ] 4-zone speaker mapping
-- [ ] Window physics stub ("glass closed" EQ filtering)
-- [ ] Operator preset switcher
-- [ ] Calibration flow v1
 
 ## Phase 3 — Historical Depth / Pre-1940 Weather (DONE)
 
@@ -77,17 +68,6 @@ You hear 1884, not 2024 with old buildings.
 - [~] ~~**Unreal scene art pass**~~: Paused — direction changed. Greybox served its purpose for audio development; future visual fidelity comes from Cesium streaming + Phase 6 historical urban form, not hand-dressed cubes.
 - [~] ~~**Gas lamp light configuration**~~: Paused — direction changed. Greybox PointLights superseded by geo pipeline. Period lighting will be placed in context of real geometry in Phase 6.
 
-## Phase 4.5 — Period Music Streaming
-
-Turn on the radio and only hear music that existed on this exact day. See PRD Section 14.5.
-
-- [ ] MusicBrainz date authority module
-- [ ] Locale music profile schema (radio format, genre weights, station identity)
-- [ ] `musicRadio` WorldState control
-- [ ] Streaming playback adapter (Spotify/Apple Music via ISRC lookup)
-- [ ] Radio station simulation (sequencing, gaps, patter cadence)
-- [ ] Pre-recording era music (barrel organ, brass band, parlor piano)
-- [ ] Baton Rouge 1978 integration test (20+ transitions, zero date violations)
 
 ## Phase 5 — Geographic Data Pipeline (DONE)
 
@@ -118,9 +98,8 @@ The 3D world looks like 1884, not just sounds like it. See PRD Phase 6.
 - [x] Street-level props: `lib/propCatalog.js` (16 prop types with era ranges, placement rules, density weights), `lib/propPlacement.js` (spline-walking placement engine with intersection props, de-duplication, deterministic seeded PRNG, --only/--exclude filtering), `tools/spawn-props.js` CLI. Prop types include hitching posts (pre-1920), horse troughs, fire hydrants, bollards, awnings, hanging signs, fire alarm boxes, mailboxes, telegraph/telephone poles, newsstands, parking meters (post-1935), traffic lights (post-1920), benches, trash cans. Era filtering matches eraData.js anachronism timeline. Tested: 1884 NYC has no parking meters; 1978 has no hitching posts.
 - [x] **Meshy AI integration** — `lib/meshyClient.js` API client + `tools/meshy-generate.js` CLI. Text-to-3D, Image-to-3D, and Retexture via Meshy 6 API. Research spike validated: text prompt produced architecturally correct 1880s Italianate brownstone with PBR textures. Pro plan ($20/mo, 1,000 credits). See `docs/research-meshy.md`.
 - [ ] **1980s Baton Rouge test scene** — 12877 Erin Ave neighborhood. Validate the "any Place×Time" pipeline beyond hand-built 1884 NYC. Cesium terrain + historical overlay (option 2). User has ground truth (grew up there). Tests: `general_late20c` architecture styles for real suburban context, Meshy generation for 1980s buildings, overlay curation workflow, procedural audio for late 20th century.
-- [ ] **Historical skyline accuracy** — OSM Buildings and Google 3D Tiles show present-day skyline. Need date-filtered building set or manual add/remove overlay per era. Critical for any era before ~2000 (Twin Towers, missing skyscrapers, demolished landmarks). Extends `lib/historicalOverlay.js` overlay schema.
-- [ ] **Sub-daily weather reconstruction (pre-1970)** — NOAA daily obs (high/low/precip) → plausible hourly arc. Current timeline interpolator synthesizes a curve but it's a guess. ERA5/20CRv3 reanalysis datasets could provide real sub-daily data back to 1940 (ERA5) or 1806 (20CRv3).
-- [ ] **Location-specific audio profiles** — Procedural profile generator produces plausible-but-generic era sounds. Location-tuned profiles (specific taxi horns for NYC, specific bird species for region, specific church bells) require either hand-curation or agent-driven research (Phase 7).
+- [x] **Historical skyline accuracy** — `filterBuildingsByYear()` in `buildingMassing.js` filters GeoJSON by `yearBuilt`/`yearDemolished`. `spawn-buildings.js --year` now filters buildings (not just styles). `historicalOverlay.js` gets `loadOverlay()` + accessor helpers (`getFeatureAdditions`, `getFeatureRemovals`, `getSurfaceSwaps`).
+- [x] **Location-specific audio profiles** — Procedural profile generator produces plausible-but-generic era sounds. Location-tuned profiles (specific taxi horns for NYC, specific bird species for region, specific church bells) require either hand-curation or agent-driven research (Phase 7).
 
 ## Phase 7 — The Agent Layer
 
@@ -135,6 +114,9 @@ AI agents autonomously research and assemble Place×Time profiles. See PRD Phase
 - [x] Materials & infrastructure agent: `lib/agents/materialsInfraAgent.js`. Road surfaces by era (8 eras, pre-1800 through modern), building facade materials, acoustic properties, 24-item infrastructure timeline (lighting, transport, communication, utilities). Produces both materials + infrastructure layers.
 - [x] Profile assembler (orchestrator): `lib/agents/profileAssembler.js`. Geocodes location, runs 7 research agents in parallel, merges into complete Environment Profile, generates accuracy manifest with review checklist. `tools/generate-environment-profile.js` CLI.
 - [x] Accuracy manifest generator: Integrated into `lib/environmentProfile.js` (`generateAccuracyManifest()`) and the profile assembler. Auto-generates layer summaries, confidence rollup, gap list, and review checklist from layer metadata.
+- [ ] **Photo archive auto-fetch for texture pipeline**: Wire NYPL Digital Collections API + Library of Congress API (both free, no key) into the photo archive agent. Auto-search by address/block, download best-match historical photos, feed into existing Gemini→Meshy Image-to-3D pipeline. Biggest payoff for well-photographed locations (NYC 1860s+, Detroit Publishing collection cities). Sparse-coverage eras fall back to text-to-3D.
+- [x] **Chronicling America for cultural agent**: LOC Chronicling America API (free, no key, 1770s+) for location-specific cultural detail. Full-text newspaper search — auto-search for street vendors, local customs, advertisements, business types. Enriches the culture layer with real primary-source data instead of generic era templates. `lib/chroniclingAmerica.js` API client, wired into `lib/agents/culturalAgent.js` via `researchNewspapers()`. Graceful fallback when API unreachable.
+- [ ] **Era-appropriate ground truth for any city×year**: The fundamental scaling problem. Sanborn maps cover ~12,000 US cities but require manual footprint tracing. OSM has modern footprints but no date metadata. Agent-driven research to assemble "what buildings existed here in year X" for arbitrary locations — cross-referencing Sanborn, photo archives, city directories, and census records.
 
 ## Phase 8 — Living Street View
 
@@ -155,51 +137,42 @@ The full dream. Walk through a historically accurate 3D reconstruction. See PRD 
 
 Ideas that would improve quality but don't belong to a specific phase.
 
-- [ ] **Foley session / sound library upgrade**: Dedicated Foley session with period-appropriate props or curated sound library (Sonniss, Boom, Pro Sound Effects). Horse hooves on real granite, wooden wheel rumble, coal chute impact, iron-on-iron rail sounds.
-
 - [ ] **Present-day weather modeling for historical reconstruction**: Reanalysis datasets (ERA5, 20CRv3) to reconstruct sub-daily weather from sparse NOAA daily observations. Turn "high of 85F, 0.2in rain" into a plausible hourly arc.
 
-- [ ] **Ambisonic output for WAMM speakers**: Full ambisonic rendering pipeline for Wilson WAMM speaker array. See `docs/audio-architecture-wamm.md`.
-
-- [ ] **Multi-locale support**: Template for rapid locale/era onboarding: locale preset + audio profile + Unreal scene package.
+- [ ] **Ambisonic / multi-channel output**: Ambisonic rendering pipeline for immersive speaker arrays (quad, 5.1, 7.1, Atmos, or custom configs). See `docs/audio-architecture-wamm.md`.
 
 - [ ] **Crowd simulation**: Persistent ambient human presence — murmur layers, footstep density tied to activityLevel, crowd noise responding to time-of-day and weather.
 
 - [ ] **Dynamic music / score layer**: Generative or adaptive musical underscore that responds to weather state, time of day, and dramatic arc.
 
-- [ ] **Era-appropriate ground truth for any city×year**: The fundamental scaling problem. Sanborn maps cover ~12,000 US cities but require manual footprint tracing. OSM has modern footprints but no date metadata. Need a strategy for rapidly assembling "what buildings existed here in year X" for arbitrary locations — likely an agent task (Phase 7).
+- [ ] **Ecology live API integration**: Re-evaluate embedded 25-species DB vs live APIs (GBIF for historical specimen records, eBird for bird observations, iNaturalist for crowd-sourced data). Current DB is sufficient while ElevenLabs SFX quality is the bottleneck — revisit when generated audio quality improves enough that species-specific accuracy matters.
 
----
+- [ ] **Vision Pro port**: Immersive experience on Apple Vision Pro. Spatial audio maps naturally to the platform. Rendering options: RealityKit native, Unity PolySpatial, or streaming from Unreal via Pixel Streaming. Key questions: full volume vs shared space, passthrough blending (windows into the past overlaid on real room), head-tracked spatial audio via platform HRTF, and how to drive the weather/world state pipeline from visionOS.
 
-## International Support
+- [ ] **Period music streaming**: Turn on the radio and only hear music that existed on this exact day (PRD Section 14.5). MusicBrainz date authority, locale music profile schema, `musicRadio` WorldState control, streaming playback adapter (Spotify/Apple Music via ISRC lookup), radio station simulation (sequencing, gaps, patter cadence), pre-recording era music (barrel organ, brass band, parlor piano).
 
-Currently US-only for terrain and building data. These items unlock any location worldwide.
+- [ ] **Sub-daily weather reconstruction (pre-1970)**: NOAA daily obs (high/low/precip) → plausible hourly arc. Current timeline interpolator synthesizes a curve but it's a guess. ERA5/20CRv3 reanalysis datasets could provide real sub-daily data back to 1940 (ERA5) or 1806 (20CRv3).
 
-### Terrain
+- [ ] **Address-level geocoding precision**: Accept street address or zip code (not just city) for higher-precision scene placement. Address/zip → lat/lon via geocoder, then use neighborhood-level density, street type, and building context. City-only input degrades gracefully to current population-based system.
+
+- [ ] **Multi-window installation**: Multi-camera Unreal scene (N/E/S/W), exposure/color matching across cameras, multi-zone speaker mapping, window physics ("glass closed" EQ filtering), operator preset switcher, calibration flow.
+
+## Phase 9 — International Support
+
+Currently US-only for terrain, building data, and cultural context. This phase unlocks any location worldwide.
+
 - [ ] **Global DEM source** — Add Copernicus DEM (30m, free, global) or SRTM as fallback in `lib/demFetcher.js` when `isInUS()` returns false. Same GDAL processing pipeline, different download endpoint. Cesium World Terrain already streams globally — this only affects the Landscape actor pipeline.
 - [ ] **Non-US elevation queries** — `estimateHeight()` already falls back to Open-Elevation API for international coordinates. Verify accuracy for mountainous terrain (Nepal, Alps) where coarse elevation data is more visible.
-
-### Architecture Styles
 - [ ] **European architecture style library** — New era rulesets for major European building traditions. Georgian/Victorian/Edwardian (UK), Haussmann (Paris), Amsterdam canal houses, Mediterranean vernacular. Each needs materials, decorative elements, texture search terms — same schema as US styles in `lib/architectureStyles.js`.
 - [ ] **Asian architecture style library** — Pagoda temples, Newari brick-and-timber (Nepal), Chinese courtyard compounds, Japanese machiya townhouses, colonial-era hybrids (Hong Kong, Singapore). Significant gap — current style system assumes Western construction.
 - [ ] **Region-aware `resolveEra()`** — Current function maps year → American era. International scenes need region+year → style era. E.g., 1920 London ≠ 1920 Chicago. Add `resolveEra(year, { region })` parameter.
-
-### Historical Map Sources
 - [ ] **UK Ordnance Survey maps** — Equivalent of Sanborn for Britain. Detailed building footprints back to 1840s. NLS (National Library of Scotland) has excellent digitized coverage. Need ingestion pipeline similar to `lib/sanborn.js`.
 - [ ] **European cadastral maps** — Building footprints from national land registries. Coverage and digitization vary by country. France (cadastre.gouv.fr), Netherlands (BAG), Germany (ALKIS).
 - [ ] **OpenHistoricalMap** — Community-sourced historical map data in OSM format. Sparse but growing. Could supplement other sources.
-
-### Audio
 - [ ] **Culture-aware audio profile generator** — Current procedural generator is latitude/density-aware but not culture-aware. A London street sounds different from a NYC street at the same density. Temple bells (Nepal), call to prayer (Istanbul), pub chatter (Edinburgh), cicadas (Japan) — these are culturally specific, not density-derived. Needs a culture/region dimension in `lib/profileGenerator.js`.
 - [ ] **Non-English voice generation** — `elevenlabs-voice-fetch.js` generates English phrases. International scenes need vendor calls, street chatter, and ambient speech in local languages. ElevenLabs supports multilingual TTS.
-
-### Weather
 - [ ] **International weather station coverage audit** — Open-Meteo works globally but station density varies. Audit data quality for target international locations (Edinburgh, Kathmandu, Tokyo, Paris). Map confidence levels to inform users when weather data is sparse.
-
-### Street Layout
 - [ ] **Non-US street surface classification** — Current `lib/streetLayout.js` rules assume American road types and historical surfaces. European cities have different patterns: setts (UK), pavé (France), sampietrini (Rome). Need region-aware surface rules.
 - [ ] **Metric dimensions** — Street widths and lamp spacing are currently in US-centric dimensions. International streets follow different standards (narrower European streets, wider Asian boulevards).
-
-### Pipeline Integration
 - [ ] **Locale auto-detection for international** — `resolveLocale()` uses population + year for US presets. International scenes need country/region detection from geocode `countryCode` (already exposed from Open-Meteo) to select appropriate architecture styles, street rules, and audio culture.
-- [ ] **Research: per-country data source registry** — Map out, for each target country, what historical building data is available and in what format. Some countries have excellent digital archives (UK, Netherlands), others have almost nothing digitized (most of Africa, Central Asia).
+- [ ] **Per-country data source registry** — Map out, for each target country, what historical building data is available and in what format. Some countries have excellent digital archives (UK, Netherlands), others have almost nothing digitized (most of Africa, Central Asia).
