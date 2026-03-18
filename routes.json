@@ -2,8 +2,8 @@
   "endpoints": {
     "unreal": {
       "transport": "unreal",
-      "host": "http://100.96.244.16:30010",
-      "daemonUrl": "http://100.68.243.96:3000",
+      "host": "http://192.168.68.63:30010",
+      "daemonUrl": "http://192.168.68.78:3000",
       "actors": {
         "Cloud_GlobalCoverage": {
           "type": "material_scalar",

@@ -55,13 +55,13 @@ Next: 1980s Baton Rouge test scene, or historical skyline accuracy, or Phase 7 (
 - PC (Windows, UE 5.7) is Unreal workhorse; Mac (M1) runs daemon + audio engine
 
 ## Technical Decisions
-- Unreal Engine 5.7 as rendering platform (PC via Tailscale)
+- Unreal Engine 5.7 as rendering platform (PC via LAN)
 - World state engine architecture: weather/sun/fog as data layer driving scene parameters
 - M1 MacBook as dev environment running daemon (port 3000), PC runs Unreal Editor (RC API port 30010)
-- Tailscale VPN for Mac↔PC connectivity (Mac: 100.68.243.96, PC: 100.96.244.16)
+- LAN connectivity: Mac (192.168.68.78) ↔ PC (192.168.68.63), hardwired 2.5Gb/s
 - RC API actor communication via function calls (`SetUrl`, `SetOriginLatitude`, etc.) — UE 5.4+ blocks direct property read/write with getter/setter protection
 - RC API actor discovery via `/remote/search/assets` endpoint (with `/remote/search` fallback for older UE)
-- RC API IP allowlist must include `100.0.0.0` lower bound for Tailscale subnet
+- RC API IP allowlist must include `192.168.68.0` subnet for LAN access
 - Python script execution via `ExecutePythonScript` on `PythonScriptLibrary` through RC API `/remote/object/call`
 - UE 5.7 API: `RenderingLibrary` (not `KismetRenderingLibrary`), canvas-based RT drawing
 - Two-track terrain: Cesium streaming for scouting, USGS heightmaps for production Landscape actors
