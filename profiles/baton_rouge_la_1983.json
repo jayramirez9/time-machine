@@ -1,0 +1,1320 @@
+{
+  "schemaVersion": 1,
+  "id": "baton_rouge_la_1983",
+  "name": "Baton Rouge, Louisiana, United States — 1983",
+  "location": {
+    "name": "Baton Rouge, Louisiana, United States",
+    "lat": 30.44332,
+    "lon": -91.18747,
+    "timezone": "America/Chicago",
+    "countryCode": "US"
+  },
+  "date": {
+    "year": 1983,
+    "month": null,
+    "day": null
+  },
+  "layers": {
+    "terrain": null,
+    "weather": {
+      "data": {
+        "provider": "visualcrossing",
+        "dataType": "hourly",
+        "resolution": 60,
+        "interpolation": null,
+        "dateRange": [
+          "1983-01-01",
+          "1983-12-31"
+        ],
+        "fallbackProvider": "openmeteo",
+        "providerConfig": {
+          "provider": "visualcrossing",
+          "token": "env:VISUALCROSSING_API_KEY"
+        },
+        "_availabilityReport": {
+          "candidatesEvaluated": 3,
+          "selectedProvider": "visualcrossing",
+          "selectedReason": "Visual Crossing selected — hourly data available for 1983, API key present",
+          "alternativeProviders": [
+            {
+              "provider": "openmeteo",
+              "available": true,
+              "confidence": 0.85
+            },
+            {
+              "provider": "mock",
+              "available": false,
+              "confidence": 0.1
+            }
+          ],
+          "apiKeysPresent": {
+            "noaa": false,
+            "visualcrossing": true
+          }
+        }
+      },
+      "confidence": 0.85,
+      "sources": [
+        {
+          "id": "visualcrossing_api",
+          "type": "online_database",
+          "name": "Visual Crossing",
+          "url": "https://www.visualcrossing.com/",
+          "citation": "Visual Crossing Weather API, hourly historical data"
+        }
+      ],
+      "knownCompromises": []
+    },
+    "soundscape": null,
+    "urbanForm": {
+      "data": {
+        "architectureEra": "general_late20c",
+        "architectureEraLabel": "Late 20th Century (1970–2000)",
+        "architectureStyleCount": 6,
+        "architectureDefaultStyle": "suburban_commercial",
+        "streetSurfaceRules": "nyc_1884",
+        "sampleStreetSurface": "belgian_block",
+        "propYear": 1983,
+        "propTypes": [
+          "fire_hydrant",
+          "bollard",
+          "awning",
+          "hanging_sign",
+          "fire_alarm_box",
+          "mailbox",
+          "telephone_pole",
+          "newsstand",
+          "parking_meter",
+          "traffic_light",
+          "bench",
+          "trash_can"
+        ],
+        "propCount": 12,
+        "propsByPlacement": {
+          "sidewalk": 7,
+          "intersection": 3,
+          "building_facade": 2
+        },
+        "sanbornCoverage": {
+          "closestYear": 1951,
+          "yearGap": 32,
+          "availableYears": [
+            1885,
+            1891,
+            1903,
+            1908,
+            1916,
+            1923,
+            1951
+          ]
+        },
+        "osmAvailable": true,
+        "countryCode": "US",
+        "streetsPath": "/Users/jay.ramirez/henhouse/time-machine/terrain-data/baton-rouge-la/roads-splines.json",
+        "streetCount": 49,
+        "_availabilityReport": {
+          "terrainDataExists": true,
+          "buildingFootprintsExist": false,
+          "streetSplinesExist": true,
+          "landmarksExist": false,
+          "sanbornSheetsFetched": false,
+          "sanbornCoverageKnown": true,
+          "architectureEraResolved": "general_late20c",
+          "propCatalogAvailable": true,
+          "osmDataAvailable": true
+        }
+      },
+      "confidence": 0.45,
+      "sources": [
+        {
+          "id": "sanborn_coverage_1951",
+          "type": "historical_map",
+          "name": "Sanborn Fire Insurance Map — Baton Rouge, 1951 (not yet fetched)",
+          "url": "https://www.loc.gov/collections/sanborn-maps/",
+          "citation": "LOC Sanborn collection. Closest map: 1951 (32-year gap from 1983)."
+        },
+        {
+          "id": "osm_roads",
+          "type": "online_database",
+          "name": "OpenStreetMap road network",
+          "citation": "OSM road data via Overpass API, 49 road splines extracted"
+        },
+        {
+          "id": "architecture_rules_general_late20c",
+          "type": "procedural_generation",
+          "name": "architectureStyles.js general_late20c rules",
+          "citation": "Era-specific building classification: 6 rules, 26 total styles"
+        },
+        {
+          "id": "prop_catalog_1983",
+          "type": "procedural_generation",
+          "name": "propCatalog.js for year 1983",
+          "citation": "12 prop types available for 1983"
+        }
+      ],
+      "knownCompromises": [
+        "Sanborn maps from 1951, not 1983 — 32-year gap",
+        "No building footprints available — would need to trace from Sanborn or OSM",
+        "Street splines from modern OSM — road alignment stable but widths may differ from era",
+        "Using general era rules (Late 20th Century (1970–2000)) — no city-specific architecture classification",
+        "No landmark compositions authored for this location"
+      ]
+    },
+    "ecology": {
+      "data": {
+        "species": [
+          {
+            "commonName": "House Sparrow",
+            "scientificName": "Passer domesticus",
+            "type": "bird",
+            "introduced": 1851,
+            "native": false,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.9,
+              "fall": 0.7,
+              "winter": 0.5
+            },
+            "diurnal": {
+              "dawn": 0.9,
+              "day": 0.7,
+              "dusk": 0.8,
+              "night": 0.1
+            },
+            "habitat": [
+              "urban",
+              "suburban"
+            ],
+            "density": 0.9
+          },
+          {
+            "commonName": "Rock Pigeon",
+            "scientificName": "Columba livia",
+            "type": "bird",
+            "introduced": 1606,
+            "native": false,
+            "seasonal": {
+              "spring": 0.9,
+              "summer": 0.9,
+              "fall": 0.9,
+              "winter": 0.8
+            },
+            "diurnal": {
+              "dawn": 0.8,
+              "day": 0.9,
+              "dusk": 0.7,
+              "night": 0.1
+            },
+            "habitat": [
+              "urban"
+            ],
+            "density": 0.95
+          },
+          {
+            "commonName": "European Starling",
+            "scientificName": "Sturnus vulgaris",
+            "type": "bird",
+            "introduced": 1890,
+            "native": false,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.8,
+              "fall": 0.9,
+              "winter": 0.7
+            },
+            "diurnal": {
+              "dawn": 0.9,
+              "day": 0.8,
+              "dusk": 0.9,
+              "night": 0.1
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural"
+            ],
+            "density": 0.85
+          },
+          {
+            "commonName": "American Robin",
+            "scientificName": "Turdus migratorius",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.6,
+              "fall": 0.3,
+              "winter": 0.1
+            },
+            "diurnal": {
+              "dawn": 0.9,
+              "day": 0.5,
+              "dusk": 0.7,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "park",
+              "rural"
+            ],
+            "density": 0.6
+          },
+          {
+            "commonName": "Blue Jay",
+            "scientificName": "Cyanocitta cristata",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.8,
+              "fall": 0.9,
+              "winter": 0.6
+            },
+            "diurnal": {
+              "dawn": 0.8,
+              "day": 0.7,
+              "dusk": 0.6,
+              "night": 0
+            },
+            "habitat": [
+              "suburban",
+              "park",
+              "forest"
+            ],
+            "density": 0.2
+          },
+          {
+            "commonName": "Northern Cardinal",
+            "scientificName": "Cardinalis cardinalis",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.9,
+              "summer": 0.8,
+              "fall": 0.6,
+              "winter": 0.5
+            },
+            "diurnal": {
+              "dawn": 0.9,
+              "day": 0.6,
+              "dusk": 0.8,
+              "night": 0
+            },
+            "habitat": [
+              "suburban",
+              "park",
+              "forest"
+            ],
+            "density": 0.22
+          },
+          {
+            "commonName": "Mourning Dove",
+            "scientificName": "Zenaida macroura",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.9,
+              "fall": 0.7,
+              "winter": 0.4
+            },
+            "diurnal": {
+              "dawn": 0.9,
+              "day": 0.6,
+              "dusk": 0.8,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural",
+              "park"
+            ],
+            "density": 0.65
+          },
+          {
+            "commonName": "Common Grackle",
+            "scientificName": "Quiscalus quiscula",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.8,
+              "fall": 0.9,
+              "winter": 0.3
+            },
+            "diurnal": {
+              "dawn": 0.7,
+              "day": 0.7,
+              "dusk": 0.8,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "park",
+              "rural"
+            ],
+            "density": 0.6
+          },
+          {
+            "commonName": "American Crow",
+            "scientificName": "Corvus brachyrhynchos",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.7,
+              "fall": 0.8,
+              "winter": 0.6
+            },
+            "diurnal": {
+              "dawn": 0.8,
+              "day": 0.8,
+              "dusk": 0.7,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural",
+              "park"
+            ],
+            "density": 0.5
+          },
+          {
+            "commonName": "Red-tailed Hawk",
+            "scientificName": "Buteo jamaicensis",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.7,
+              "fall": 0.7,
+              "winter": 0.6
+            },
+            "diurnal": {
+              "dawn": 0.5,
+              "day": 0.9,
+              "dusk": 0.5,
+              "night": 0
+            },
+            "habitat": [
+              "suburban",
+              "rural",
+              "park",
+              "forest"
+            ],
+            "density": 0.06
+          },
+          {
+            "commonName": "Northern Mockingbird",
+            "scientificName": "Mimus polyglottos",
+            "type": "bird",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.9,
+              "summer": 0.9,
+              "fall": 0.5,
+              "winter": 0.3
+            },
+            "diurnal": {
+              "dawn": 1,
+              "day": 0.6,
+              "dusk": 0.8,
+              "night": 0.4
+            },
+            "habitat": [
+              "suburban",
+              "park",
+              "rural"
+            ],
+            "density": 0.2
+          },
+          {
+            "commonName": "Norway Rat",
+            "scientificName": "Rattus norvegicus",
+            "type": "mammal",
+            "introduced": 1776,
+            "native": false,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.8,
+              "fall": 0.8,
+              "winter": 0.7
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0.1,
+              "dusk": 0.5,
+              "night": 0.9
+            },
+            "habitat": [
+              "urban"
+            ],
+            "density": 0.8
+          },
+          {
+            "commonName": "Eastern Gray Squirrel",
+            "scientificName": "Sciurus carolinensis",
+            "type": "mammal",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.8,
+              "summer": 0.7,
+              "fall": 0.9,
+              "winter": 0.5
+            },
+            "diurnal": {
+              "dawn": 0.7,
+              "day": 0.9,
+              "dusk": 0.6,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "park",
+              "forest"
+            ],
+            "density": 0.7
+          },
+          {
+            "commonName": "Raccoon",
+            "scientificName": "Procyon lotor",
+            "type": "mammal",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.8,
+              "fall": 0.8,
+              "winter": 0.3
+            },
+            "diurnal": {
+              "dawn": 0.2,
+              "day": 0,
+              "dusk": 0.6,
+              "night": 0.9
+            },
+            "habitat": [
+              "suburban",
+              "park",
+              "forest",
+              "wetland"
+            ],
+            "density": 0.14
+          },
+          {
+            "commonName": "White-tailed Deer",
+            "scientificName": "Odocoileus virginianus",
+            "type": "mammal",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.6,
+              "summer": 0.6,
+              "fall": 0.7,
+              "winter": 0.5
+            },
+            "diurnal": {
+              "dawn": 0.8,
+              "day": 0.3,
+              "dusk": 0.9,
+              "night": 0.4
+            },
+            "habitat": [
+              "suburban",
+              "rural",
+              "forest"
+            ],
+            "density": 0.08
+          },
+          {
+            "commonName": "Horse",
+            "scientificName": "Equus caballus",
+            "type": "mammal_domestic",
+            "introduced": null,
+            "native": false,
+            "seasonal": {
+              "spring": 1,
+              "summer": 1,
+              "fall": 1,
+              "winter": 0.8
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0.9,
+              "dusk": 0.7,
+              "night": 0.1
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural"
+            ],
+            "density": 0.14
+          },
+          {
+            "commonName": "Virginia Opossum",
+            "scientificName": "Didelphis virginiana",
+            "type": "mammal",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.6,
+              "summer": 0.6,
+              "fall": 0.6,
+              "winter": 0.4
+            },
+            "diurnal": {
+              "dawn": 0.1,
+              "day": 0,
+              "dusk": 0.4,
+              "night": 0.8
+            },
+            "habitat": [
+              "suburban",
+              "rural",
+              "forest"
+            ],
+            "density": 0.08
+          },
+          {
+            "commonName": "Field Cricket",
+            "scientificName": "Gryllus pennsylvanicus",
+            "type": "insect",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.3,
+              "summer": 0.8,
+              "fall": 0.9,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0.1,
+              "dusk": 0.7,
+              "night": 1
+            },
+            "habitat": [
+              "suburban",
+              "rural",
+              "park"
+            ],
+            "density": 0.28,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Annual Cicada",
+            "scientificName": "Neotibicen linnei",
+            "type": "insect",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0,
+              "summer": 0.9,
+              "fall": 0.3,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0.9,
+              "dusk": 0.5,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "park",
+              "forest"
+            ],
+            "density": 0.6,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Western Honeybee",
+            "scientificName": "Apis mellifera",
+            "type": "insect",
+            "introduced": 1622,
+            "native": false,
+            "seasonal": {
+              "spring": 0.7,
+              "summer": 0.9,
+              "fall": 0.5,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.4,
+              "day": 0.9,
+              "dusk": 0.3,
+              "night": 0
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural",
+              "park"
+            ],
+            "density": 0.5,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Common Mosquito",
+            "scientificName": "Culex pipiens",
+            "type": "insect",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.4,
+              "summer": 0.9,
+              "fall": 0.5,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.7,
+              "day": 0.3,
+              "dusk": 0.9,
+              "night": 0.8
+            },
+            "habitat": [
+              "urban",
+              "suburban",
+              "rural",
+              "wetland",
+              "park"
+            ],
+            "density": 0.7,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Common Eastern Firefly",
+            "scientificName": "Photinus pyralis",
+            "type": "insect",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.3,
+              "summer": 0.9,
+              "fall": 0.1,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0,
+              "day": 0,
+              "dusk": 0.9,
+              "night": 0.7
+            },
+            "habitat": [
+              "suburban",
+              "rural",
+              "park",
+              "wetland"
+            ],
+            "density": 0.18,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Katydid",
+            "scientificName": "Pterophylla camellifolia",
+            "type": "insect",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0,
+              "summer": 0.6,
+              "fall": 0.8,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.1,
+              "day": 0,
+              "dusk": 0.6,
+              "night": 1
+            },
+            "habitat": [
+              "suburban",
+              "park",
+              "forest"
+            ],
+            "density": 0.2,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "Spring Peeper",
+            "scientificName": "Pseudacris crucifer",
+            "type": "amphibian",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 1,
+              "summer": 0.3,
+              "fall": 0,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0,
+              "dusk": 0.7,
+              "night": 1
+            },
+            "habitat": [
+              "wetland",
+              "forest",
+              "park"
+            ],
+            "density": 0.2,
+            "note": "Not active in winter"
+          },
+          {
+            "commonName": "American Bullfrog",
+            "scientificName": "Lithobates catesbeianus",
+            "type": "amphibian",
+            "introduced": null,
+            "native": true,
+            "seasonal": {
+              "spring": 0.6,
+              "summer": 0.9,
+              "fall": 0.3,
+              "winter": 0
+            },
+            "diurnal": {
+              "dawn": 0.3,
+              "day": 0.1,
+              "dusk": 0.8,
+              "night": 1
+            },
+            "habitat": [
+              "wetland",
+              "park"
+            ],
+            "density": 0.14,
+            "note": "Not active in winter"
+          }
+        ],
+        "vegetation": [
+          {
+            "type": "street_trees",
+            "species": [
+              "Live Oak",
+              "Crape Myrtle",
+              "Southern Magnolia",
+              "Bald Cypress",
+              "Pecan"
+            ],
+            "coverage": "major_avenues_and_parks",
+            "seasonalCanopy": {
+              "spring": 0.7,
+              "summer": 1,
+              "fall": 0.6,
+              "winter": 0.2
+            }
+          },
+          {
+            "type": "park",
+            "species": [
+              "Loblolly Pine",
+              "Water Oak",
+              "Sweetgum",
+              "Dogwood",
+              "Red Maple"
+            ],
+            "coverage": "parks_and_green_spaces",
+            "seasonalCanopy": {
+              "spring": 0.7,
+              "summer": 1,
+              "fall": 0.6,
+              "winter": 0.2
+            }
+          }
+        ],
+        "_researchMeta": {
+          "region": "southeast_us",
+          "habitat": "urban",
+          "season": "winter",
+          "totalSpeciesConsidered": 26,
+          "speciesAfterFiltering": 25,
+          "yearFiltered": 1
+        }
+      },
+      "confidence": 0.85,
+      "sources": [
+        {
+          "id": "embedded_species_db",
+          "type": "ornithological_survey",
+          "name": "Embedded species database — common North American urban/suburban wildlife",
+          "citation": "Composite from Audubon, NWF, and USGS species range data"
+        },
+        {
+          "id": "embedded_vegetation_db",
+          "type": "botanical_survey",
+          "name": "Regional vegetation data — southeast_us street trees and park species",
+          "citation": "Composite from USDA Forest Service and local arboretum records"
+        }
+      ],
+      "knownCompromises": [
+        "Species pool inferred from regional data, not site-specific field surveys",
+        "Seasonal/diurnal weights are estimated from general behavior patterns",
+        "Urban habitat reduces species diversity — some species present in parks may be underrepresented"
+      ]
+    },
+    "culture": {
+      "data": {
+        "eraKey": "modern",
+        "eraLabel": "Modern Era",
+        "languages": {
+          "primary": "English",
+          "secondary": [
+            "Spanish",
+            "Chinese",
+            "Vietnamese",
+            "Korean",
+            "Tagalog",
+            "Arabic"
+          ],
+          "signage": "English"
+        },
+        "commerce": {
+          "currency": "USD",
+          "streetVendors": [
+            "hot dog vendor",
+            "food truck",
+            "ice cream truck",
+            "street performer",
+            "flower seller"
+          ],
+          "vendorDensity": 5,
+          "markets": [
+            "supermarket",
+            "shopping_mall",
+            "big_box_store",
+            "convenience_store",
+            "online_marketplace"
+          ]
+        },
+        "dailyLife": {
+          "workday": {
+            "start": "08:00",
+            "end": "17:00"
+          },
+          "peakActivity": [
+            "07:30-09:00",
+            "12:00-13:00",
+            "17:00-18:30"
+          ],
+          "sabbath": "Sunday"
+        },
+        "newspapers": [
+          "major_daily",
+          "tabloid",
+          "free_daily",
+          "online_news"
+        ],
+        "technology": [
+          "personal_computer",
+          "internet",
+          "cell_phone",
+          "satellite_tv",
+          "gps",
+          "streaming"
+        ],
+        "notableEvents": []
+      },
+      "confidence": 0.7,
+      "sources": [
+        {
+          "id": "era_culture_db_modern",
+          "type": "published_book",
+          "name": "Modern Era cultural reference data",
+          "citation": "General published accounts of Modern Era (1980–present) daily life and commerce"
+        }
+      ],
+      "knownCompromises": [
+        "Street vendor types from general era sources, not date-specific",
+        "Daily life patterns are typical for the era, not verified for the specific date",
+        "Secondary languages based on general immigration patterns, not block-level census"
+      ]
+    },
+    "music": {
+      "data": {
+        "era": "broadcast_tv",
+        "eraLabel": "Broadcast TV Era",
+        "formats": [
+          "television",
+          "radio",
+          "vinyl_record",
+          "cassette_tape",
+          "jukebox",
+          "8_track"
+        ],
+        "catalog": [],
+        "genreWeights": {
+          "rock": 0.3,
+          "popular": 0.2,
+          "soul": 0.15,
+          "country": 0.1,
+          "jazz": 0.1,
+          "disco": 0.1,
+          "folk": 0.05
+        },
+        "performanceVenues": [
+          "radio_station",
+          "tv_studio",
+          "concert_venue",
+          "nightclub",
+          "stadium",
+          "bar",
+          "church",
+          "record_store"
+        ],
+        "notableSongs": [
+          "Rock Around the Clock",
+          "Hound Dog",
+          "I Want to Hold Your Hand",
+          "Respect",
+          "Stayin' Alive"
+        ]
+      },
+      "confidence": 0.6,
+      "sources": [
+        {
+          "id": "music_era_db_broadcast_tv",
+          "type": "online_database",
+          "name": "Broadcast TV Era music reference data",
+          "citation": "Published music catalogs and charts for the Broadcast TV Era (1950–1989)"
+        }
+      ],
+      "knownCompromises": [
+        "Performance venue types are typical for the era, not verified for the specific location"
+      ]
+    },
+    "materials": {
+      "data": {
+        "roads": {
+          "primary": "asphalt",
+          "secondary": "asphalt",
+          "residential": "asphalt",
+          "service": "asphalt",
+          "footway": "concrete"
+        },
+        "sidewalks": "concrete",
+        "buildingFacades": [
+          "glass",
+          "steel",
+          "concrete",
+          "composite",
+          "brick"
+        ],
+        "roofing": [
+          "asphalt_shingle",
+          "membrane",
+          "metal",
+          "green_roof"
+        ],
+        "acousticProperties": {
+          "asphalt": {
+            "reverbSend": 0,
+            "impactHardness": 0.5
+          },
+          "concrete": {
+            "reverbSend": 0,
+            "impactHardness": 0.55
+          },
+          "brick": {
+            "reverbSend": 1,
+            "impactHardness": 0.6
+          }
+        }
+      },
+      "confidence": 0.8,
+      "sources": [
+        {
+          "id": "street_layout_rules",
+          "type": "procedural_generation",
+          "name": "streetLayout.js era rules (modern)",
+          "citation": "Era-specific road surface classification from lib/streetLayout.js"
+        },
+        {
+          "id": "architecture_styles",
+          "type": "procedural_generation",
+          "name": "architectureStyles.js era data",
+          "citation": "Building material data from lib/architectureStyles.js"
+        }
+      ],
+      "knownCompromises": [
+        "Road surface assignments from era rules, not per-street historical records",
+        "Acoustic properties are modeled values, not measured"
+      ]
+    },
+    "infrastructure": {
+      "data": {
+        "lighting": {
+          "primary": "electric",
+          "electric": true,
+          "gasRemaining": false,
+          "lampSpacing": "25-35m"
+        },
+        "transport": {
+          "modes": [
+            "pedestrian",
+            "bicycle",
+            "automobile",
+            "subway",
+            "bus",
+            "ferry"
+          ],
+          "details": {}
+        },
+        "communication": [
+          "telephone",
+          "radio",
+          "television"
+        ],
+        "utilities": [
+          "gas_piped",
+          "municipal_water",
+          "sewer_combined",
+          "electricity",
+          "central_heating",
+          "air_conditioning"
+        ],
+        "streetFurniture": [
+          "fire_hydrant",
+          "bollard",
+          "awning",
+          "hanging_sign",
+          "fire_alarm_box",
+          "mailbox",
+          "telephone_pole",
+          "newsstand",
+          "parking_meter",
+          "traffic_light",
+          "bench",
+          "trash_can"
+        ],
+        "publicServices": {
+          "fire": "professional",
+          "police": "professional",
+          "streetCleaning": "mechanical",
+          "ambulance": "motorized"
+        }
+      },
+      "confidence": 0.75,
+      "sources": [
+        {
+          "id": "infrastructure_timeline",
+          "type": "online_database",
+          "name": "Infrastructure technology introduction dates",
+          "citation": "Compiled from general US infrastructure history references"
+        },
+        {
+          "id": "prop_catalog",
+          "type": "procedural_generation",
+          "name": "propCatalog.js (12 prop types for 1983)",
+          "citation": "Era-appropriate street furniture from lib/propCatalog.js"
+        }
+      ],
+      "knownCompromises": [
+        "Infrastructure dates are US national averages — specific cities adopted at different times",
+        "Transport mode availability does not indicate density or route coverage"
+      ]
+    }
+  },
+  "accuracyManifest": {
+    "profileId": "baton_rouge_la_1983",
+    "overallConfidence": 0.71,
+    "generatedAt": "2026-03-18T03:37:48.457Z",
+    "layerSummary": {
+      "terrain": {
+        "confidence": 0,
+        "status": "missing"
+      },
+      "weather": {
+        "confidence": 0.85,
+        "status": "complete"
+      },
+      "soundscape": {
+        "confidence": 0,
+        "status": "missing"
+      },
+      "urbanForm": {
+        "confidence": 0.45,
+        "status": "interpolated"
+      },
+      "ecology": {
+        "confidence": 0.85,
+        "status": "complete"
+      },
+      "culture": {
+        "confidence": 0.7,
+        "status": "complete"
+      },
+      "music": {
+        "confidence": 0.6,
+        "status": "likely"
+      },
+      "materials": {
+        "confidence": 0.8,
+        "status": "complete"
+      },
+      "infrastructure": {
+        "confidence": 0.75,
+        "status": "complete"
+      }
+    },
+    "gaps": [
+      "terrain: Layer not populated",
+      "soundscape: Layer not populated",
+      "urbanForm: Sanborn maps from 1951, not 1983 — 32-year gap",
+      "urbanForm: No building footprints available — would need to trace from Sanborn or OSM",
+      "urbanForm: Street splines from modern OSM — road alignment stable but widths may differ from era",
+      "urbanForm: Using general era rules (Late 20th Century (1970–2000)) — no city-specific architecture classification",
+      "urbanForm: No landmark compositions authored for this location",
+      "ecology: Species pool inferred from regional data, not site-specific field surveys",
+      "ecology: Seasonal/diurnal weights are estimated from general behavior patterns",
+      "ecology: Urban habitat reduces species diversity — some species present in parks may be underrepresented",
+      "culture: Street vendor types from general era sources, not date-specific",
+      "culture: Daily life patterns are typical for the era, not verified for the specific date",
+      "culture: Secondary languages based on general immigration patterns, not block-level census",
+      "music: Performance venue types are typical for the era, not verified for the specific location",
+      "materials: Road surface assignments from era rules, not per-street historical records",
+      "materials: Acoustic properties are modeled values, not measured",
+      "infrastructure: Infrastructure dates are US national averages — specific cities adopted at different times",
+      "infrastructure: Transport mode availability does not indicate density or route coverage"
+    ],
+    "reviewChecklist": [
+      "Urban form data is low confidence — verify building footprints if available",
+      "Review species pool for plausibility — check introduction dates",
+      "Verify infrastructure dates against local history (national averages may not apply)",
+      "No soundscape layer — audio profile needs to be generated or referenced",
+      "No terrain layer — terrain data needs to be fetched"
+    ]
+  },
+  "generatedAt": "2026-03-18T03:37:48.458Z",
+  "generatedBy": "agent_pipeline_v1",
+  "description": "Environment Profile for Baton Rouge, Louisiana, United States in 1983. Auto-assembled by the Phase 7 agent pipeline.",
+  "_photoArchives": {
+    "data": {
+      "era": "modern",
+      "availability": 0.9,
+      "eraDescription": "Modern era — abundant photographic documentation; digital archives increasingly comprehensive",
+      "matchedArchives": [
+        {
+          "id": "loc_prints",
+          "name": "Library of Congress Prints & Photographs",
+          "url": "https://www.loc.gov/pictures/",
+          "apiAvailable": true,
+          "apiUrl": "https://www.loc.gov/pictures/api/",
+          "relevance": 0.7,
+          "types": [
+            "photographs",
+            "prints",
+            "drawings",
+            "posters",
+            "stereographs"
+          ]
+        },
+        {
+          "id": "nara",
+          "name": "National Archives (NARA)",
+          "url": "https://catalog.archives.gov/",
+          "apiAvailable": true,
+          "apiUrl": "https://catalog.archives.gov/api/v1/",
+          "relevance": 0.7,
+          "types": [
+            "photographs",
+            "film",
+            "maps",
+            "documents"
+          ]
+        },
+        {
+          "id": "shorpy",
+          "name": "Shorpy Historical Photos",
+          "url": "https://www.shorpy.com/",
+          "apiAvailable": false,
+          "apiUrl": null,
+          "relevance": 0.6,
+          "types": [
+            "photographs"
+          ]
+        },
+        {
+          "id": "local_historical_societies",
+          "name": "Local Historical Societies",
+          "url": null,
+          "apiAvailable": false,
+          "apiUrl": null,
+          "relevance": 0.5,
+          "types": [
+            "photographs",
+            "documents",
+            "oral_histories",
+            "maps"
+          ]
+        }
+      ],
+      "archiveCount": 4,
+      "apiArchiveCount": 2,
+      "year": 1983,
+      "location": "Baton Rouge, Louisiana, United States",
+      "_researchSummary": {
+        "totalArchivesEvaluated": 8,
+        "matchedCount": 4,
+        "topArchive": "loc_prints",
+        "photoEra": "modern",
+        "recommendation": "Query Library of Congress Prints & Photographs first (API available) — 4 total archives matched"
+      }
+    },
+    "confidence": 0.83,
+    "sources": [
+      {
+        "id": "loc_prints",
+        "type": "photo_archive",
+        "name": "Library of Congress Prints & Photographs",
+        "url": "https://www.loc.gov/pictures/",
+        "citation": "Library of Congress Prints & Photographs — photographs, prints, drawings, posters, stereographs",
+        "apiAvailable": true
+      },
+      {
+        "id": "nara",
+        "type": "photo_archive",
+        "name": "National Archives (NARA)",
+        "url": "https://catalog.archives.gov/",
+        "citation": "National Archives (NARA) — photographs, film, maps, documents",
+        "apiAvailable": true
+      },
+      {
+        "id": "shorpy",
+        "type": "photo_archive",
+        "name": "Shorpy Historical Photos",
+        "url": "https://www.shorpy.com/",
+        "citation": "Shorpy Historical Photos — photographs",
+        "apiAvailable": false
+      },
+      {
+        "id": "local_historical_societies",
+        "type": "photo_archive",
+        "name": "Local Historical Societies",
+        "url": null,
+        "citation": "Local Historical Societies — photographs, documents, oral_histories, maps",
+        "apiAvailable": false
+      }
+    ],
+    "knownCompromises": [
+      "2 of 4 matched archives lack public APIs — manual search required for full coverage",
+      "No location-specific archives matched — relying on national collections which may have sparse local coverage"
+    ]
+  }
+}
