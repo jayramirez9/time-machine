@@ -13,6 +13,10 @@ This is a Node.js ES modules project. No build step required.
 ## Quick Reference
 
 ```bash
+# Bootstrap a full scene (terrain + audio + photos + env profile)
+node tools/bootstrap-scene.js "Manhattan, NY" --year 1884
+node tools/bootstrap-scene.js "Baton Rouge, LA" --year 1978 --dry-run
+
 # CLI
 ./cli.js -l "New York, NY" -d "06-15-2024"              # Direct mode
 ./cli.js -l "Baton Rouge, LA" -d "07-04-1978" --mode world --locale baton_rouge_suburb
@@ -297,7 +301,7 @@ Environment Profiles are the complete description of a place at a moment in hist
 | Tool | Description | Requires |
 |------|-------------|----------|
 | `meshy-generate.js` | **3D model generator.** Text-to-3D, Image-to-3D, or Retexture. Outputs FBX/GLB to `mesh-data/`. | `MESHY_API_KEY` |
-| `generate-building-refs.js` | **Gemini → Meshy pipeline.** Reference image generation + Image-to-3D. Tier 2. | `GOOGLE_AI_API_KEY` + `MESHY_API_KEY` |
+| `generate-building-refs.js` | **Photo/Gemini → Meshy pipeline.** `--auto-fetch` downloads LOC photos, `--photos <dir>` uses existing. Photos preferred over Gemini for reference images. Tier 1 (photo) + Tier 2 (Gemini fallback). | `GOOGLE_AI_API_KEY` + `MESHY_API_KEY` |
 | `preview-textures.js` | **Offline prompt preview.** Generates texture prompts from buildings.geojson — zero API calls. `--summary` for distribution + credit estimate. | — |
 
 ### Terrain & Geospatial
@@ -326,6 +330,11 @@ All spawners support `--dry-run` and `--clear`. Most support `--host` for remote
 | Tool | Description |
 |------|-------------|
 | `generate-environment-profile.js` | **Phase 7 agent pipeline.** Assembles a complete Environment Profile for any Place×Time. Runs 7 research agents in parallel, produces JSON with 9 layers + accuracy manifest. `--terrain` to include existing terrain data. `--skip` layers. `--dry-run`. |
+
+### Scene Orchestration
+| Tool | Description |
+|------|-------------|
+| `bootstrap-scene.js` | **One-command scene setup.** Chains: fetch-dem → fetch-imagery → fetch-vectors → generate-profile → elevenlabs-fetch → fetch-photos → generate-environment-profile. Parallel phases, skip detection (idempotent reruns), API key auto-detection. `--skip <phases>`, `--force`, `--dry-run`. |
 
 ### Route Configs
 

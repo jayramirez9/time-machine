@@ -11,6 +11,7 @@ import {
   searchAndDownload,
   loadPhotoManifest,
   buildSearchQuery,
+  findBestPhoto,
   _resetRateLimit,
   _getLastRequestTime
 } from '../lib/photoArchiveFetch.js';
@@ -688,5 +689,124 @@ describe('photoArchiveFetch — rate limiting', () => {
 
     const lastTime = _getLastRequestTime();
     assert.ok(lastTime >= before, `Last request time ${lastTime} should be >= ${before}`);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findBestPhoto
+// ---------------------------------------------------------------------------
+
+describe('photoArchiveFetch — findBestPhoto', () => {
+  const makeManifest = (photos) => ({ query: 'test', year: 1884, photos });
+
+  const broadwayPhoto = {
+    id: 'p1',
+    title: 'Broadway looking north from City Hall',
+    date: 'c1884',
+    filename: 'p1.jpg',
+    subjects: ['Streets', 'New York (N.Y.)'],
+    downloaded: true,
+    bytes: 5000,
+    itemUrl: 'https://www.loc.gov/pictures/item/p1/'
+  };
+
+  const wallStreetPhoto = {
+    id: 'p2',
+    title: 'Wall Street and buildings',
+    date: 'c1885',
+    filename: 'p2.jpg',
+    subjects: ['Financial district', 'Architecture'],
+    downloaded: true,
+    bytes: 6000,
+    itemUrl: 'https://www.loc.gov/pictures/item/p2/'
+  };
+
+  const notDownloaded = {
+    id: 'p3',
+    title: 'Some great photo',
+    date: 'c1884',
+    filename: 'p3.jpg',
+    subjects: ['Broadway'],
+    downloaded: false,
+    bytes: null
+  };
+
+  it('returns null when manifest is null', () => {
+    assert.equal(findBestPhoto(null, { address: '56 Broadway' }), null);
+  });
+
+  it('returns null when manifest has no photos', () => {
+    assert.equal(findBestPhoto(makeManifest([]), { address: '56 Broadway' }), null);
+  });
+
+  it('returns null when no photos are downloaded', () => {
+    assert.equal(findBestPhoto(makeManifest([notDownloaded]), { address: '56 Broadway' }), null);
+  });
+
+  it('matches photo by street name in title', () => {
+    const manifest = makeManifest([broadwayPhoto, wallStreetPhoto]);
+    const result = findBestPhoto(manifest, { address: '56 Broadway' });
+    assert.equal(result.id, 'p1', 'should prefer Broadway photo for Broadway address');
+  });
+
+  it('matches photo by street name in subjects', () => {
+    const photoWithSubject = {
+      ...wallStreetPhoto,
+      id: 'p4',
+      title: 'A view of buildings',
+      subjects: ['Broad Street', 'Financial district']
+    };
+    const manifest = makeManifest([photoWithSubject]);
+    const result = findBestPhoto(manifest, { address: '56 Broad Street' });
+    assert.equal(result.id, 'p4');
+  });
+
+  it('prefers street-matched photo over generic', () => {
+    const manifest = makeManifest([wallStreetPhoto, broadwayPhoto]);
+    const result = findBestPhoto(manifest, { address: '100 Wall Street' });
+    assert.equal(result.id, 'p2', 'should prefer Wall Street photo for Wall Street address');
+  });
+
+  it('falls back to a downloaded photo when no street match', () => {
+    const manifest = makeManifest([broadwayPhoto, wallStreetPhoto]);
+    const result = findBestPhoto(manifest, { address: '42 Pine Street' });
+    // No street match — should return some downloaded photo as generic era fallback
+    assert.ok(result, 'should return a fallback photo');
+    assert.ok(result.downloaded, 'fallback should be a downloaded photo');
+  });
+
+  it('returns null in strictMatch mode when no street match', () => {
+    const manifest = makeManifest([broadwayPhoto]);
+    const result = findBestPhoto(manifest, { address: '42 Pine Street' }, { strictMatch: true });
+    assert.equal(result, null, 'strict mode should not return generic fallback');
+  });
+
+  it('returns null when building has no address', () => {
+    const manifest = makeManifest([broadwayPhoto]);
+    const result = findBestPhoto(manifest, { address: '' }, { strictMatch: true });
+    assert.equal(result, null);
+  });
+
+  it('gives bonus score for architecture-related title terms', () => {
+    const archPhoto = {
+      ...broadwayPhoto,
+      id: 'p5',
+      title: 'Broadway building facade with storefronts',
+    };
+    const plainPhoto = {
+      ...broadwayPhoto,
+      id: 'p6',
+      title: 'Broadway looking north',
+    };
+    const manifest = makeManifest([plainPhoto, archPhoto]);
+    const result = findBestPhoto(manifest, { address: '56 Broadway' });
+    assert.equal(result.id, 'p5', 'should prefer photo with architecture terms');
+  });
+
+  it('skips not-downloaded photos even if they match', () => {
+    const manifest = makeManifest([notDownloaded, wallStreetPhoto]);
+    const result = findBestPhoto(manifest, { address: '56 Broadway' });
+    // notDownloaded mentions Broadway in subjects but is not downloaded
+    assert.equal(result.id, 'p2', 'should skip not-downloaded and use fallback');
   });
 });

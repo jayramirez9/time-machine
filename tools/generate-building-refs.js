@@ -3,26 +3,32 @@
 /**
  * Reference image → 3D building generator.
  *
- * Two-stage pipeline: Gemini generates an architectural reference image
- * from building metadata, then Meshy Image-to-3D converts it to a
- * textured 3D mesh. Tier 2 in the asset pipeline hierarchy — used when
- * no historical photo exists but you want better fidelity than text-only.
+ * Three-tier pipeline for 3D building generation:
+ *   Tier 1 (best): Historical photo from LOC/NYPL → Meshy Image-to-3D
+ *   Tier 2 (good): Gemini-generated reference image → Meshy Image-to-3D
+ *   Tier 3 (fallback): Text prompt → Meshy Text-to-3D (separate tool)
+ *
+ * When --photos or --auto-fetch is used, real historical photographs are
+ * preferred over AI-generated reference images. Photos are matched to
+ * buildings by street name; unmatched buildings fall back to Gemini.
  *
  * Usage:
- *   # Full pipeline: Gemini reference image → Meshy Image-to-3D
+ *   # Full pipeline with auto-fetched LOC photos (best quality)
+ *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --auto-fetch
+ *
+ *   # Use previously downloaded photos (from fetch-photos.js)
+ *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --photos photos/manhattan-ny/
+ *
+ *   # Gemini-only (no photo archive, original behavior)
  *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884
- *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --index 9
  *
- *   # Just generate reference images (no Meshy, no credits spent)
- *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --image-only
+ *   # Preview which buildings get photos vs Gemini (no API calls)
+ *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --dry-run --photos photos/manhattan-ny/
  *
- *   # Preview prompts without any API calls
- *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --dry-run
+ *   # Just reference images, skip Meshy
+ *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --image-only --auto-fetch
  *
- *   # Control quality tier (affects Meshy polycount)
- *   node tools/generate-building-refs.js terrain-data/manhattan-ny/ --era nyc_1884 --quality hero
- *
- * Requires: GOOGLE_AI_API_KEY (Gemini), MESHY_API_KEY (Meshy, unless --image-only)
+ * Requires: GOOGLE_AI_API_KEY (Gemini, for fallback), MESHY_API_KEY (Meshy, unless --image-only)
  */
 
 import fs from 'node:fs';
@@ -36,6 +42,12 @@ import {
   getBalance,
 } from '../lib/meshyClient.js';
 import { parseSpawnArgs } from '../lib/rcHelpers.js';
+import {
+  loadPhotoManifest,
+  findBestPhoto,
+  searchAndDownload,
+  buildSearchQuery,
+} from '../lib/photoArchiveFetch.js';
 
 // ---------------------------------------------------------------------------
 // Arg parsing
@@ -51,6 +63,8 @@ const imageOnly = hasFlag('--image-only');
 const force = hasFlag('--force');
 const format = getFlag('--format', 'fbx');
 const geminiModel = getFlag('--model');
+const photosDir = getFlag('--photos');
+const autoFetch = hasFlag('--auto-fetch');
 
 if (!terrainDir) {
   console.error('Usage: generate-building-refs.js <terrain-data-dir/> --era <era>');
@@ -62,6 +76,8 @@ if (!terrainDir) {
   console.error('            --index <N>       Single building only');
   console.error('            --format fbx|glb  Output format (default: fbx)');
   console.error('            --model <id>      Gemini model override');
+  console.error('            --photos <dir>    Use downloaded photos as reference (from fetch-photos.js)');
+  console.error('            --auto-fetch      Auto-download LOC photos if none exist');
   console.error('            --image-only      Generate reference images, skip Meshy');
   console.error('            --dry-run         Preview prompts, no API calls');
   console.error('            --force           Overwrite existing output');
@@ -95,6 +111,15 @@ if (!era && !year) {
   if (targetYear) opts.year = targetYear;
 }
 
+// ---------------------------------------------------------------------------
+// Photo archive discovery
+// ---------------------------------------------------------------------------
+
+// Resolve photos directory: explicit flag, or auto-discover from terrain slug
+const terrainSlug = path.basename(terrainDir);
+const resolvedPhotosDir = photosDir || path.join('photos', terrainSlug);
+let photoManifest = loadPhotoManifest(resolvedPhotosDir);
+
 // Filter features and build prompts
 const allBuildings = features.map((feature, index) => {
   const props = feature.properties || {};
@@ -122,9 +147,20 @@ const tier = QUALITY_TIERS[quality];
 const meshyCreditsEach = 30; // Image-to-3D with texture
 const totalMeshyCredits = imageOnly ? 0 : buildings.length * meshyCreditsEach;
 
+const photoCount = photoManifest
+  ? photoManifest.photos.filter(p => p.downloaded).length
+  : 0;
+
 console.log(`Buildings:    ${buildings.length} of ${allBuildings.length}`);
 console.log(`Quality:      ${quality} (${tier.polycount.toLocaleString()} polys)`);
-console.log(`Mode:         ${imageOnly ? 'image-only (Gemini only)' : 'full pipeline (Gemini → Meshy)'}`);
+console.log(`Mode:         ${imageOnly ? 'image-only' : 'full pipeline (reference → Meshy)'}`);
+if (photoCount > 0) {
+  console.log(`Photos:       ${photoCount} available in ${resolvedPhotosDir}/`);
+  console.log(`Strategy:     LOC photo preferred → Gemini fallback`);
+} else {
+  console.log(`Photos:       none${autoFetch ? ' (will auto-fetch)' : ''}`);
+  console.log(`Strategy:     Gemini reference images only`);
+}
 if (!imageOnly) console.log(`Meshy cost:   ~${totalMeshyCredits} credits`);
 console.log(`Era:          ${opts.era || 'auto'} (year ${opts.year || 'auto'})`);
 console.log();
@@ -136,7 +172,16 @@ console.log();
 if (dryRun) {
   for (const b of buildings) {
     console.log(`━━━ ${b.index}: ${b.address} (${b.styleName}) ━━━`);
-    console.log(`  ${b.prompt}`);
+    if (photoManifest) {
+      const match = findBestPhoto(photoManifest, b);
+      if (match) {
+        console.log(`  [PHOTO] ${match.title.slice(0, 70)} (${match.date || 'n/d'})`);
+      } else {
+        console.log(`  [GEMINI] ${b.prompt}`);
+      }
+    } else {
+      console.log(`  [GEMINI] ${b.prompt}`);
+    }
     console.log();
   }
   console.log(`[DRY RUN] ${buildings.length} buildings. No API calls.`);
@@ -171,21 +216,45 @@ async function processBuilding(b) {
     }
   }
 
-  // Stage 1: Generate reference image via Gemini
-  process.stdout.write('  Generating reference image...');
-  const imageResult = await generateImage(b.prompt, {
-    model: geminiModel || undefined,
-  });
-  saveImage(imageResult, imagePath);
-  const sizeKb = Math.round(imageResult.image.length / 1024);
-  process.stdout.write(`\r  Reference image: ${imagePath} (${sizeKb}KB)\n`);
+  // Stage 1: Resolve reference image — prefer historical photo, fall back to Gemini
+  let dataUri;
+  let referenceSource = 'gemini';
+  let matchedPhoto = null;
 
-  if (imageOnly) {
-    return { index: b.index, status: 'image-only', slug, imagePath };
+  // Try to use a real historical photo
+  if (photoManifest) {
+    const candidate = findBestPhoto(photoManifest, b);
+    if (candidate) {
+      const photoPath = path.join(resolvedPhotosDir, candidate.filename);
+      if (fs.existsSync(photoPath)) {
+        const photoBuffer = fs.readFileSync(photoPath);
+        const sizeKb = Math.round(photoBuffer.length / 1024);
+        console.log(`  [PHOTO] ${candidate.title.slice(0, 60)} (${sizeKb}KB)`);
+        dataUri = `data:image/jpeg;base64,${photoBuffer.toString('base64')}`;
+        referenceSource = 'loc-photo';
+        matchedPhoto = candidate;
+      } else {
+        console.log(`  [WARN] Photo file missing: ${photoPath}, falling back to Gemini`);
+      }
+    }
   }
 
-  // Stage 2: Feed reference image into Meshy Image-to-3D
-  const dataUri = toDataUri(imageResult);
+  // Fall back to Gemini-generated reference image
+  if (!dataUri) {
+    process.stdout.write('  Generating reference image...');
+    const imageResult = await generateImage(b.prompt, {
+      model: geminiModel || undefined,
+    });
+    saveImage(imageResult, imagePath);
+    const sizeKb = Math.round(imageResult.image.length / 1024);
+    process.stdout.write(`\r  Reference image: ${imagePath} (${sizeKb}KB)\n`);
+    dataUri = toDataUri(imageResult);
+  }
+
+  if (imageOnly) {
+    return { index: b.index, status: 'image-only', slug, referenceSource,
+      ...(matchedPhoto ? { photo: matchedPhoto.title } : { imagePath }) };
+  }
 
   const taskId = await createImageTo3D({
     imageUrl: dataUri,
@@ -210,14 +279,17 @@ async function processBuilding(b) {
     address: b.address,
     buildingIndex: b.index,
     generatedAt: new Date().toISOString(),
-    pipeline: 'gemini-reference-image-to-3d',
-    geminiModel: geminiModel || 'gemini-2.0-flash-exp',
+    pipeline: referenceSource === 'loc-photo'
+      ? 'historical-photo-to-3d'
+      : 'gemini-reference-image-to-3d',
+    referenceSource,
+    ...(referenceSource === 'loc-photo'
+      ? { photoTitle: matchedPhoto.title, photoItemUrl: matchedPhoto.itemUrl }
+      : { geminiModel: geminiModel || 'gemini-2.0-flash-exp', referenceImagePrompt: b.prompt, referenceImagePath: imagePath }),
     aiModel: 'meshy-6',
     styleName: b.styleName,
     quality,
     polycount: tier.polycount,
-    referenceImagePrompt: b.prompt,
-    referenceImagePath: imagePath,
     meshyTaskId: taskId,
     formats: [format, ...(format !== 'glb' ? ['glb'] : [])],
     pbr: true,
@@ -227,10 +299,43 @@ async function processBuilding(b) {
     JSON.stringify(manifest, null, 2),
   );
 
-  return { index: b.index, status: 'ok', slug, imagePath, meshDir, files };
+  return { index: b.index, status: 'ok', slug, imagePath, meshDir, files, referenceSource };
 }
 
 async function main() {
+  // Auto-fetch photos if requested and none exist yet
+  if (autoFetch && !photoManifest) {
+    const targetYear = opts.year || parseInt(year, 10);
+    if (!targetYear) {
+      console.warn('Cannot auto-fetch photos without --year or --era that resolves to a year.');
+    } else {
+      // Read location from terrain metadata if available
+      let locationName = terrainSlug.replace(/-/g, ' ');
+      const metaPath = path.join(terrainDir, 'metadata.json');
+      if (fs.existsSync(metaPath)) {
+        try {
+          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+          if (meta.name) locationName = meta.name;
+        } catch { /* use slug fallback */ }
+      }
+
+      console.log(`Auto-fetching photos for "${locationName}" ~${targetYear}...`);
+      const query = buildSearchQuery(locationName, targetYear);
+      try {
+        const manifest = await searchAndDownload(query, resolvedPhotosDir, {
+          year: targetYear,
+          maxPhotos: 10,
+          onProgress: (stage, msg) => console.log(`  [${stage}] ${msg}`),
+        });
+        photoManifest = manifest;
+        const dlCount = manifest.photos.filter(p => p.downloaded).length;
+        console.log(`  Fetched ${dlCount} photos → ${resolvedPhotosDir}/\n`);
+      } catch (e) {
+        console.warn(`  Auto-fetch failed: ${e.message}. Continuing with Gemini.\n`);
+      }
+    }
+  }
+
   // Check Meshy balance (only if doing full pipeline)
   let balance;
   if (!imageOnly) {
@@ -251,6 +356,8 @@ async function main() {
   let imageOnlyCount = 0;
   let skipped = 0;
   let failed = 0;
+  let fromPhoto = 0;
+  let fromGemini = 0;
 
   for (let bi = 0; bi < buildings.length; bi++) {
     const b = buildings[bi];
@@ -264,8 +371,12 @@ async function main() {
         skipped++;
       } else if (result.status === 'image-only') {
         imageOnlyCount++;
+        if (result.referenceSource === 'loc-photo') fromPhoto++;
+        else fromGemini++;
       } else {
         generated++;
+        if (result.referenceSource === 'loc-photo') fromPhoto++;
+        else fromGemini++;
         console.log(`  → ${result.meshDir}/`);
       }
     } catch (e) {
@@ -286,6 +397,10 @@ async function main() {
     console.log(`Reference images: ${imageOnlyCount}`);
   } else {
     console.log(`3D models:        ${generated}`);
+  }
+  if (fromPhoto > 0 || fromGemini > 0) {
+    console.log(`  from LOC photo: ${fromPhoto}`);
+    console.log(`  from Gemini:    ${fromGemini}`);
   }
   console.log(`Skipped:          ${skipped}`);
   console.log(`Failed:           ${failed}`);
