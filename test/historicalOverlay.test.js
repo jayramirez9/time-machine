@@ -1,7 +1,11 @@
-import { describe, it } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
+import { mkdtempSync, writeFileSync, rmSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import {
   validateOverlay, createBlankOverlay, confidenceSummary, filterModifications,
+  loadOverlay, getFeatureAdditions, getFeatureRemovals, getSurfaceSwaps,
   CONFIDENCE, OVERLAY_TYPES
 } from '../lib/historicalOverlay.js';
 
@@ -158,5 +162,59 @@ describe('CONFIDENCE and OVERLAY_TYPES enums', () => {
 
   it('OVERLAY_TYPES has six types', () => {
     assert.strictEqual(Object.keys(OVERLAY_TYPES).length, 6);
+  });
+});
+
+describe('loadOverlay', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'tm-overlay-'));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('loads a valid overlay file', () => {
+    const overlay = createBlankOverlay({ location: 'Test', targetYear: 1900, baseTerrainSlug: 'test' });
+    const filePath = join(tmpDir, 'overlay.json');
+    writeFileSync(filePath, JSON.stringify(overlay));
+    const loaded = loadOverlay(filePath);
+    assert.strictEqual(loaded.targetYear, 1900);
+  });
+
+  it('throws on missing file', () => {
+    assert.throws(() => loadOverlay(join(tmpDir, 'nope.json')), /not found/);
+  });
+
+  it('throws on invalid overlay', () => {
+    const filePath = join(tmpDir, 'bad.json');
+    writeFileSync(filePath, JSON.stringify({ bad: true }));
+    assert.throws(() => loadOverlay(filePath), /Invalid overlay/);
+  });
+});
+
+describe('accessor helpers', () => {
+  const overlay = createBlankOverlay({ location: 'NYC', targetYear: 1884, baseTerrainSlug: 'manhattan-ny' });
+  overlay.modifications = [
+    { type: 'feature_add', confidence: 'verified', extent: { type: 'LineString' }, featureType: 'elevated_railway' },
+    { type: 'feature_add', confidence: 'estimated', extent: { type: 'LineString' }, featureType: 'canal' },
+    { type: 'feature_remove', confidence: 'verified', id: 'fdr-drive' },
+    { type: 'surface_swap', confidence: 'verified', extent: { type: 'Polygon' }, historicalMaterial: 'granite' }
+  ];
+
+  it('getFeatureAdditions returns feature_add mods', () => {
+    assert.strictEqual(getFeatureAdditions(overlay).length, 2);
+  });
+
+  it('getFeatureRemovals returns feature_remove mods', () => {
+    assert.strictEqual(getFeatureRemovals(overlay).length, 1);
+  });
+
+  it('getSurfaceSwaps returns surface_swap mods', () => {
+    const swaps = getSurfaceSwaps(overlay);
+    assert.strictEqual(swaps.length, 1);
+    assert.strictEqual(swaps[0].historicalMaterial, 'granite');
   });
 });

@@ -17,6 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { geocode } from '../lib/openmeteo.js';
 import { generateProfile, classifyClimate, classifyDensity, getEraBracket } from '../lib/profileGenerator.js';
+import { loadProfile } from '../lib/environmentProfile.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -38,6 +39,7 @@ function hasFlag(name) {
 const location = args.find(a => !a.startsWith('--'));
 const year = parseInt(getFlag('--year', new Date().getFullYear()));
 const dryRun = hasFlag('--dry-run');
+const envProfilePath = getFlag('--profile', null);
 
 if (!location) {
   console.error('Usage: ./tools/generate-profile.js "Location" [--year YYYY] [--dry-run]');
@@ -67,6 +69,17 @@ async function main() {
   console.log(`  Density: ${density}`);
   console.log(`  Era: ${eraBracket}`);
 
+  // Load environment profile for location-specific enrichment
+  let envProfile = null;
+  if (envProfilePath) {
+    try {
+      envProfile = loadProfile(path.resolve(PROJECT_ROOT, envProfilePath));
+      console.log(`  Profile: ${envProfile.id} (location-specific enrichment)`);
+    } catch (e) {
+      console.warn(`  Profile load failed: ${e.message}`);
+    }
+  }
+
   const profile = generateProfile({
     location: geo.name,
     year,
@@ -74,6 +87,7 @@ async function main() {
     countryCode: geo.countryCode,
     lat: geo.lat,
     lon: geo.lon,
+    environmentProfile: envProfile || undefined,
   });
 
   const eventCount = profile.microEvents.length;

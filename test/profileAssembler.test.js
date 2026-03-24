@@ -1,10 +1,14 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 
 import {
   assembleProfile,
   buildProfileId,
-  buildReviewChecklist
+  buildReviewChecklist,
+  findTerrainData
 } from '../lib/agents/profileAssembler.js';
 
 import {
@@ -57,14 +61,24 @@ const TEST_GEO = {
 // ---------------------------------------------------------------------------
 
 describe('Profile Assembler — buildProfileId', () => {
-  it('generates slug from geo name + year', () => {
-    const id = buildProfileId({ name: 'New York, NY' }, 1884);
+  it('generates short ID: city_state_year for US locations', () => {
+    const id = buildProfileId({ name: 'New York, New York, United States', countryCode: 'US' }, 1884);
     assert.equal(id, 'new_york_ny_1884');
   });
 
-  it('handles special characters', () => {
-    const id = buildProfileId({ name: "Baton Rouge, LA (USA)" }, 1978);
-    assert.equal(id, 'baton_rouge_la_usa_1978');
+  it('abbreviates full US state names', () => {
+    const id = buildProfileId({ name: 'Baton Rouge, Louisiana, United States', countryCode: 'US' }, 1978);
+    assert.equal(id, 'baton_rouge_la_1978');
+  });
+
+  it('uses countryCode for non-US locations', () => {
+    const id = buildProfileId({ name: 'London, England, United Kingdom', countryCode: 'GB' }, 1888);
+    assert.equal(id, 'london_gb_1888');
+  });
+
+  it('passes through already-abbreviated state names', () => {
+    const id = buildProfileId({ name: 'New York, NY', countryCode: 'US' }, 1884);
+    assert.equal(id, 'new_york_ny_1884');
   });
 
   it('handles missing name', () => {
@@ -251,5 +265,84 @@ describe('Profile Assembler — buildReviewChecklist', () => {
     };
     const checklist = buildReviewChecklist(profile);
     assert.ok(checklist.some(c => c.includes('interpolation')));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findTerrainData
+// ---------------------------------------------------------------------------
+
+describe('Profile Assembler — findTerrainData', () => {
+  let tmpRoot;
+
+  beforeEach(() => {
+    tmpRoot = mkdtempSync(join(tmpdir(), 'tm-terrain-'));
+  });
+
+  afterEach(() => {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  it('finds matching terrain by lat/lon proximity', () => {
+    const dir = join(tmpRoot, 'manhattan-ny');
+    mkdirSync(dir);
+    writeFileSync(join(dir, 'metadata.json'), JSON.stringify({
+      lat: 40.78343, lon: -73.96625, slug: 'manhattan-ny'
+    }));
+
+    // ~8km away — should match within 2km? No. Use closer coords.
+    // Manhattan center is 40.783, NYC geocode is 40.712 — that's ~8km.
+    // Use a point within 2km of the metadata coords.
+    const result = findTerrainData(40.785, -73.968, tmpRoot);
+    assert.ok(result, 'Should find nearby terrain data');
+    assert.equal(result.slug, 'manhattan-ny');
+    assert.ok(result.distanceKm < 2);
+  });
+
+  it('returns null when no terrain dirs exist', () => {
+    const result = findTerrainData(40.7128, -74.006, tmpRoot);
+    assert.equal(result, null);
+  });
+
+  it('returns null when terrain is too far away', () => {
+    const dir = join(tmpRoot, 'chicago-il');
+    mkdirSync(dir);
+    writeFileSync(join(dir, 'metadata.json'), JSON.stringify({
+      lat: 41.8781, lon: -87.6298, slug: 'chicago-il'
+    }));
+
+    // NYC coords — Chicago is ~1100km away
+    const result = findTerrainData(40.7128, -74.006, tmpRoot);
+    assert.equal(result, null);
+  });
+
+  it('picks the closest match when multiple exist', () => {
+    const dir1 = join(tmpRoot, 'area-a');
+    mkdirSync(dir1);
+    writeFileSync(join(dir1, 'metadata.json'), JSON.stringify({
+      lat: 40.780, lon: -73.970
+    }));
+
+    const dir2 = join(tmpRoot, 'area-b');
+    mkdirSync(dir2);
+    writeFileSync(join(dir2, 'metadata.json'), JSON.stringify({
+      lat: 40.782, lon: -73.968
+    }));
+
+    // Closer to area-b
+    const result = findTerrainData(40.783, -73.967, tmpRoot);
+    assert.ok(result);
+    assert.equal(result.slug, 'area-b');
+  });
+
+  it('skips directories without metadata.json', () => {
+    mkdirSync(join(tmpRoot, 'no-meta'));
+    const result = findTerrainData(40.7128, -74.006, tmpRoot);
+    assert.equal(result, null);
+  });
+
+  it('returns null for nonexistent root directory', () => {
+    const result = findTerrainData(40.7128, -74.006, '/tmp/does-not-exist-terrain');
+    assert.equal(result, null);
   });
 });

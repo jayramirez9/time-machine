@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadBuildingFootprints } from '../lib/sanborn.js';
-import { buildingsToSpawnList, buildSpawnScript, ACTOR_PREFIX } from '../lib/buildingMassing.js';
+import { buildingsToSpawnList, buildSpawnScript, filterBuildingsByYear, ACTOR_PREFIX } from '../lib/buildingMassing.js';
 import { classifyBuilding, listEras, getEraInfo, resolveEra } from '../lib/architectureStyles.js';
 import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
 
@@ -98,7 +98,15 @@ async function main() {
     }
   }
 
-  const geojson = JSON.parse(fs.readFileSync(buildingsPath, 'utf8'));
+  let geojson = JSON.parse(fs.readFileSync(buildingsPath, 'utf8'));
+
+  // Filter buildings by year if --year is specified
+  const targetYear = YEAR_FLAG ? parseInt(YEAR_FLAG, 10) : null;
+  if (targetYear) {
+    const result = filterBuildingsByYear(geojson, targetYear);
+    geojson = result.filtered;
+    console.log(`  Year filter: ${targetYear} → ${result.included} included, ${result.excluded} excluded, ${result.undated} undated (pass-through)`);
+  }
 
   // Determine georeference origin
   let origin;
