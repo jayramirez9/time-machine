@@ -1387,6 +1387,32 @@ function diurnalWeightAt(weights, timePhase) {
   return weights.day ?? 0.5;
 }
 
+/**
+ * Activity multiplier curve based on time of day.
+ * Models realistic urban activity: quiet at 3am, building at 7am, peak at noon, taper at 10pm.
+ * @param {number} timePhase - 0-1 (0=midnight)
+ * @returns {number} Multiplier 0-1
+ */
+function activityMultiplierAt(timePhase) {
+  // Piecewise linear curve:
+  // 0.0 (midnight) → 0.1, 0.125 (3am) → 0.05, 0.25 (6am) → 0.4,
+  // 0.33 (8am) → 0.8, 0.5 (noon) → 1.0, 0.75 (6pm) → 0.85,
+  // 0.875 (9pm) → 0.4, 0.96 (11pm) → 0.15, 1.0 → 0.1
+  const points = [
+    [0.0, 0.10], [0.125, 0.05], [0.25, 0.40], [0.33, 0.80],
+    [0.5, 1.00], [0.75, 0.85], [0.875, 0.40], [0.96, 0.15], [1.0, 0.10]
+  ];
+  for (let i = 0; i < points.length - 1; i++) {
+    if (timePhase <= points[i + 1][0]) {
+      const [x0, y0] = points[i];
+      const [x1, y1] = points[i + 1];
+      const t = (timePhase - x0) / (x1 - x0);
+      return y0 + (y1 - y0) * t;
+    }
+  }
+  return 0.1;
+}
+
 class MicroEventScheduler {
   constructor(ctx, masterGain, profile, buffers) {
     this.ctx = ctx;
@@ -1427,6 +1453,14 @@ class MicroEventScheduler {
     const now = this.ctx.currentTime;
     const timePhase = worldState.controls?.audio?.timeOfDayPhase ?? 0.5;
     const activity = worldState.controls?.audio?.activityLevel ?? 0.5;
+    const windLevel = worldState.controls?.audio?.windLevel ?? 0;
+    const rainLevel = worldState.controls?.audio?.rainLevel ?? 0;
+    const gustiness = worldState.controls?.audio?.gustiness ?? 0;
+
+    // Activity curve: modulate effective activity by time of day
+    // Quiet at 3am (0.125), building at 7am, peak at noon, taper at 10pm
+    const activityCurve = activityMultiplierAt(timePhase);
+    const effectiveActivity = activity * activityCurve;
 
     // Global cooldown
     if (now - this.lastGlobalFire < this.globalCooldownSec) return;
@@ -1444,18 +1478,36 @@ class MicroEventScheduler {
         if (!inPrimary && !inSecondary) continue;
       }
 
-      // Activity range
+      // Activity range (using curve-adjusted activity)
       if (pool.activityRange) {
-        if (activity < pool.activityRange[0] || activity > pool.activityRange[1]) continue;
+        if (effectiveActivity < pool.activityRange[0] || effectiveActivity > pool.activityRange[1]) continue;
       }
 
-      // Probability roll — modulated by diurnal ecology weights when available
+      // Weather-reactive gating
+      if (pool.weatherGate === 'wind') {
+        // Wind-gated events: suppress in calm, boost in wind
+        if (gustiness < 0.2) continue;
+      }
+      // Suppress outdoor foley during heavy rain
+      if (rainLevel > 0.7 && (pool.id === 'footsteps_street' || pool.id === 'footsteps_sidewalk' ||
+          pool.id === 'door_open_close' || pool.id === 'broom_sweep')) {
+        continue;
+      }
+
+      // Probability roll — modulated by ecology + weather weights
       const dt = 0.1; // scheduler tick interval
       let prob = (1 / pool.cooldownSec) * this.densityMultiplier * dt;
       if (pool.diurnalWeights) {
         prob *= diurnalWeightAt(pool.diurnalWeights, timePhase);
       }
+      // Wind-gated events fire more in strong wind
+      if (pool.weatherGate === 'wind') {
+        prob *= (gustiness + windLevel) * 0.5 + 0.5; // 0.5× to 1.5× range
+      }
       if (Math.random() > prob) continue;
+
+      // Priority suppression: skip low-priority events when high-priority is active
+      if (this.activeSources > 0 && pool.priority === 'low') continue;
 
       // Fire!
       this._fire(pool);
@@ -1480,6 +1532,9 @@ class MicroEventScheduler {
 
     const node = this.ctx.createBufferSource();
     node.buffer = buf;
+
+    // Pitch jitter: ±5% playback rate variation for natural feel
+    node.playbackRate.value = 1.0 + (Math.random() - 0.5) * 0.10;
 
     // Random gain variation ±3dB
     const gain = this.ctx.createGain();
@@ -1581,7 +1636,9 @@ class MicroEventScheduler {
       }
     }
 
-    node.start();
+    // Onset jitter: ±200ms for natural timing variation
+    const onsetDelay = Math.random() * 0.4;
+    node.start(this.ctx.currentTime + onsetDelay);
     this.activeSources++;
     pool.lastFiredAt = this.ctx.currentTime;
     this.lastGlobalFire = this.ctx.currentTime;

@@ -116,6 +116,11 @@ function buildPrompt(source, section, profile) {
     parts.push(`Movement: ${source._motionType} — sound passes by the listener.`);
   }
 
+  // Add variant hint for multi-source events (different takes)
+  if (source.variantHint) {
+    parts.push(`Variation: ${source.variantHint}.`);
+  }
+
   // Year-based technology exclusions from shared era data
   if (era && era.year) {
     const exclusion = getExclusionText(era.year);

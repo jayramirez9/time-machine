@@ -448,3 +448,124 @@ describe('generateProfile — surface-linked footsteps', () => {
     assert.ok(!evt, 'Rural should not have street footsteps');
   });
 });
+
+// ── Door/window and material-contact foley ───────────────────────
+
+describe('generateProfile — foley templates', () => {
+  const baseOpts = {
+    location: 'Test City, US',
+    year: 1950,
+    population: 200000,
+    lat: 40.7,
+    lon: -74.0,
+  };
+
+  it('urban profile includes door and window foley', () => {
+    const profile = generateProfile(baseOpts);
+    const ids = profile.microEvents.map(e => e.id);
+    assert.ok(ids.includes('door_open_close'), 'Should have door_open_close');
+    assert.ok(ids.includes('door_creak'), 'Should have door_creak');
+    assert.ok(ids.includes('window_rattle'), 'Should have window_rattle');
+    assert.ok(ids.includes('shutter_bang'), 'Should have shutter_bang');
+  });
+
+  it('urban profile includes material-contact foley', () => {
+    const profile = generateProfile(baseOpts);
+    const ids = profile.microEvents.map(e => e.id);
+    assert.ok(ids.includes('glass_clink'), 'Should have glass_clink');
+    assert.ok(ids.includes('metal_clang'), 'Should have metal_clang');
+    assert.ok(ids.includes('cloth_rustle'), 'Should have cloth_rustle');
+    assert.ok(ids.includes('broom_sweep'), 'Should have broom_sweep');
+  });
+
+  it('window_rattle and shutter_bang have weatherGate', () => {
+    const profile = generateProfile(baseOpts);
+    const rattle = profile.microEvents.find(e => e.id === 'window_rattle');
+    const shutter = profile.microEvents.find(e => e.id === 'shutter_bang');
+    assert.equal(rattle.weatherGate, 'wind');
+    assert.equal(shutter.weatherGate, 'wind');
+  });
+
+  it('multi-source events have variantHint', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1880 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(evt);
+    assert.equal(evt.sources.length, 2);
+    assert.ok(evt.sources[0].variantHint, 'First source should have variantHint');
+    assert.ok(evt.sources[1].variantHint, 'Second source should have variantHint');
+    assert.notEqual(evt.sources[0].variantHint, evt.sources[1].variantHint, 'Hints should differ');
+  });
+
+  it('rural excludes density-gated foley', () => {
+    const profile = generateProfile({ ...baseOpts, population: 500 });
+    const ids = profile.microEvents.map(e => e.id);
+    assert.ok(!ids.includes('door_open_close'), 'Rural should not have door_open_close');
+    assert.ok(!ids.includes('glass_clink'), 'Rural should not have glass_clink');
+    // But wind-gated events with no density gate should still be present
+    assert.ok(ids.includes('window_rattle'), 'Should have window_rattle (no density gate)');
+    assert.ok(ids.includes('cloth_rustle'), 'Should have cloth_rustle (no density gate)');
+  });
+});
+
+// ── Voice event generation ───────────────────────────────────────
+
+describe('generateProfile — voice events', () => {
+  const baseOpts = {
+    location: 'Test City, US',
+    population: 200000,
+    lat: 40.7,
+    lon: -74.0,
+  };
+
+  it('1900 urban profile generates vendor voice events', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1900 });
+    const voiceEvents = profile.microEvents.filter(e => e.id.startsWith('voice_'));
+    assert.ok(voiceEvents.length > 0, 'Should have at least one voice event');
+    assert.ok(voiceEvents.length <= 3, 'Should have at most 3 voice events');
+  });
+
+  it('vendor voice events have phrases and voice fields', () => {
+    const envProfile = {
+      layers: {
+        culture: { data: { commerce: { streetVendors: ['newsboy', 'hot corn girl'] } } }
+      }
+    };
+    const profile = generateProfile({ ...baseOpts, year: 1884, environmentProfile: envProfile });
+    const newsboy = profile.microEvents.find(e => e.id === 'voice_newsboy');
+    assert.ok(newsboy, 'Should have newsboy voice event');
+    assert.ok(newsboy.phrases?.length >= 2, 'Should have at least 2 phrases');
+    assert.ok(newsboy.voice, 'Should have voice field');
+    assert.equal(newsboy.sources.length, 2);
+  });
+
+  it('uses cultural agent vendor data when available', () => {
+    const envProfile = {
+      layers: {
+        culture: { data: { commerce: { streetVendors: ['oyster seller', 'flower girl'] } } }
+      }
+    };
+    const profile = generateProfile({ ...baseOpts, year: 1884, environmentProfile: envProfile });
+    const ids = profile.microEvents.filter(e => e.id.startsWith('voice_')).map(e => e.id);
+    assert.ok(ids.includes('voice_oyster_seller'));
+    assert.ok(ids.includes('voice_flower_girl'));
+  });
+
+  it('2020 urban profile generates casual speech event', () => {
+    const profile = generateProfile({ ...baseOpts, year: 2020 });
+    const passerby = profile.microEvents.find(e => e.id === 'voice_passerby');
+    assert.ok(passerby, 'Modern urban should have voice_passerby');
+    assert.ok(!passerby.phrases, 'Modern speech should not have specific phrases');
+  });
+
+  it('rural profile has no voice events', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1900, population: 500 });
+    const voiceEvents = profile.microEvents.filter(e => e.id.startsWith('voice_'));
+    assert.equal(voiceEvents.length, 0, 'Rural should have no voice events');
+  });
+
+  it('suburban profile has no voice events', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1900, population: 50000 });
+    const voiceEvents = profile.microEvents.filter(e => e.id.startsWith('voice_'));
+    assert.equal(voiceEvents.length, 0, 'Suburban should have no voice events');
+  });
+});

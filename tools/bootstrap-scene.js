@@ -214,6 +214,12 @@ async function main() {
       output: audioAssetsDir, outputIsDir: true, phase: 3,
       requires: 'audio-profile', needsKey: 'ELEVENLABS_API_KEY',
     },
+    {
+      name: 'voice-assets', label: 'VoiceAssets', script: 'elevenlabs-voice-fetch.js',
+      args: [audioProfilePath],
+      output: audioAssetsDir, outputIsDir: true, phase: 3,
+      requires: 'audio-assets', needsKey: 'ELEVENLABS_API_KEY',
+    },
   ];
 
   // ─── Evaluate skip status ─────────────────────────────────
