@@ -342,3 +342,109 @@ describe('generateProfile — diurnal/seasonal enrichment', () => {
     assert.ok(birdWithout.diurnalWeights);
   });
 });
+
+// ── Surface-linked footstep templates ────────────────────────────
+
+describe('generateProfile — surface-linked footsteps', () => {
+  const baseOpts = {
+    location: 'Test City, US',
+    population: 200000,
+    lat: 40.7,
+    lon: -74.0,
+  };
+
+  it('1880 (steam_age) gets cobblestone street footsteps', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1880 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(evt, 'Should have footsteps_street event');
+    assert.equal(evt.surface, 'cobblestone');
+    assert.ok(evt.description.includes('cobblestone'), `Description should mention cobblestone: ${evt.description}`);
+    assert.ok(evt.description.includes('leather shoes'), `Description should mention shoe type: ${evt.description}`);
+  });
+
+  it('1880 gets granite flag sidewalk footsteps', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1880 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_sidewalk');
+    assert.ok(evt, 'Should have footsteps_sidewalk event');
+    assert.equal(evt.surface, 'granite_flag');
+    assert.ok(evt.description.includes('granite flag'), `Description should mention granite flag: ${evt.description}`);
+  });
+
+  it('1960 (postwar) gets asphalt street footsteps', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1960 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(evt);
+    assert.equal(evt.surface, 'asphalt');
+    assert.ok(evt.description.includes('hard-soled shoes'));
+  });
+
+  it('1960 gets concrete sidewalk footsteps', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1960 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_sidewalk');
+    assert.ok(evt);
+    assert.equal(evt.surface, 'concrete');
+  });
+
+  it('1800 (pre_1830) gets dirt surface and leather boots', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1800 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(evt);
+    assert.equal(evt.surface, 'dirt');
+    assert.ok(evt.description.includes('leather boots'));
+  });
+
+  it('2020 (modern) gets rubber-soled shoes on asphalt', () => {
+    const profile = generateProfile({ ...baseOpts, year: 2020 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(evt);
+    assert.equal(evt.surface, 'asphalt');
+    assert.ok(evt.description.includes('rubber-soled'));
+  });
+
+  it('footsteps have 2 source slots for variation', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1880 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.equal(evt.sources.length, 2);
+  });
+
+  it('materials layer overrides default surface when available', () => {
+    const envProfile = {
+      layers: {
+        materials: {
+          data: {
+            roads: { primary: 'belgian_block', secondary: 'cobblestone', residential: 'dirt' },
+            sidewalks: 'granite_flag'
+          }
+        }
+      }
+    };
+    // 1960 would normally get asphalt, but materials layer says belgian_block
+    const profile = generateProfile({ ...baseOpts, year: 1960, environmentProfile: envProfile });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.equal(evt.surface, 'belgian_block', 'Materials layer should override era default');
+    assert.ok(evt.description.includes('belgian block'));
+  });
+
+  it('materials layer overrides horse_cart surface', () => {
+    const envProfile = {
+      layers: {
+        materials: {
+          data: {
+            roads: { primary: 'belgian_block' }
+          }
+        }
+      }
+    };
+    const profile = generateProfile({ ...baseOpts, year: 1880, environmentProfile: envProfile });
+    const evt = profile.microEvents.find(e => e.id === 'horse_cart');
+    assert.ok(evt);
+    assert.equal(evt.surface, 'belgian_block');
+    assert.ok(evt.description.includes('belgian block'));
+  });
+
+  it('rural excludes footsteps (minDensity: suburban)', () => {
+    const profile = generateProfile({ ...baseOpts, year: 1880, population: 500 });
+    const evt = profile.microEvents.find(e => e.id === 'footsteps_street');
+    assert.ok(!evt, 'Rural should not have street footsteps');
+  });
+});
