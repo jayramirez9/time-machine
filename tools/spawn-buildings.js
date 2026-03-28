@@ -26,6 +26,7 @@ import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
 const HOST = getFlag('--host', 'http://localhost:30010');
+const DAEMON_URL = getFlag('--daemon-url', 'http://localhost:3000');
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
 const ERA_FLAG = getFlag('--era', null);
@@ -44,6 +45,7 @@ if (!positionalArg) {
   console.error('');
   console.error('Options:');
   console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --daemon-url URL    Mac daemon URL reachable from PC (default: http://localhost:3000)');
   console.error('  --dry-run           Show spawn data without touching Unreal');
   console.error('  --clear             Remove all TM_Building_* actors from the level');
   console.error('  --origin-lat N      Override georeference latitude');
@@ -219,7 +221,7 @@ async function main() {
 
   // Generate and execute Python script
   console.log(`\n  Spawning ${spawnList.length} buildings via Python script...`);
-  const script = buildSpawnScript(spawnList, { clearExisting: true });
+  const script = buildSpawnScript(spawnList, { clearExisting: true, era: resolvedEra, daemonUrl: DAEMON_URL });
 
   // Write script for debugging
   const scriptPath = path.join(terrainDir, 'buildings-spawn.py');

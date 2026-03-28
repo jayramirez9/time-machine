@@ -46,6 +46,14 @@ Every cue agrees:
 Historical accuracy is the true north. Not "vibes." Not "close enough."
 Absolute realism is the product.
 
+### Visual Fidelity Bar
+
+The visual quality target is the best real-time and near-real-time rendering in the world: Crimson Desert (Pearl Abyss), Red Dead Redemption 2 (Rockstar), The Mandalorian virtual production (ILM StageCraft), The Last of Us (Naughty Dog). These productions share a common trait: every surface has material depth, every scene has atmospheric density, nothing is clean, and light behaves correctly. That is the bar.
+
+This is not aspirational hand-waving. The gap between procedural reconstruction and hand-authored AAA content is real today — but it is closing fast. AI-generated 3D assets, materials, and textures are on a trajectory where the quality ceiling rises every quarter. The pipeline is designed to ride that curve: agents assemble what goes where, then the best available generation technology produces the assets. As AI model quality improves, the same pipeline produces better output without architectural changes.
+
+The implication: invest in *systems* (material libraries, weathering functions, vegetation placement, atmospheric particles, lighting pipelines) rather than hand-crafting individual assets. Systems scale. Hand-crafted assets don't. When AI-generated assets reach parity with hand-authored ones, a system-driven pipeline will match AAA quality at any location and any era — something no hand-authored production can do.
+
 Examples of the bar:
 
 * Turn on a radio in 1981: only songs released on or before that date exist. DJ tone and slang are era-correct. Ads are era-correct.
@@ -53,6 +61,8 @@ Examples of the bar:
 * "Groovy" shows up only in its actual era window.
 * "Pop vs soda vs coke" is location + time specific, not a generic Americanism.
 * Car horns, church bells, fog horns, work whistles—all period-correct.
+* Stand at street level in 1884 Manhattan: Lumen GI bounces warm afternoon light into an alley between brownstones. Water stains streak below every cornice. Cobblestones have grass in the mortar joints. Coal smoke trails from chimneys. A shop awning ripples in the wind. Gas lamps glow with moth halos at dusk. It looks like a place where people live, not a diagram of where buildings were.
+* Walk a 1978 Baton Rouge suburb: the concrete driveway has oil stains and crabgrass in the expansion joints. Vinyl siding is sun-faded on the south face. A garden hose is coiled by the spigot. Cicadas pulse in the live oaks. It doesn't look generated — it looks remembered.
 
 Rule: Missing detail is forgivable. Incorrect detail breaks trust.
 
@@ -113,9 +123,9 @@ One simulation clock. One weather state. One sun position. Deterministic procedu
 
 Window views match cardinal orientation and physical placement. Audio feels anchored to "outside space," not stuck to speakers.
 
-### G3 — Believability (Photoreal + Psychoacoustic)
+### G3 — Believability (AAA Visual Fidelity + Psychoacoustic Realism)
 
-Lighting correctness, motion coherence, black levels, exposure matching, non-looping ambience, and physically plausible cues.
+The visual bar is AAA real-time rendering: Crimson Desert, Red Dead 2, The Mandalorian, The Last of Us. Every surface has material depth and weathering. Atmosphere is volumetric. Light bounces correctly. Nothing is clean. Nothing is empty. The audio bar is psychoacoustic realism: non-looping, spatially anchored, era-correct, and invisible. See Section 3 (Visual Fidelity Bar) for the full statement.
 
 ### G4 — Operability
 
@@ -128,7 +138,7 @@ A content pipeline that supports growth while enforcing accuracy constraints.
 ## 7) Non-Goals (for v1)
 
 * Perfect multi-person individualized binaural rendering.
-* Infinite global coverage at film-quality from day one.
+* Infinite global coverage at AAA quality from day one. (AAA fidelity is the goal, but it scales city-by-city, not everywhere at once.)
 * Full "walk anywhere" tracking in a huge space.
 * Consumer DIY kits (v1 is pro install / owned-and-operated quality).
 

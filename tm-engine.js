@@ -439,6 +439,10 @@ function createServer(engineRef) {
         '.fbx': 'application/octet-stream', '.glb': 'model/gltf-binary',
         '.obj': 'text/plain', '.png': 'image/png', '.json': 'application/json',
       });
+    } else if (req.method === 'GET' && urlPath.startsWith('/material-assets/')) {
+      serveStaticDir(res, 'material-assets', urlPath.slice('/material-assets/'.length), {
+        '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json',
+      });
     } else if (req.method === 'GET' && (urlPath === '/viz' || urlPath === '/viz/')) {
       serveHtml(res, path.join(__dirname, 'viz.html'));
     } else {

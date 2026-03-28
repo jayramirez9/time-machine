@@ -5,6 +5,7 @@ node_modules/
 tm-engine.log
 logs/
 audio-assets/
+material-assets/
 
 terrain-data/
 mesh-data/

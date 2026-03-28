@@ -1355,6 +1355,38 @@ class DirectionalBedsLayer {
 //  LAYER 3: Micro-Event Scheduler
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Interpolate diurnal ecology weight for a given timeOfDayPhase.
+ * Maps timePhase (0-1, 0=midnight) to ecology periods (dawn/day/dusk/night)
+ * with smooth cosine interpolation between adjacent periods.
+ * @param {{ dawn: number, day: number, dusk: number, night: number }} weights
+ * @param {number} timePhase - 0-1 (0=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk)
+ * @returns {number} Weight 0-1
+ */
+function diurnalWeightAt(weights, timePhase) {
+  // Period centers in timePhase space (0-1 where 0=midnight)
+  // night=0.0, dawn=0.25, day=0.5, dusk=0.75
+  const periods = [
+    { center: 0.0,  w: weights.night ?? 0 },
+    { center: 0.25, w: weights.dawn  ?? 0 },
+    { center: 0.5,  w: weights.day   ?? 0 },
+    { center: 0.75, w: weights.dusk  ?? 0 },
+    { center: 1.0,  w: weights.night ?? 0 },  // wrap
+  ];
+
+  // Find surrounding periods and interpolate
+  for (let i = 0; i < periods.length - 1; i++) {
+    if (timePhase >= periods[i].center && timePhase <= periods[i + 1].center) {
+      const range = periods[i + 1].center - periods[i].center;
+      const t = range > 0 ? (timePhase - periods[i].center) / range : 0;
+      // Cosine interpolation for smooth transitions
+      const blend = 0.5 * (1 - Math.cos(t * Math.PI));
+      return periods[i].w * (1 - blend) + periods[i + 1].w * blend;
+    }
+  }
+  return weights.day ?? 0.5;
+}
+
 class MicroEventScheduler {
   constructor(ctx, masterGain, profile, buffers) {
     this.ctx = ctx;
@@ -1417,9 +1449,12 @@ class MicroEventScheduler {
         if (activity < pool.activityRange[0] || activity > pool.activityRange[1]) continue;
       }
 
-      // Probability roll
+      // Probability roll — modulated by diurnal ecology weights when available
       const dt = 0.1; // scheduler tick interval
-      const prob = (1 / pool.cooldownSec) * this.densityMultiplier * dt;
+      let prob = (1 / pool.cooldownSec) * this.densityMultiplier * dt;
+      if (pool.diurnalWeights) {
+        prob *= diurnalWeightAt(pool.diurnalWeights, timePhase);
+      }
       if (Math.random() > prob) continue;
 
       // Fire!

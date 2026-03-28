@@ -29,6 +29,7 @@ import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
 const HOST = getFlag('--host', 'http://localhost:30010');
+const DAEMON_URL = getFlag('--daemon-url', 'http://localhost:3000');
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
 const NO_LAMPS = hasFlag('--no-lamps');
@@ -42,6 +43,7 @@ if (!positionalArg) {
   console.error('');
   console.error('Options:');
   console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --daemon-url URL    Mac daemon URL reachable from PC (default: http://localhost:3000)');
   console.error('  --dry-run           Show spawn data without touching Unreal');
   console.error('  --clear             Remove all TM_Street_*/TM_Sidewalk_*/TM_Lamp_* actors');
   console.error('  --no-lamps          Skip gas lamp spawning');
@@ -202,7 +204,7 @@ async function main() {
 
   // Generate and execute street spawn script
   console.log(`\n  Spawning ${streetSpawnList.length} street elements...`);
-  const streetScript = buildStreetSpawnScript(streetSpawnList, { clearExisting: true });
+  const streetScript = buildStreetSpawnScript(streetSpawnList, { clearExisting: true, era: ERA, daemonUrl: DAEMON_URL });
 
   const streetScriptPath = path.join(terrainDir, 'streets-spawn.py');
   fs.writeFileSync(streetScriptPath, streetScript);

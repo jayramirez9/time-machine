@@ -198,6 +198,12 @@ Thin CLI + HTTP/WebSocket transport shell around `startEngine()`.
 
 Assets in `audio-assets/{profile_id}/` (gitignored). Regenerate with `tools/elevenlabs-fetch.js`.
 
+### Procedural Audio Profile Generator (`lib/profileGenerator.js`)
+
+Generates v2 audio profiles for any Place×Time. 47 event templates across 6 era brackets (pre_1830 through modern). Density/climate/era filtering. Accepts optional `month` for seasonal modulation and `environmentProfile` for ecology-driven enrichment. `--month` flag on `tools/generate-profile.js`.
+
+**Diurnal/seasonal gating**: When an Environment Profile with ecology data is provided, bird_song and insect_chorus events get `diurnalWeights` (from species DB density-weighted averages). The audio engine uses these to modulate firing probability by time of day — birds peak at dawn, crickets peak at night. Seasonal weights modulate cooldowns at generation time — insects go silent in winter, birds are sparse.
+
 ### Extended Audio Controls (WorldState)
 
 `worldStateCompiler.js` produces: `gustiness`, `thunderProb`, `activityLevel`, `timeOfDayPhase`, `snowLevel`, `windDirection` — plus the original `windLevel`, `rainLevel`, `ambientLevel`.
@@ -251,9 +257,10 @@ See `docs/research-meshy.md`.
 Shared utilities for spawning actors via Unreal Remote Control API:
 
 - `lib/rcHelpers.js` — RC client + CLI arg parsing. Used by all `spawn-*.js` tools.
-- `lib/spawnScript.js` — Python script generation primitives (header, clear, mesh/light items).
-- `lib/buildingMassing.js` — GeoJSON footprints → scaled cubes (350cm/floor), axis-aligned bounding boxes.
-- `lib/streetMeshing.js` — Road spline control points → flat slab segments + raised sidewalks.
+- `lib/spawnScript.js` — Python script generation primitives (header, clear, mesh/light items, material setup).
+- `lib/materialCatalog.js` — Recipe-based material system. Maps `STYLES[].materials.primary` → base texture + PBR params. `getMaterialRecipe(styleName)`, `getSurfaceRecipe(surface)`, `collectUniqueRecipes()`. Era-agnostic: same textures reused across all eras with per-style tint/roughness/metallic tuning. 17 base texture types covering all architecture styles and street surfaces.
+- `lib/buildingMassing.js` — GeoJSON footprints → scaled cubes (350cm/floor), axis-aligned bounding boxes. Auto-assigns materials from `materialCatalog.js` when `era` + `daemonUrl` are provided.
+- `lib/streetMeshing.js` — Road spline control points → flat slab segments + raised sidewalks. Auto-assigns surface materials (belgian_block, cobblestone, granite_flag, etc.).
 - `lib/lampPlacement.js` — Gas lamp positions along splines, 2200K PointLights at 4.2m, intersection dedup.
 - `lib/landmarks.js` — Multi-primitive hero building compositions from `landmarks.json`.
 - `lib/propCatalog.js` — 16 era-appropriate street furniture types with introduction/removal years.
@@ -313,12 +320,13 @@ Environment Profiles are the complete description of a place at a moment in hist
 | `set-location.js` | Geocode + set CesiumGeoreference via RC API | Unreal running |
 | `set-tileset.js` | Manage Cesium3DTileset URL (Google 3D Tiles, custom, clear, status) | Unreal running |
 | `fetch-sanborn.js` | Download Sanborn fire insurance maps from Library of Congress | — |
+| `fetch-textures.js` | **PBR texture downloader.** Downloads tileable CC0 textures from ambientCG for all 17 material types. Output to `material-assets/`. `--only`, `--force`, `--resolution 2K`. | — |
 
 ### Unreal Spawners
 | Tool | Description | Actor prefix |
 |------|-------------|-------------|
-| `spawn-buildings.js` | GeoJSON footprints → scaled cubes | `TM_Building_{idx}_{material}_{stories}s` |
-| `spawn-streets.js` | Road splines → slabs + sidewalks + lamps. `--era` flag. | `TM_Street_`, `TM_Sidewalk_`, `TM_Lamp_` |
+| `spawn-buildings.js` | GeoJSON footprints → scaled cubes. Auto-creates + assigns materials when `--daemon-url` provided. | `TM_Building_{idx}_{material}_{stories}s` |
+| `spawn-streets.js` | Road splines → slabs + sidewalks + lamps. Auto-creates + assigns surface materials. `--era`, `--daemon-url` flags. | `TM_Street_`, `TM_Sidewalk_`, `TM_Lamp_` |
 | `spawn-landmarks.js` | Multi-primitive hero buildings from `landmarks.json`. `--year` filter. | `TM_Landmark_{id}_{index}` |
 | `spawn-meshes.js` | Import Meshy FBX into Unreal, spawn at geo positions | `TM_Mesh_{idx}_{slug}` |
 | `spawn-props.js` | Era-appropriate street furniture. `--year`, `--only`, `--exclude`. | `TM_Prop_{type}_{idx}` |
@@ -388,5 +396,6 @@ npm test   # Node built-in test runner
 | `eraData.js` | Anachronism timeline (~35 entries, 1712–2017) |
 | `demFetcher.js` | USGS 3DEP DEM download + GDAL processing |
 | `rcHelpers.js` | Unreal RC API client + CLI arg parsing for spawn tools |
-| `spawnScript.js` | Python script generation primitives for RC API |
+| `materialCatalog.js` | Recipe-based material system. Maps architecture styles + street surfaces → base textures + PBR params. Auto-MI creation pipeline. |
+| `spawnScript.js` | Python script generation primitives for RC API. Includes `scriptMaterialSetup()` for auto-creating Material Instances from master material. |
 | `environmentProfile.js` | Environment Profile schema validation, loading, layer helpers, accuracy manifest generation. See `docs/environment-profile-schema.md` |

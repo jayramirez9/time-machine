@@ -38,16 +38,18 @@ function hasFlag(name) {
 
 const location = args.find(a => !a.startsWith('--'));
 const year = parseInt(getFlag('--year', new Date().getFullYear()));
+const monthFlag = getFlag('--month', null);
+const month = monthFlag ? parseInt(monthFlag, 10) : null;
 const dryRun = hasFlag('--dry-run');
 const envProfilePath = getFlag('--profile', null);
 
 if (!location) {
-  console.error('Usage: ./tools/generate-profile.js "Location" [--year YYYY] [--dry-run]');
+  console.error('Usage: ./tools/generate-profile.js "Location" [--year YYYY] [--month M] [--dry-run]');
   console.error('');
   console.error('Examples:');
   console.error('  ./tools/generate-profile.js "Hollywood, CA" --year 1953');
-  console.error('  ./tools/generate-profile.js "Reykjavik, Iceland" --year 1920 --dry-run');
-  console.error('  ./tools/generate-profile.js "Paris, France" --year 1890');
+  console.error('  ./tools/generate-profile.js "Reykjavik, Iceland" --year 1920 --month 7 --dry-run');
+  console.error('  ./tools/generate-profile.js "Paris, France" --year 1890 --month 12');
   process.exit(1);
 }
 
@@ -83,6 +85,7 @@ async function main() {
   const profile = generateProfile({
     location: geo.name,
     year,
+    month,
     population: geo.population || 0,
     countryCode: geo.countryCode,
     lat: geo.lat,

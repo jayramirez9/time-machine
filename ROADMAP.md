@@ -118,6 +118,112 @@ AI agents autonomously research and assemble Place×Time profiles. See PRD Phase
 - [x] **Chronicling America for cultural agent**: LOC Chronicling America API (free, no key, 1770s+) for location-specific cultural detail. Full-text newspaper search — auto-search for street vendors, local customs, advertisements, business types. Enriches the culture layer with real primary-source data instead of generic era templates. `lib/chroniclingAmerica.js` API client, wired into `lib/agents/culturalAgent.js` via `researchNewspapers()`. Graceful fallback when API unreachable.
 - [ ] **Era-appropriate ground truth for any city×year**: The fundamental scaling problem. Sanborn maps cover ~12,000 US cities but require manual footprint tracing. OSM has modern footprints but no date metadata. Agent-driven research to assemble "what buildings existed here in year X" for arbitrary locations — cross-referencing Sanborn, photo archives, city directories, and census records.
 
+## Phase 7b — Visual Fidelity
+
+The scene is accurate. Now make it beautiful. Close the gap between "correct geometry" and "a place that feels real." Prioritized by impact-per-effort: lighting and atmosphere first (engine settings), then materials (reusable across all scenes), then organic detail (vegetation, grime, motion).
+
+### 7b.1 — Rendering Foundation (Lumen + Nanite)
+
+Lumen GI and Nanite mesh are the single biggest quality multiplier — bounce light filling alleys, warm glow under awnings, millions of polygons at no extra cost. This is mostly configuration, not content.
+
+- [ ] **Lumen Global Illumination**: Enable Lumen GI in project settings. Validate with existing Manhattan greybox — bounce light into alley gaps between buildings, warm indirect under awnings. Tune Lumen scene detail, final gather quality, and sky light leak reduction. Verify dispatch pipeline still drives DirectionalLight/SkyLight correctly.
+- [ ] **Nanite mesh conversion**: Convert building massing cubes and Meshy FBX imports to Nanite-enabled static meshes. Validate polycount headroom (Nanite handles millions). Update `lib/meshImport.js` to enable Nanite on import. Benchmark: target 60fps at street level with full block of buildings.
+- [ ] **Virtual Shadow Maps**: Enable VSM (Lumen companion). Soft contact shadows from gas lamps, sharp sun shadows through building gaps. Per-light shadow resolution tuning for `TM_Lamp_` actors.
+- [ ] **Exposure and tone mapping**: Auto-exposure with histogram-based metering. Era-appropriate tone curve — slightly desaturated warm for 1880s, saturated Kodachrome feel for 1970s. Drive from locale preset or Environment Profile.
+
+### 7b.2 — Era Material Library
+
+A brownstone cube with a great tileable material looks better than a 300K-poly Meshy mesh with baked AI texture. Build 10–15 hero material sets per era, applied procedurally by architecture style.
+
+- [x] **Recipe-based material catalog**: `lib/materialCatalog.js` — era-agnostic recipe system. `BASE_TEXTURES` (17 types: brownstone, brick_red, stone_grey, limestone, granite, cast_iron, wood_clapboard, concrete, stucco, terra_cotta, steel_frame + 6 surface types). `PRIMARY_TO_TEXTURE` maps `STYLES[].materials.primary` → base texture. `getMaterialRecipe(styleName)` returns `{ textureKey, tint, roughness, metallic, tilingScale, miName, miPath }`. Covers all 30+ architecture styles across all eras. No per-era authoring needed.
+- [x] **Auto-MI creation at spawn time**: `scriptMaterialSetup()` in `lib/spawnScript.js` generates Python that auto-creates Unreal Material Instance Constants from a single master material (`M_TM_Surface`). Downloads base textures from daemon, imports into Content Browser, creates MI via `MaterialInstanceConstantFactoryNew`, sets PBR parameters (BaseColor, Normal, Tint, TilingScale, RoughnessScale, MetallicScale), saves. Idempotent — skips existing MIs. Wired into `buildSpawnScript()` and `buildStreetSpawnScript()` via `daemonUrl` parameter.
+- [x] **Material auto-assignment**: `spawn-buildings.js` and `spawn-streets.js` pass `--era` and `--daemon-url` through to script builders. Style classification → MI assignment is fully automatic. `brownstone_rowhouse` → `MI_brownstone`, `belgian_block` → `MI_belgian_block`. Graceful fallback to default material when MI doesn't exist.
+- [x] **Placeholder texture library**: `material-assets/` — 17 directories with `base_color.png` + `normal.png` placeholder PNGs (solid colors matching tint values). Daemon serves over HTTP at `/material-assets/`. Swap for real Megascans/CC0 textures anytime without code changes.
+- [ ] **Real PBR texture sets**: Replace placeholder solid-color PNGs with proper tileable PBR textures. Source: Quixel Megascans (free with UE), ambientCG, or Poly Haven (all CC0). ~17 sets: brownstone, brick, stone, iron, wood, concrete, stucco, terra cotta, steel + 6 street surfaces. Each set: base_color.png, normal.png, optionally roughness.png (1024×1024 tileable).
+- [ ] **Runtime Virtual Texture (RVT) blending**: Landscape RVT layer for road/sidewalk/grass transitions. Soft blending at surface boundaries instead of hard edges. Driven by `fetch-vectors.js` land-use masks.
+- [ ] **Parallax Occlusion Mapping**: POM on hero facade materials for depth without geometry cost. Brownstone window recesses, cast iron column fluting, brick mortar lines. Distance-based LOD to flat normal map beyond 20m.
+
+### 7b.3 — Procedural Weathering & Grime
+
+Nothing in the real world is clean. Dirt accumulates in corners, rain streaks under windowsills, soot darkens surfaces near chimneys. One system, infinite variety.
+
+- [ ] **Decal spawner tool**: `tools/spawn-decals.js` — procedurally scatter deferred decals on building facades. Types: water stain (under windows, cornices), soot/smoke (above chimneys, near vents), dirt accumulation (base of walls, corners), crack/spall (random, age-weighted), moss/lichen (north-facing, damp). Placement rules from building height, orientation, era, material. `--density` control.
+- [ ] **Master weathering material function**: Shared Unreal material function that all building materials include. Inputs: world-position noise, vertex color (hand-paintable override), age factor (years since construction), rainfall factor (from WorldState). Outputs: darkening, roughness increase, color desaturation. One function, applied everywhere.
+- [ ] **Ground grime layer**: RVT decal layer for ground-level dirt — puddle stains, mud tracking, oil spots (era-appropriate: horse waste pre-1920, oil post-1900). Driven by WorldState rain/wetness history.
+- [ ] **Age-from-profile**: Wire Environment Profile `yearBuilt` per building → age factor in weathering material. A 5-year-old brownstone in 1884 looks different from a 40-year-old one.
+
+### 7b.4 — Vegetation System
+
+The eye notices barren surfaces instantly. Grass between cobblestones, weeds along walls, street trees — all era-appropriate from the ecology agent.
+
+- [ ] **Foliage catalog**: `lib/foliageCatalog.js` — maps ecology agent species data to Unreal foliage types. Trees (street trees, park trees), shrubs, ground cover (grass, weeds, moss). Era-aware: no Japanese maples in 1884 NYC, no kudzu in 1880s Louisiana. Asset source: Megascans vegetation + procedural grass.
+- [ ] **Street tree placement**: Extend `spawn-streets.js` to place foliage instances along sidewalk splines. Spacing from historical records (typically 25–40ft in 19th century NYC). Species from ecology agent layer.
+- [ ] **Ground cover scatter**: Procedural foliage placement in landscape gaps — grass in vacant lots, weeds at building bases, moss on north-facing stone. Density driven by land-use mask (park → dense, commercial → sparse). Nanite foliage for high instance counts.
+- [ ] **Seasonal variation**: WorldState month/temperature → foliage color, leaf density, grass height. Autumn leaf color for northeast, evergreen persistence, bare winter branches. Material parameter driven from dispatch pipeline.
+
+### 7b.5 — Atmospheric Particles (Niagara)
+
+Dust, smoke, and haze make air visible. Cheap to render, massive impact on presence.
+
+- [ ] **Chimney smoke**: Niagara emitter spawned above buildings with `heating: coal` or `heating: wood` in profile. Smoke color and density from fuel type and weather (more visible in cold/humid). Driven by WorldState temperature + wind.
+- [ ] **Street-level dust**: Kicked up by wind on dry days, suppressed after rain. Particle density from `controls.atmosphere.hazeLevel` and ground wetness. Warm golden tint in afternoon light.
+- [ ] **Gas lamp glow**: Niagara warm particle halo around `TM_Lamp_` actors. Subtle moth/insect particles in summer. Activate at dusk via `timeOfDayPhase`.
+- [ ] **Rain splash particles**: Ground-level splash emitters on horizontal surfaces during rain. Density from `precipDensity`. Puddle ripple rings on wet surfaces.
+- [ ] **Window light glow**: Warm interior light emissive on building windows after dusk. Randomized per-window on/off pattern. Flicker for gas/candle era, steady for electric. Time-of-day driven.
+
+### 7b.6 — Detail Props & Small Motion
+
+Still scenes feel dead. Tiny motion and clutter sell life even without NPCs.
+
+- [ ] **Cloth simulation**: Awning flutter, hanging laundry, window curtains, flags. Simple cloth meshes with UE5 cloth simulation. Wind direction/strength from WorldState. Placed by `spawn-props.js` extension.
+- [ ] **Animated prop catalog**: Extend `propCatalog.js` with animated variants: swinging shop signs, rocking chairs, spinning weathervanes, swaying hanging plants. Simple looping skeletal or material-driven animation.
+- [ ] **Street clutter scatter**: Small-scale ground detail — newspapers, leaves, horse manure (pre-1920), cigarette butts (post-1880), bottle caps. Instanced static meshes, era-filtered, scattered along curbs and in gutters.
+
+**Exit criteria:** Stand at street level in Manhattan 1884. Lumen GI fills the alley with warm bounce light. Brownstone facades have visible mortar depth. Water stains streak below every cornice. Cobblestones have grass in the joints. Three chimneys trail coal smoke. A shop awning ripples in the wind. Gas lamps glow with moth halos. It feels like a *place*, not a diagram.
+
+## Phase 7c — Audio Fidelity
+
+The soundscape is procedurally generated and era-aware. Now make it dense, varied, and physically grounded. Close the gap between "correct macro ambience" and "foley that makes you believe you're standing there." Same principle as 7b: build systems, not individual assets.
+
+The procedural profile generator (`lib/profileGenerator.js`) already handles any city×year with 47 event templates across 6 era brackets. The ecology agent provides species data. The gap is **detail density and variation** — AAA foley (RDR2, Crimson Desert) has 30,000+ clips across hundreds of categories. We have ~40 per scene with one take each.
+
+### 7c.1 — Foley Event Templates (Quick Wins)
+
+Wire the data that already exists but isn't flowing through, then expand the template library.
+
+- [ ] **Diurnal/seasonal gating**: Wire `ecologyAgent.js` species DB `diurnal` and `seasonal` weights into micro-event scheduling. Bird songs suppress at night (`diurnal.night: 0.1`), peak at dawn (`diurnal.dawn: 0.9`). Insect chorus peaks in summer. Data is already in `SPECIES_DB` — just not read by the profile generator's scheduling logic.
+- [ ] **Surface-linked footstep events**: Connect `streetLayout.js` surface types (`belgian_block`, `cobblestone`, `dirt`, `granite_flag`) to footstep event descriptions. "Leather boots on granite setts" vs "shoes on packed dirt." Same surface data the material system uses. One event template per surface type, gated by `activityLevel` and `timeOfDayPhase`.
+- [ ] **Door and window foley templates**: `door_open_wood`, `door_close_wood`, `door_creak`, `window_rattle`, `shutter_bang`. Gated by density (more in urban), era (wood vs metal), and wind (shutters rattle in gusts). ~8 new templates covering pre-1900 through modern.
+- [ ] **Material-contact foley templates**: Generic interaction sounds — `object_drop_wood`, `object_drop_metal`, `glass_clink`, `ceramic_set_down`, `cloth_rustle`, `paper_shuffle`. Gated by `activityLevel` and density. ~12 new templates.
+- [ ] **Transport-specific detail**: Replace generic `car_traffic` with era-specific transport sounds linked to `materialsInfraAgent.js` infrastructure timeline. Horse hooves on cobblestone (pre-1900), steam engine chug (1830-1950), trolley bell (1880-1960), diesel bus (1930+), jet rumble (1950+). ~10 new templates replacing 3 generic ones.
+
+### 7c.2 — Variation & Layering
+
+Single-take assets sound robotic on repeat. Build variation into the generation pipeline.
+
+- [ ] **Multi-variant generation**: Extend `elevenlabs-fetch.js` to generate 3-5 variants per micro-event source (different takes of the same prompt). Round-robin playback in the audio engine eliminates repetition. Track variants in `GENERATION_MANIFEST.json` as `variants: [url1, url2, url3]`.
+- [ ] **Pitch/timing randomization**: Audio engine micro-event playback adds ±5% pitch jitter and ±200ms onset jitter per play. Zero asset cost, significant repetition masking. Wire into `audio-engine.html` scheduler.
+- [ ] **Layered bed construction**: Generate 2-3 complementary bed sources per directional bed instead of 1. Cross-fade between layers for richer texture. Profile generator outputs `sources: [near, mid, far]` per direction.
+
+### 7c.3 — Voice Integration in Auto Profiles
+
+The voice generation framework exists (`elevenlabs-voice-fetch.js`) but only the hand-authored NYC 1884 profile uses it.
+
+- [ ] **Auto voice config in profile generator**: When `density >= urban` and `year` in 1850-1960, auto-generate voice configs for era-appropriate vendor calls, street cries, newsboy shouts. Use `culturalAgent.js` street vendor data to pick phrases. When `year > 1960`, generate casual speech fragments instead.
+- [ ] **Wire voice fetch into bootstrap-scene.js**: After profile generation and SFX fetch, auto-run `elevenlabs-voice-fetch.js` for any profile that has voice configs. Currently skipped in the bootstrap orchestrator.
+
+### 7c.4 — Context-Aware Scheduling
+
+Make the audio engine smarter about when and how events fire.
+
+- [ ] **Weather-reactive foley**: Suppress footstep and door events during heavy rain (`rainLevel > 0.7`). Increase window-rattle frequency during high wind. Add rain-drip-on-awning events post-rain (`rainLevel` falling from >0.3). Already have WorldState controls — need scheduling rules.
+- [ ] **Activity curve from timeOfDayPhase**: Map `timeOfDayPhase` to an activity multiplier curve — quiet at 3am (0.1×), building at 7am (0.8×), peak at noon (1.0×), taper at 10pm (0.3×). Currently `activityLevel` is flat. Drive `densityMultiplier` from the curve instead.
+- [ ] **Concurrent event awareness**: Suppress low-priority events when high-priority events are playing. Thunder suppresses bird song. Heavy traffic suppresses distant vendor calls. Priority ranking per template.
+
+**Exit criteria:** Stand at street level in Manhattan 1884 with eyes closed. You hear hooves on cobblestone, a distant door creak, varying birdsong that fades at dusk. A vendor calls. The sounds don't repeat noticeably over 10 minutes. Rain starts — footsteps thin out, a shutter bangs in the wind, drips patter on an awning. It sounds like a *place*, not a playlist.
+
+---
+
 ## Phase 8 — Living Street View
 
 The full dream. Walk through a historically accurate 3D reconstruction. See PRD Phase 8.

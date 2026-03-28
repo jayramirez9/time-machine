@@ -5,6 +5,7 @@ import {
   classifyDensity,
   getEraBracket,
   generateProfile,
+  getSeason,
 } from '../lib/profileGenerator.js';
 
 // ── classifyClimate ─────────────────────────────────────────────
@@ -226,5 +227,118 @@ describe('generateProfile', () => {
     assert.ok(profile.assetGeneration.promptContext.length > 20);
     assert.ok(profile.description.length > 20);
     assert.equal(profile.description, profile.assetGeneration.promptContext);
+  });
+});
+
+// ── getSeason ─────────────────────────────────────────────────
+
+describe('getSeason', () => {
+  it('maps months to northern hemisphere seasons', () => {
+    assert.equal(getSeason(1), 'winter');
+    assert.equal(getSeason(3), 'spring');
+    assert.equal(getSeason(7), 'summer');
+    assert.equal(getSeason(10), 'fall');
+    assert.equal(getSeason(12), 'winter');
+  });
+
+  it('flips for southern hemisphere', () => {
+    assert.equal(getSeason(1, 'south'), 'summer');
+    assert.equal(getSeason(7, 'south'), 'winter');
+  });
+});
+
+// ── Diurnal/Seasonal enrichment ──────────────────────────────────
+
+describe('generateProfile — diurnal/seasonal enrichment', () => {
+  // Mock environment profile with ecology species data
+  const mockEnvProfile = {
+    layers: {
+      ecology: {
+        data: {
+          species: [
+            {
+              commonName: 'House Sparrow', type: 'bird', density: 0.9,
+              diurnal: { dawn: 0.9, day: 0.7, dusk: 0.8, night: 0.1 },
+              seasonal: { spring: 0.8, summer: 0.9, fall: 0.7, winter: 0.5 }
+            },
+            {
+              commonName: 'American Robin', type: 'bird', density: 0.6,
+              diurnal: { dawn: 0.9, day: 0.5, dusk: 0.7, night: 0.0 },
+              seasonal: { spring: 0.7, summer: 0.6, fall: 0.3, winter: 0.1 }
+            },
+            {
+              commonName: 'Field Cricket', type: 'insect', density: 0.7,
+              diurnal: { dawn: 0.2, day: 0.1, dusk: 0.7, night: 0.9 },
+              seasonal: { spring: 0.3, summer: 0.8, fall: 0.9, winter: 0.0 }
+            }
+          ]
+        }
+      }
+    }
+  };
+
+  const baseOpts = {
+    location: 'Test City, US',
+    year: 1950,
+    population: 200000,
+    lat: 40.7,
+    lon: -74.0,
+  };
+
+  it('attaches diurnalWeights to bird_song when environment profile provided', () => {
+    const profile = generateProfile({ ...baseOpts, environmentProfile: mockEnvProfile });
+    const birdEvt = profile.microEvents.find(e => e.id === 'bird_song');
+    assert.ok(birdEvt, 'Should have bird_song event');
+    assert.ok(birdEvt.diurnalWeights, 'bird_song should have diurnalWeights');
+    assert.ok(birdEvt.diurnalWeights.dawn > 0.7, 'Dawn weight should be high for sparrows+robins');
+    assert.ok(birdEvt.diurnalWeights.night < 0.15, 'Night weight should be near zero');
+  });
+
+  it('attaches diurnalWeights to insect_chorus when environment profile provided', () => {
+    const profile = generateProfile({ ...baseOpts, environmentProfile: mockEnvProfile });
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
+    assert.ok(insectEvt, 'Should have insect_chorus event');
+    assert.ok(insectEvt.diurnalWeights, 'insect_chorus should have diurnalWeights');
+    assert.ok(insectEvt.diurnalWeights.night > 0.7, 'Night weight should be high for crickets');
+    assert.ok(insectEvt.diurnalWeights.day < 0.2, 'Day weight should be low for crickets');
+  });
+
+  it('applies seasonal cooldown modulation in winter (birds less active)', () => {
+    const summer = generateProfile({ ...baseOpts, month: 7, environmentProfile: mockEnvProfile });
+    const winter = generateProfile({ ...baseOpts, month: 1, environmentProfile: mockEnvProfile });
+    const summerBird = summer.microEvents.find(e => e.id === 'bird_song');
+    const winterBird = winter.microEvents.find(e => e.id === 'bird_song');
+    assert.ok(winterBird.avgCooldownSec > summerBird.avgCooldownSec,
+      `Winter cooldown (${winterBird.avgCooldownSec}) should be longer than summer (${summerBird.avgCooldownSec})`);
+  });
+
+  it('suppresses insects in winter (seasonal weight 0)', () => {
+    const profile = generateProfile({ ...baseOpts, month: 1, environmentProfile: mockEnvProfile });
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
+    assert.ok(insectEvt, 'insect_chorus should still exist');
+    assert.ok(insectEvt.avgCooldownSec > 1000, `Winter insect cooldown should be very high, got ${insectEvt.avgCooldownSec}`);
+  });
+
+  it('insects are frequent in summer', () => {
+    const profile = generateProfile({ ...baseOpts, month: 7, environmentProfile: mockEnvProfile });
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
+    assert.ok(insectEvt.avgCooldownSec < 100, `Summer insect cooldown should be reasonable, got ${insectEvt.avgCooldownSec}`);
+  });
+
+  it('no diurnalWeights without environment profile', () => {
+    const profile = generateProfile(baseOpts);
+    const birdEvt = profile.microEvents.find(e => e.id === 'bird_song');
+    assert.ok(birdEvt, 'Should have bird_song event');
+    assert.ok(!birdEvt.diurnalWeights, 'Should not have diurnalWeights without env profile');
+  });
+
+  it('no seasonal modulation without month', () => {
+    const withMonth = generateProfile({ ...baseOpts, month: 7, environmentProfile: mockEnvProfile });
+    const withoutMonth = generateProfile({ ...baseOpts, environmentProfile: mockEnvProfile });
+    const birdWith = withMonth.microEvents.find(e => e.id === 'bird_song');
+    const birdWithout = withoutMonth.microEvents.find(e => e.id === 'bird_song');
+    // Both should have diurnal weights (from ecology), but only withMonth should have seasonal modulation
+    assert.ok(birdWith.diurnalWeights);
+    assert.ok(birdWithout.diurnalWeights);
   });
 });
