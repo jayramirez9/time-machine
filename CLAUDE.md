@@ -223,7 +223,8 @@ The world state is self-sufficient: renderers drive entirely from `states` + `co
 - **Auto-height**: `estimateHeight()` queries USGS 3DEP for ground level + 2m eye offset.
 - **Google 3D Tiles** (scouting only, not production — ToS restrictions). Toggle in launcher.
 - **`lib/cesiumGeoreference.js`**: discover actor, write origin, estimate height, check connectivity.
-- **`lib/cesiumTileset.js`**: discover tileset actors, set/clear URL, get status.
+- **`lib/cesiumTileset.js`**: discover tileset actors, set/clear URL, get status, disable ion imagery overlays.
+- **Auto-disable ion imagery on engine start**: `disableIonImagery()` removes CesiumIonRasterOverlay components via Python RC API. Prevents Cesium ion imagery session quota burn. Local NAIP imagery (fetched by `fetch-imagery.js`, applied to Landscape material) is used instead.
 - **Status endpoint**: `GET /api/unreal-status` → `{ reachable, cesiumFound, origin, tileset }`.
 
 See `docs/research-geo-pipeline.md` and `docs/research-historical-built-environment.md`.
