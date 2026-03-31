@@ -221,7 +221,7 @@ async function main() {
 
   // Generate and execute Python script
   console.log(`\n  Spawning ${spawnList.length} buildings via Python script...`);
-  const script = buildSpawnScript(spawnList, { clearExisting: true, era: resolvedEra, daemonUrl: DAEMON_URL });
+  const script = buildSpawnScript(spawnList, { clearExisting: true, era: resolvedEra, daemonUrl: DAEMON_URL, targetYear: YEAR_FLAG ? parseInt(YEAR_FLAG, 10) : null });
 
   // Write script for debugging
   const scriptPath = path.join(terrainDir, 'buildings-spawn.py');

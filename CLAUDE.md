@@ -61,7 +61,7 @@ Weather Provider → Timeline Interpolation → World State Compiler → Locale 
 **Pipeline** (`lib/`):
 - `weatherTimeline.js` — fetches surrounding hours, interpolates to 15min intervals, auto-selects provider with fallback chain
 - `worldStateCompiler.js` — compiles timeline into renderer-independent world state with categorical states and normalized controls (lighting, audio, atmosphere, visual)
-- `localePresets.js` — environment-specific tuning (`baton_rouge_suburb`, `nyc_city`, `nyc_city_1884`)
+- `localePresets.js` — environment-specific tuning (`baton_rouge_suburb`, `nyc_city`, `nyc_city_1884`). Era-aware tone mapping presets (`TONE_MAPPING_PRESETS`, `resolveToneMapping(year)`).
 
 ### Runtime Engine
 
@@ -331,6 +331,10 @@ Environment Profiles are the complete description of a place at a moment in hist
 | `spawn-landmarks.js` | Multi-primitive hero buildings from `landmarks.json`. `--year` filter. | `TM_Landmark_{id}_{index}` |
 | `spawn-meshes.js` | Import Meshy FBX into Unreal, spawn at geo positions | `TM_Mesh_{idx}_{slug}` |
 | `spawn-props.js` | Era-appropriate street furniture. `--year`, `--only`, `--exclude`. | `TM_Prop_{type}_{idx}` |
+| `spawn-decals.js` | Procedural weathering decals on facades + ground grime | `TM_Decal_{type}_{idx}`, `TM_Grime_{type}_{idx}` |
+| `spawn-vegetation.js` | Street trees + ground cover from ecology data | `TM_Tree_{type}_{idx}`, `TM_Foliage_{type}_{idx}` |
+| `spawn-particles.js` | Atmospheric particles (smoke, dust, lamp glow, rain, windows) | `TM_Particle_{type}_{idx}` |
+| `spawn-clutter.js` | Street clutter, cloth items, animated props | `TM_Clutter_{type}_{idx}` |
 | `spawn-greybox.js` | Quick 1884 NYC greybox scene (12 brownstones + 4 lamps) | — |
 
 All spawners support `--dry-run` and `--clear`. Most support `--host` for remote Unreal.
@@ -385,6 +389,13 @@ npm test   # Node built-in test runner
 | `test/photoArchiveAgent.test.js` | Archive matching by location/year, photo availability assessment |
 | `test/materialsInfraAgent.test.js` | Road surfaces, infrastructure timeline, lighting/transport by year |
 | `test/profileAssembler.test.js` | Full pipeline assembly, validation, progress callbacks, skip layers |
+| `test/renderingConfig.test.js` | Lumen/VSM/Nanite script content, lamp shadows, tone mapping presets, offline RC API |
+| `test/weatheringParams.test.js` | Building age, weathering curves, material params, per-building DMI, decal script output |
+| `test/decalCatalog.test.js` | Decal type integrity, era filtering, material affinity, density computation |
+| `test/decalPlacement.test.js` | Deterministic placement, density scaling, ground grime, script generation |
+| `test/foliageCatalog.test.js` | Vegetation catalog integrity, era/region filtering, seasonal, placement determinism |
+| `test/particlePlacement.test.js` | Particle catalog, smoke density, all 5 placement functions, script generation |
+| `test/clutterCatalog.test.js` | Clutter catalog, era filtering, seasonal density, cloth/animated categories |
 
 ---
 
@@ -400,3 +411,12 @@ npm test   # Node built-in test runner
 | `materialCatalog.js` | Recipe-based material system. Maps architecture styles + street surfaces → base textures + PBR params. Auto-MI creation pipeline. |
 | `spawnScript.js` | Python script generation primitives for RC API. Includes `scriptMaterialSetup()` for auto-creating Material Instances from master material. |
 | `environmentProfile.js` | Environment Profile schema validation, loading, layer helpers, accuracy manifest generation. See `docs/environment-profile-schema.md` |
+| `renderingConfig.js` | Lumen GI, Nanite, VSM, auto-exposure configuration via Python RC API. `configureRendering(host)`, `configureLampShadows(host)`, `buildNaniteConversionScript(prefix)` |
+| `decalCatalog.js` | Weathering/grime decal definitions (5 facade + 4 ground types) with era ranges, material affinity, density weights. `getDecalsForYear()`, `getDecalsForMaterial()`, `getGroundGrimeForYear()`, `computeDecalDensity()` |
+| `decalPlacement.js` | Procedural decal placement on building facades + ground grime along streets. Seeded PRNG, dedup. `placeDecals()`, `placeGroundGrime()`, `buildDecalSpawnScript()` |
+| `foliageCatalog.js` | Vegetation species definitions (20 types: street trees, park trees, ground cover, building-base). Region + era filtered. `getFoliageForYear()`, `getFoliageForRegion()`, `getFoliageByCategory()` |
+| `foliagePlacement.js` | Street tree placement along sidewalk splines + ground cover grid scatter. Seeded PRNG. `placeStreetTrees()`, `placeGroundCover()`, `buildFoliageSpawnScript()` |
+| `particleCatalog.js` | Atmospheric particle definitions (5 types: chimney smoke, dust, lamp glow, rain splash, window glow). Trigger conditions + Niagara bindings. `getParticlesForYear()`, `computeSmokeDensity()` |
+| `particlePlacement.js` | Particle spawn placement for all 5 types. `placeAllParticles()`, `buildParticleSpawnScript()`. Uses scriptNiagaraItem + scriptPointLightItem. |
+| `clutterCatalog.js` | Detail props (15 types: 8 clutter, 4 cloth, 3 animated). Era-filtered, seasonal, wind-responsive. `getClutterForYear()`, `getClutterByCategory()`, `computeSeasonalDensity()` |
+| `clutterPlacement.js` | Street clutter scatter + cloth/animated facade placement. `placeStreetClutter()`, `placeClothItems()`, `placeAnimatedProps()`, `buildClutterSpawnScript()` |

@@ -81,6 +81,42 @@
           "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.SkyLight_UAID_A85E45CFE40401D200_1470380759",
           "componentPath": "SkyLightComponent0",
           "propertyName": "Intensity"
+        },
+        "PP.ExposureBias": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "AutoExposureBias",
+          "overrideName": "bOverride_AutoExposureBias"
+        },
+        "PP.FilmSlope": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "FilmSlope",
+          "overrideName": "bOverride_FilmSlope"
+        },
+        "PP.FilmToe": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "FilmToe",
+          "overrideName": "bOverride_FilmToe"
+        },
+        "PP.FilmShoulder": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "FilmShoulder",
+          "overrideName": "bOverride_FilmShoulder"
+        },
+        "PP.Saturation": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "ColorSaturation",
+          "overrideName": "bOverride_ColorSaturation"
+        },
+        "PP.ColorGammaR": {
+          "type": "postprocess",
+          "objectPath": "/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel.PostProcessVolume_UAID_F4D4887DE23484C302_1403672650",
+          "settingName": "ColorGamma",
+          "overrideName": "bOverride_ColorGamma"
         }
       }
     },
@@ -225,6 +261,41 @@
       "endpoint": "unreal",
       "param": "Wind.Direction",
       "transform": { "type": "passthrough" }
+    },
+    {
+      "source": "controls.postprocess.exposureBias",
+      "endpoint": "unreal",
+      "param": "PP.ExposureBias",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.1, "ema": 0.3 }
+    },
+    {
+      "source": "controls.postprocess.filmSlope",
+      "endpoint": "unreal",
+      "param": "PP.FilmSlope",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.05, "ema": 0.2 }
+    },
+    {
+      "source": "controls.postprocess.filmToe",
+      "endpoint": "unreal",
+      "param": "PP.FilmToe",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.05, "ema": 0.2 }
+    },
+    {
+      "source": "controls.postprocess.filmShoulder",
+      "endpoint": "unreal",
+      "param": "PP.FilmShoulder",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.05, "ema": 0.2 }
+    },
+    {
+      "source": "controls.postprocess.saturation",
+      "endpoint": "unreal",
+      "param": "PP.Saturation",
+      "transform": { "type": "passthrough" },
+      "rateLimit": { "maxDelta": 0.05, "ema": 0.2 }
     }
   ]
 }
