@@ -277,7 +277,8 @@ Phase 7 research agents that produce Environment Profile layers:
 - `culturalAgent.js` — Produces culture + music layers from embedded era databases. Street vendors, daily life, languages, music formats. Exports `researchCulture()`, `ERA_CULTURE_DB`, `MUSIC_ERA_DB`, `getMusicEra()`.
 - `photoArchiveAgent.js` — Catalogs available photo archives for a location + year. 8 major US collections with API availability. Exports `researchPhotoArchives()`, `PHOTO_ARCHIVES`, `matchArchives()`.
 - `materialsInfraAgent.js` — Road surfaces, building facades, roofing by era + infrastructure timeline (lighting, transport, utilities). Exports `researchMaterials()`, `researchInfrastructure()`, `INFRASTRUCTURE_TIMELINE`.
-- `profileAssembler.js` — **Orchestrator.** Geocodes, runs all agents in parallel, merges into Environment Profile, generates accuracy manifest. Exports `assembleProfile()`.
+- `buildingDateAgent.js` — Estimates yearBuilt/yearDemolished for undated buildings using 7 evidence methods: explicit dates, OSM start_date, Sanborn bracketing, major fire lower bounds, material+stories era ranges, construction boom decades, neighborhood clustering. Embedded DBs: `CONSTRUCTION_BOOMS` (25 cities), `MAJOR_FIRES` (12 events), `MATERIAL_ERA_RANGES` (14 materials). Exports `researchBuildingDates()`, `fuseEstimates()`, `parseStartDate()`, `dateFrom*()` methods.
+- `profileAssembler.js` — **Orchestrator.** Geocodes, runs all agents in parallel (Group 1), then runs buildingDateAgent (Group 2, depends on urbanForm), merges into Environment Profile, generates accuracy manifest. Exports `assembleProfile()`.
 
 ### Environment Profiles (`profiles/`)
 
@@ -388,6 +389,7 @@ npm test   # Node built-in test runner
 | `test/culturalAgent.test.js` | Era culture/music DB integrity, era resolution, layer generation |
 | `test/photoArchiveAgent.test.js` | Archive matching by location/year, photo availability assessment |
 | `test/materialsInfraAgent.test.js` | Road surfaces, infrastructure timeline, lighting/transport by year |
+| `test/buildingDateAgent.test.js` | Evidence methods, fusion, embedded DB integrity, Sanborn bracketing, major fires, material eras, manhattan-ny integration |
 | `test/profileAssembler.test.js` | Full pipeline assembly, validation, progress callbacks, skip layers |
 | `test/renderingConfig.test.js` | Lumen/VSM/Nanite script content, lamp shadows, tone mapping presets, offline RC API |
 | `test/weatheringParams.test.js` | Building age, weathering curves, material params, per-building DMI, decal script output |
