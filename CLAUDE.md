@@ -413,7 +413,7 @@ npm test   # Node built-in test runner
 | `materialCatalog.js` | Recipe-based material system. Maps architecture styles + street surfaces → base textures + PBR params. Auto-MI creation pipeline. |
 | `spawnScript.js` | Python script generation primitives for RC API. Includes `scriptMaterialSetup()` for auto-creating Material Instances from master material. |
 | `environmentProfile.js` | Environment Profile schema validation, loading, layer helpers, accuracy manifest generation. See `docs/environment-profile-schema.md` |
-| `renderingConfig.js` | Lumen GI, Nanite, VSM, auto-exposure configuration via Python RC API. `configureRendering(host)`, `configureLampShadows(host)`, `buildNaniteConversionScript(prefix)` |
+| `renderingConfig.js` | Lumen GI, Nanite, VSM, auto-exposure, RVT blending, POM configuration via Python RC API. `configureRendering(host)`, `configureLampShadows(host)`, `buildNaniteConversionScript(prefix)`, `configureRVTBlending(host, slug)`, `configurePOM(host)` |
 | `decalCatalog.js` | Weathering/grime decal definitions (5 facade + 4 ground types) with era ranges, material affinity, density weights. `getDecalsForYear()`, `getDecalsForMaterial()`, `getGroundGrimeForYear()`, `computeDecalDensity()` |
 | `decalPlacement.js` | Procedural decal placement on building facades + ground grime along streets. Seeded PRNG, dedup. `placeDecals()`, `placeGroundGrime()`, `buildDecalSpawnScript()` |
 | `foliageCatalog.js` | Vegetation species definitions (20 types: street trees, park trees, ground cover, building-base). Region + era filtered. `getFoliageForYear()`, `getFoliageForRegion()`, `getFoliageByCategory()` |

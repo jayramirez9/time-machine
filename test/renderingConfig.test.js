@@ -4,9 +4,15 @@ import {
   buildRenderingScript,
   buildLampShadowScript,
   buildNaniteConversionScript,
+  buildRVTBlendingScript,
+  buildPOMScript,
   configureRendering,
   configureLampShadows,
+  configureRVTBlending,
+  configurePOM,
 } from '../lib/renderingConfig.js';
+import { BASE_TEXTURES, POM_MAX_DISTANCE } from '../lib/materialCatalog.js';
+import { rasterizeRoadMask } from '../lib/osmVectors.js';
 import {
   resolveToneMapping,
   TONE_MAPPING_PRESETS,
@@ -129,6 +135,164 @@ describe('Rendering Config', () => {
       const result = await configureLampShadows('http://127.0.0.1:1');
       assert.equal(result.ok, false);
     });
+  });
+
+  // ── RVT Blending Script ─────────────────────────────────────
+
+  describe('buildRVTBlendingScript', () => {
+    const script = buildRVTBlendingScript('manhattan-ny');
+
+    it('enables virtual textures', () => {
+      assert.ok(script.includes('r.VirtualTextures'));
+    });
+
+    it('references correct mask asset paths for slug', () => {
+      assert.ok(script.includes('Mask_roads_manhattan_ny'));
+      assert.ok(script.includes('Mask_water_manhattan_ny'));
+      assert.ok(script.includes('Mask_landuse_manhattan_ny'));
+    });
+
+    it('creates landscape material instance', () => {
+      assert.ok(script.includes('MI_Landscape_manhattan_ny'));
+      assert.ok(script.includes('MaterialInstanceConstantFactoryNew'));
+    });
+
+    it('sets blend sharpness parameters', () => {
+      assert.ok(script.includes('RoadBlendSharpness'));
+      assert.ok(script.includes('WaterBlendSharpness'));
+      assert.ok(script.includes('GrassBlendSharpness'));
+    });
+
+    it('assigns material to landscape', () => {
+      assert.ok(script.includes('landscape_material'));
+    });
+
+    it('sanitizes slug with hyphens', () => {
+      const s = buildRVTBlendingScript('baton-rouge-la');
+      assert.ok(s.includes('Mask_roads_baton_rouge_la'));
+      assert.ok(!s.includes('baton-rouge-la'));
+    });
+  });
+
+  describe('configureRVTBlending (offline)', () => {
+    it('returns ok: false when Unreal is unreachable', async () => {
+      const result = await configureRVTBlending('http://127.0.0.1:1', 'test');
+      assert.equal(result.ok, false);
+    });
+  });
+
+  // ── POM Script ──────────────────────────────────────────────
+
+  describe('buildPOMScript', () => {
+    const script = buildPOMScript();
+
+    it('enables parallel occlusion', () => {
+      assert.ok(script.includes('r.ParallelOcclusion'));
+    });
+
+    it('audits TM_Building_ actors', () => {
+      assert.ok(script.includes('TM_Building_'));
+    });
+
+    it('checks HeightScale parameter', () => {
+      assert.ok(script.includes('HeightScale'));
+    });
+
+    it('logs POM readiness', () => {
+      assert.ok(script.includes('POM audit'));
+    });
+  });
+
+  describe('configurePOM (offline)', () => {
+    it('returns ok: false when Unreal is unreachable', async () => {
+      const result = await configurePOM('http://127.0.0.1:1');
+      assert.equal(result.ok, false);
+    });
+  });
+});
+
+// ── POM Material Parameters ─────────────────────────────────
+
+describe('POM Material Catalog', () => {
+  it('every BASE_TEXTURE has heightScale', () => {
+    for (const [key, tex] of Object.entries(BASE_TEXTURES)) {
+      assert.ok(typeof tex.heightScale === 'number', `${key} missing heightScale`);
+      assert.ok(tex.heightScale >= 0 && tex.heightScale <= 0.1, `${key} heightScale out of range: ${tex.heightScale}`);
+    }
+  });
+
+  it('POM_MAX_DISTANCE is exported and reasonable', () => {
+    assert.ok(typeof POM_MAX_DISTANCE === 'number');
+    assert.ok(POM_MAX_DISTANCE > 0);
+    assert.equal(POM_MAX_DISTANCE, 2000);
+  });
+
+  it('cast_iron has highest heightScale (deep relief)', () => {
+    assert.ok(BASE_TEXTURES.cast_iron.heightScale >= BASE_TEXTURES.brick_red.heightScale);
+  });
+
+  it('granite has low heightScale (polished surface)', () => {
+    assert.ok(BASE_TEXTURES.granite.heightScale <= 0.02);
+  });
+
+  it('cobblestone has high heightScale (round stones)', () => {
+    assert.ok(BASE_TEXTURES.cobblestone.heightScale >= 0.04);
+  });
+});
+
+// ── Road Mask Rasterization ─────────────────────────────────
+
+describe('rasterizeRoadMask', () => {
+  const bbox = { minLat: 40.70, maxLat: 40.72, minLon: -74.02, maxLon: -74.00 };
+
+  it('produces non-zero pixels for a road feature', () => {
+    const features = [{
+      type: 'Feature',
+      properties: { category: 'road', subcategory: 'primary' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [[-74.015, 40.71], [-74.005, 40.71]]
+      }
+    }];
+    const pixels = rasterizeRoadMask(features, bbox, 100, 100);
+    const filled = pixels.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    assert.ok(filled > 0, 'should have filled pixels');
+  });
+
+  it('returns all-zero for empty features', () => {
+    const pixels = rasterizeRoadMask([], bbox, 100, 100);
+    const filled = pixels.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    assert.equal(filled, 0);
+  });
+
+  it('primary roads are wider than residential', () => {
+    const makeLine = (sub) => [{
+      type: 'Feature',
+      properties: { category: 'road', subcategory: sub },
+      geometry: {
+        type: 'LineString',
+        coordinates: [[-74.015, 40.71], [-74.005, 40.71]]
+      }
+    }];
+    const primaryPx = rasterizeRoadMask(makeLine('primary'), bbox, 200, 200);
+    const residentialPx = rasterizeRoadMask(makeLine('residential'), bbox, 200, 200);
+    const primaryFilled = primaryPx.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    const residentialFilled = residentialPx.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    assert.ok(primaryFilled > residentialFilled, 'primary should be wider than residential');
+  });
+
+  it('skips non-LineString geometries', () => {
+    const features = [{
+      type: 'Feature',
+      properties: { category: 'road', subcategory: 'primary' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[-74.015, 40.71], [-74.005, 40.71], [-74.005, 40.715], [-74.015, 40.71]]]
+      }
+    }];
+    const pixels = rasterizeRoadMask(features, bbox, 100, 100);
+    const filled = pixels.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    assert.equal(filled, 0);
   });
 });
 

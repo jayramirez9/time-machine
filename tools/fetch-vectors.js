@@ -15,7 +15,7 @@
 
 import { geocode } from '../lib/openmeteo.js';
 import { computeBoundingBox, slugify } from '../lib/demFetcher.js';
-import { fetchOSMData, toGeoJSON, simplifyGeoJSON, roadsToSplineData, rasterizeMask, encodePNG } from '../lib/osmVectors.js';
+import { fetchOSMData, toGeoJSON, simplifyGeoJSON, roadsToSplineData, rasterizeMask, rasterizeRoadMask, encodePNG } from '../lib/osmVectors.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -181,6 +181,19 @@ async function main() {
     console.log('  No landuse polygons to rasterize');
   }
 
+  // Rasterize road mask (line buffer — roads are LineStrings, not polygons)
+  if (roads.length) {
+    console.log(`  Rasterizing road mask (${maskDimensions}x${maskDimensions})...`);
+    const roadPixels = rasterizeRoadMask(roads, bbox, maskDimensions, maskDimensions);
+    const roadPng = encodePNG(roadPixels, maskDimensions, maskDimensions);
+    const roadMaskPath = path.join(outputDir, 'mask-roads.png');
+    fs.writeFileSync(roadMaskPath, roadPng);
+    const filledPx = roadPixels.reduce((n, v) => n + (v > 0 ? 1 : 0), 0);
+    console.log(`  Wrote ${roadMaskPath} (${(filledPx / (maskDimensions * maskDimensions) * 100).toFixed(1)}% coverage)`);
+  } else {
+    console.log('  No roads to rasterize');
+  }
+
   // Extract road splines
   const origin = { lat, lon };
   const splines = roadsToSplineData(roads, origin);
@@ -201,6 +214,7 @@ async function main() {
     geojsonPath: path.join(outputDir, 'vectors.geojson'),
     waterMaskPath: waterPolygons.length ? path.join(outputDir, 'mask-water.png') : null,
     landuseMaskPath: landusePolygons.length ? path.join(outputDir, 'mask-landuse.png') : null,
+    roadsMaskPath: roads.length ? path.join(outputDir, 'mask-roads.png') : null,
     roadsSplinePath: path.join(outputDir, 'roads-splines.json'),
     maskDimensions,
     featureCounts: { roads: roads.length, water: water.length, landuse: landuse.length },
