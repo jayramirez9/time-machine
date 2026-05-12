@@ -180,6 +180,72 @@ describe('generateProfile', () => {
     assert.equal(p1.id, p2.id);
   });
 
+  // ── Layered directional beds (Phase 7c.2) ─────────────────────
+
+  it('directional beds have 3 layered sources per direction', () => {
+    const profile = generateProfile(baseOpts);
+    for (const dir of ['N', 'E', 'S', 'W']) {
+      const bed = profile.beds.directional[dir];
+      assert.equal(bed.sources.length, 3,
+        `direction ${dir} should have 3 layered sources, got ${bed.sources.length}`);
+    }
+  });
+
+  it('layered directional sources have near/mid/far variantHints', () => {
+    const profile = generateProfile(baseOpts);
+    const expectedSuffixes = ['near', 'mid', 'far'];
+    for (const dir of ['N', 'E', 'S', 'W']) {
+      const bed = profile.beds.directional[dir];
+      for (let i = 0; i < 3; i++) {
+        const s = bed.sources[i];
+        assert.ok(s.label.endsWith(`-${expectedSuffixes[i]}`),
+          `${dir}.sources[${i}] label should end with -${expectedSuffixes[i]}, got ${s.label}`);
+        assert.ok(typeof s.variantHint === 'string' && s.variantHint.length > 0,
+          `${dir}.sources[${i}] should have a variantHint`);
+      }
+      // Distinct hints per layer
+      const hints = new Set(bed.sources.map(s => s.variantHint));
+      assert.equal(hints.size, 3, `${dir} layers should have 3 distinct variantHints`);
+    }
+  });
+
+  it('layered sources have ordered distance and gain offsets', () => {
+    const profile = generateProfile(baseOpts);
+    for (const dir of ['N', 'E', 'S', 'W']) {
+      const [near, mid, far] = profile.beds.directional[dir].sources;
+      assert.ok(near.spatial.distance < far.spatial.distance,
+        `${dir}: near distance should be closer than far`);
+      assert.ok(near.spatial.spread < far.spatial.spread,
+        `${dir}: near spread should be narrower than far`);
+      assert.ok(near.gainOffsetDb > 0,
+        `${dir}: near should have positive gain offset (louder)`);
+      assert.equal(mid.gainOffsetDb, 0,
+        `${dir}: mid should have neutral gain offset`);
+      assert.ok(far.gainOffsetDb < 0,
+        `${dir}: far should have negative gain offset (softer)`);
+    }
+  });
+
+  it('layered sources share direction azimuth and elevation', () => {
+    const profile = generateProfile(baseOpts);
+    for (const dir of ['N', 'E', 'S', 'W']) {
+      const [near, mid, far] = profile.beds.directional[dir].sources;
+      assert.equal(near.spatial.azimuth, mid.spatial.azimuth,
+        `${dir}: layers must point the same direction`);
+      assert.equal(mid.spatial.azimuth, far.spatial.azimuth);
+      assert.equal(near.spatial.elevation, mid.spatial.elevation);
+    }
+  });
+
+  it('layered sources keep url: null for asset generation', () => {
+    const profile = generateProfile(baseOpts);
+    for (const dir of ['N', 'E', 'S', 'W']) {
+      for (const s of profile.beds.directional[dir].sources) {
+        assert.equal(s.url, null);
+      }
+    }
+  });
+
   it('1870 gets horses not cars', () => {
     const profile = generateProfile({ ...baseOpts, year: 1870 });
     const eventIds = profile.microEvents.map(e => e.id);

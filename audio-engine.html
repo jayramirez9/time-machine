@@ -1222,38 +1222,44 @@ class DirectionalBedsLayer {
     const facingAngle = { N: 0, E: 90, S: 180, W: 270 };
 
     for (const [dir, config] of Object.entries(dirConfig)) {
-      const labels = (config.sources || []).map(s => s.label);
-      if (labels.length === 0) continue;
+      const sources = config.sources || [];
+      if (sources.length === 0) continue;
 
-      // v2: use HRTF from source spatial data; v1: stereo pan
-      const firstSource = (config.sources || [])[0];
-      const spatial = firstSource?.spatial || null;
-      const pannerWrapper = spatial
-        ? createSpatialPanner(ctx, spatial)
-        : createSpatialPanner(ctx, null, { pan: panMap[dir] ?? 0 });
+      const baseGainDb = config.gainDb ?? -18;
 
-      const gain = ctx.createGain();
-      gain.gain.value = dbToLin(config.gainDb ?? -18);
+      // Per-direction parent gain — modulated by wind direction at runtime,
+      // and the splice point for occlusion filters. Each layered source
+      // (near/mid/far) feeds into this through its own panner+distance chain.
+      const parentGain = ctx.createGain();
+      parentGain.gain.value = dbToLin(baseGainDb);
+      parentGain.connect(this.output);
 
-      // Distance filter for HRTF sources
-      const distFilter = spatial ? createDistanceFilter(ctx, spatial.distance ?? 0.5) : null;
-      if (distFilter) {
-        gain.connect(distFilter);
-        distFilter.connect(pannerWrapper.node);
-      } else {
-        gain.connect(pannerWrapper.node);
-      }
-      pannerWrapper.node.connect(this.output);
+      const layerEntries = sources.map(s => {
+        const spatial = s.spatial || null;
+        const panner = spatial
+          ? createSpatialPanner(ctx, spatial)
+          : createSpatialPanner(ctx, null, { pan: panMap[dir] ?? 0 });
+
+        const sourceGain = ctx.createGain();
+        sourceGain.gain.value = dbToLin(s.gainOffsetDb ?? 0);
+
+        const distFilter = spatial ? createDistanceFilter(ctx, spatial.distance ?? 0.5) : null;
+        if (distFilter) {
+          sourceGain.connect(distFilter);
+          distFilter.connect(panner.node);
+        } else {
+          sourceGain.connect(panner.node);
+        }
+        panner.node.connect(parentGain);
+
+        return { label: s.label, sourceGain, panner, distFilter, node: null };
+      });
 
       this.directions[dir] = {
-        labels,
-        pannerWrapper,
-        gain,
-        distFilter,
-        node: null,
-        currentIdx: 0,
+        layers: layerEntries,
+        parentGain,
+        baseGainDb,
         facingAngle: facingAngle[dir] ?? 0,
-        baseGainDb: config.gainDb ?? -18
       };
     }
 
@@ -1261,25 +1267,26 @@ class DirectionalBedsLayer {
   }
 
   start() {
-    for (const [dir, d] of Object.entries(this.directions)) {
+    for (const dir of Object.keys(this.directions)) {
       this._startDirection(dir);
     }
   }
 
   _startDirection(dir) {
     const d = this.directions[dir];
-    if (!d || d.labels.length === 0) return;
+    if (!d || !d.layers || d.layers.length === 0) return;
 
-    const label = d.labels[d.currentIdx % d.labels.length];
-    const buf = this.buffers[label];
-    if (!buf) return;
-
-    const node = this.ctx.createBufferSource();
-    node.buffer = buf;
-    node.loop = true;
-    node.start(0, Math.random() * buf.duration);
-    node.connect(d.gain);
-    d.node = node;
+    for (const layer of d.layers) {
+      const buf = this.buffers[layer.label];
+      if (!buf) continue;
+      const node = this.ctx.createBufferSource();
+      node.buffer = buf;
+      node.loop = true;
+      // Randomize start offset per layer so loops don't phase-align
+      node.start(0, Math.random() * buf.duration);
+      node.connect(layer.sourceGain);
+      layer.node = node;
+    }
   }
 
   update(worldState, dt) {
@@ -1302,8 +1309,11 @@ class DirectionalBedsLayer {
     for (const d of Object.values(this.directions)) {
       const angleDiff = (windDir - d.facingAngle) * DEG2RAD;
       const modDb = Math.cos(angleDiff) * MOD_DB;
-      const targetGain = dbToLin(d.baseGainDb + modDb);
-      d.gain.gain.setTargetAtTime(targetGain, now, RAMP);
+      // Preserve occlusion attenuation: applyOcclusion() stores a static
+      // multiplier we re-apply every tick, since setTargetAtTime overwrites.
+      const occMul = d.occlusionGainMul ?? 1;
+      const targetGain = dbToLin(d.baseGainDb + modDb) * occMul;
+      d.parentGain.gain.setTargetAtTime(targetGain, now, RAMP);
     }
   }
 
@@ -1327,24 +1337,23 @@ class DirectionalBedsLayer {
       const result = occLayer.createDirectionalBedFilter(dir);
       if (!result) continue;
 
-      // Splice filter: disconnect gain from current target, insert filter
-      d.gain.disconnect();
-      d.gain.connect(result.filter);
-      if (d.distFilter) {
-        result.filter.connect(d.distFilter);
-      } else {
-        result.filter.connect(d.pannerWrapper.node);
-      }
+      // Splice filter post-pan: parentGain → filter → output (was → output directly).
+      d.parentGain.disconnect();
+      d.parentGain.connect(result.filter);
+      result.filter.connect(this.output);
 
-      // Apply gain reduction
-      d.gain.gain.value *= result.gainMul;
+      // Store the multiplier so update() can re-apply it each tick — a bare
+      // *= here would be clobbered the next time setTargetAtTime fires.
+      d.occlusionGainMul = result.gainMul;
       d.occlusionFilter = result.filter;
     }
   }
 
   dispose() {
     for (const d of Object.values(this.directions)) {
-      try { d.node?.stop(); } catch (_) {}
+      for (const layer of (d.layers || [])) {
+        try { layer.node?.stop(); } catch (_) {}
+      }
       if (d.occlusionFilter) d.occlusionFilter.disconnect();
     }
     this.output.disconnect();
