@@ -223,6 +223,35 @@ Make the audio engine smarter about when and how events fire.
 
 ---
 
+## Phase 7d — Capture-Based Geometry (3DGS) — **NEXT / ACTIVE**
+
+> **Why this is now the priority.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
+>
+> **Key external facts (June 2026):** Cesium for Unreal now streams **3DGS tilesets with hierarchical LOD** from Cesium ion (the existing dependency — no new vendor). Cesium ion reconstructs **photos → mesh / point cloud / Gaussian splats** (iTwin Capture). Format is standardized via Khronos glTF extensions `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Unreal **5.8** (releasing this month) ships **Megalights** (production-ready — many shadowed lights cheaply) and **Lumen Medium** (2× faster GI). These de-risk the lamp-heavy lighting design and the Mac/perf ceiling.
+
+### 7d.1 — Hero Building Spike (decision gate)
+
+The one move that resolves the biggest open question with evidence before committing further.
+
+- [ ] **Trinity Church A/B**: Reconstruct one hero building two ways and compare side by side in Unreal — (a) existing Meshy mesh pipeline vs. (b) Cesium ion photos→3DGS from archival photographs. Evaluate fidelity, effort, cost, and how each reads at street level. Document the verdict. *Decision gate: outcome determines how much of the hero pipeline shifts to capture.*
+- [ ] **Sparse-view feasibility note**: Assess how few/poor-quality historical photos still yield an acceptable splat (informs which 1884 landmarks are capture-eligible vs. procedural). Reference sparse-view 3DGS / Photo-Tourism reconstruction work.
+
+### 7d.2 — Capture Pipeline Integration
+
+- [ ] **3DGS tileset streaming**: Wire Cesium for Unreal 3DGS tileset support into the engine-start path alongside the existing tileset config (`lib/cesiumTileset.js`). Make 3DGS a selectable tile source for the present-day / recent-era branch.
+- [ ] **Cesium ion capture client**: `lib/` module + tool to submit imagery to Cesium ion (iTwin Capture) and retrieve a 3DGS tileset asset ID. Photos sourced from the existing photo-archive fetch (`lib/photoArchiveFetch.js`) for historical heroes, or aerial/Street-level capture for present-day.
+- [ ] **Representation selector**: Per-feature regime decision driven by Environment Profile confidence/source metadata (PRD §17). Output: each building/landform tagged `capture` | `procedural` so spawners and the streaming path know which to use. Records provenance into the accuracy manifest.
+
+### 7d.3 — Renderer Foundation Refresh (UE 5.8)
+
+- [ ] **Megalights migration**: Move the hundreds of `TM_Lamp_` gas lamps and `TM_Particle_` window-glow PointLights onto Megalights. Update `lib/renderingConfig.js` (`configureLampShadows`) for the Megalights path. Removes the many-shadowed-lights perf cliff.
+- [ ] **Lumen Medium tier**: Add a Lumen Medium quality option to `renderingConfig.js` for the Mac/perf-constrained baseline (PRD "Mac hardware ceiling" risk).
+- [ ] **Verify against 5.8**: Re-validate Lumen/Nanite/VSM config and the spawn/RC-API scripts against the 5.8 release (watch for RC API or material-pipeline changes).
+
+**Exit criteria:** Stand at street level in present-day or recent-era Baton Rouge: the trees are crisp splats, not melted photogrammetry; power lines read as lines. Stand in 1884 Manhattan: Trinity Church is a clean reconstruction from archival photos, the demolished tenement beside it is procedural massing with period materials, and you cannot tell which pipeline produced which from the experience — only the accuracy manifest knows. Gas lamps cast soft shadows at no frame cost.
+
+---
+
 ## Phase 8 — Living Street View
 
 The full dream. Walk through a historically accurate 3D reconstruction. See PRD Phase 8.
@@ -283,3 +312,25 @@ Currently US-only for terrain, building data, and cultural context. This phase u
 - [ ] **Metric dimensions** — Street widths and lamp spacing are currently in US-centric dimensions. International streets follow different standards (narrower European streets, wider Asian boulevards).
 - [ ] **Locale auto-detection for international** — `resolveLocale()` uses population + year for US presets. International scenes need country/region detection from geocode `countryCode` (already exposed from Open-Meteo) to select appropriate architecture styles, street rules, and audio culture.
 - [ ] **Per-country data source registry** — Map out, for each target country, what historical building data is available and in what format. Some countries have excellent digital archives (UK, Netherlands), others have almost nothing digitized (most of Africa, Central Asia).
+
+---
+
+## Technology Watch (June 2026)
+
+External technology that informs the roadmap. Volatile by nature — this is where dated, vendor-specific facts live so the PRD (the constitution) doesn't carry them. Re-scan periodically; promote anything that changes the plan into a phase above.
+
+**Drove Phase 7d (acted on):**
+- **3D Gaussian Splatting (3DGS)** — capture-based photoreal reconstruction; preserves thin structures (power lines, foliage, glass) where photogrammetry fails. Now the steepest quality curve in real-time 3D.
+- **Cesium for Unreal 3DGS streaming** (Cesium blog, Apr 27 2026) — hierarchical-LOD splat tilesets stream from Cesium ion. *On the dependency we already use.*
+- **Cesium ion iTwin Capture** — photos → mesh / point cloud / **Gaussian splats**, hosted. Turns the historical-photo→splat path from a research spike into a service call.
+- **Khronos glTF splat extensions** — `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Standardized format; safe to build against.
+- **Unreal Engine 5.8** (preview May 13 2026; full release ~mid-June; Unreal Fest Jun 16–19) — **Megalights** production-ready (many shadowed lights, cheap), **Lumen Medium** (2× faster GI), updated PCG framework, improved Procedural Vegetation Editor, experimental **MetaHuman Crowd** plugin.
+
+**Watching (not yet acted on):**
+- **Unreal Engine 6** (announced May 24 2026) — early access late 2026, beta early 2027, stable ~late 2027. Modular plugin core, fully parallel execution, AI-assisted authoring, Nanite/Lumen on animated/dynamic geometry, unified UE+UEFN. *Implication: avoid deep custom rendering plumbing that UE6 is likely to rework; the modular direction is friendly to our loosely-coupled renderer stance.*
+- **RealityKit / visionOS 27** (WWDC Jun 8 2026) — gains 3DGS, physical-space lighting, cloth sim, and a **reverb mesh API**. Strengthens the Vision Pro port (backlog) and offers a native per-space acoustics primitive relevant to Phase 8 "acoustic environment modeling."
+- **MetaHuman Crowd (UE 5.8)** — candidate for Phase 8 "dynamic population."
+- **AI 3D generators** — Meshy 6 still strong; Hyper3D/Rodin (photoreal), Tripo (auto-rig), Microsoft **TRELLIS 2** (splat output). Trend: even *generated* hero assets moving toward splat output — relevant for buildings with only 1–2 reference images.
+
+**Quarantined (explicitly out of bounds for the historical core — PRD §17 generative-world-model boundary):**
+- **Google Genie 3** (public Jan 29 2026; AI Ultra US; 720p/24fps; ~few-min consistency) and generative world models generally. They invent rather than cite — fine for present-day/live or clearly-flagged low-confidence background, never a source of historical truth.

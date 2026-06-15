@@ -4,9 +4,11 @@ PRD + Brand Constitution for the Time Machine Platform
 
 ## Version
 
-v2.0 — Experience Bible / Product Requirements Document
+v2.1 — Experience Bible / Product Requirements Document
 Owner: Henhouse Holdings / Time Machine
 Status: North Star + v2 build specification (Historical Environment Reconstruction)
+
+**v2.1 amendment (June 2026):** Adds the **Representation Regimes** model (§17) — geometry representation is chosen per-feature by available evidence, not by a single pipeline — and codifies the **generative-world-model boundary** (§17) that follows from Laws 5.5 and 5.6. These are the only constitutional changes from the 2026 technology review; all specific technologies (3D Gaussian Splatting, Unreal versions, asset generators) are deliberately kept out of this document and tracked in `ROADMAP.md`, per the §3 principle that the pipeline rides the quality curve without architectural change.
 
 ## 1) What This Is
 
@@ -53,6 +55,8 @@ The visual quality target is the best real-time and near-real-time rendering in 
 This is not aspirational hand-waving. The gap between procedural reconstruction and hand-authored AAA content is real today — but it is closing fast. AI-generated 3D assets, materials, and textures are on a trajectory where the quality ceiling rises every quarter. The pipeline is designed to ride that curve: agents assemble what goes where, then the best available generation technology produces the assets. As AI model quality improves, the same pipeline produces better output without architectural changes.
 
 The implication: invest in *systems* (material libraries, weathering functions, vegetation placement, atmospheric particles, lighting pipelines) rather than hand-crafting individual assets. Systems scale. Hand-crafted assets don't. When AI-generated assets reach parity with hand-authored ones, a system-driven pipeline will match AAA quality at any location and any era — something no hand-authored production can do.
+
+A note on which curve bent: as of 2026 the steepest quality gains are in **capture-based reconstruction** (neural/splat techniques that reconstruct a photorealistic scene from imagery) rather than in polygonal mesh generation alone. This does not change the principle — it sharpens it. Where photographic evidence exists, capture is now the best system; where it does not, procedural reconstruction remains the only system. The pipeline must therefore choose the right representation per feature (see §17, Representation Regimes), and stay loosely coupled to whatever produces the best result this quarter.
 
 Examples of the bar:
 
@@ -459,6 +463,28 @@ An Environment Profile is the complete description of a place at a moment in his
 | **Infrastructure** | Technology present: lighting type, transport, utilities | Gas street lamps (electric only on Broadway below 14th), elevated railway, horse-drawn carriages |
 
 Each layer has a **confidence rating** and an explicit **known compromises** manifest, honoring the "Silence Over Wrongness" law.
+
+### Representation Regimes
+
+Geometry is not produced by a single pipeline. The right way to represent a building, street, or landform depends on **what evidence survives for that specific feature**, and the system chooses per feature, driven by the same confidence/source metadata the Environment Profile already carries.
+
+There are two regimes:
+
+* **Capture regime** — for features where the real thing can be reconstructed from imagery: present-day scenes, recent eras, and any structure that still stands. Here the best representation is a photoreal reconstruction built from photographs or aerial capture. This is the strongest path *when the evidence exists*, and it is improving fastest. It is also the path that benefits automatically from external platform progress (mapping providers, capture services) at no architectural cost.
+* **Procedural + archival regime** — for features where the real thing no longer exists and was never photographed in a reconstructable way: pre-photographic eras, demolished blocks, changed coastlines. Here representation is assembled from archival record (historical maps, written description, era material libraries) through procedural systems. This regime is the product's **moat** — it is the only path that works where capture cannot reach, and no mapping platform solves it.
+
+The decision is per feature, not per scene. A single 1884 street may contain a surviving church reconstructed from archival photographs (capture), alongside a demolished tenement assembled from a fire-insurance footprint (procedural). The selector is evidence, expressed as confidence:
+
+```
+survives today + imagery available        → capture
+hero feature + historical photographs     → capture from archival imagery
+demolished / no usable imagery             → procedural + archival
+low confidence everywhere                  → reduce detail (Law 5.5), do not invent
+```
+
+**The generative-world-model boundary.** Generative world models — systems that *invent* navigable environments from a prompt — are explicitly **out of bounds for the historical core**. They produce plausible fiction, not cited fact, and so violate Law 5.5 (Silence Over Wrongness), Law 5.6 (No Anachronisms), and the "every fact is cited, every gap is acknowledged" promise of the North Star. They may be used only where invention is honest: present-day/live scenes, or clearly-flagged low-confidence distant background that no archival source covers. They are never a source of historical truth.
+
+Both regimes feed the same Environment Profile and hang off the same WorldState. As with weather inputs, the downstream pipeline does not care which regime produced a given feature — only that its provenance and confidence are recorded.
 
 ### Topology
 
