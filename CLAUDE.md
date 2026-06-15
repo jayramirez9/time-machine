@@ -42,6 +42,7 @@ export FREESOUND_API_KEY="your-key"         # Freesound (legacy, CC-licensed aud
 export GOOGLE_3D_TILES_API_KEY="your-key"   # Google Photorealistic 3D Tiles (scouting/preview only)
 export MESHY_API_KEY="your-key"             # Meshy (AI 3D model generation, $20/mo Pro)
 export GOOGLE_AI_API_KEY="your-key"         # Google AI / Gemini (reference image generation)
+export CESIUM_ION_TOKEN="your-token"        # Cesium ion (photos→3DGS capture reconstruction, Phase 7d.2)
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo.
