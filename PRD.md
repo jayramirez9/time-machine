@@ -500,6 +500,8 @@ Both regimes feed the same Environment Profile and hang off the same WorldState.
    * Outputs multi-channel to room zones
    * Enforces non-looping logic and layer fallbacks
 
+For the first physical install (the 2–3 window concept trailer), this topology collapses onto a **single workstation running one Unreal process** — which keeps all windows frame-synchronized for free (Law 5.3) without genlock hardware. Master/Render/Audio nodes scale out to separate machines only when window count grows past what one GPU can drive. See `docs/roadster-trailer-hardware.md` for the concept-trailer compute/display/audio spec and install (electrical/thermal/rack) considerations.
+
 ### Rendering
 
 * Unreal Engine as the renderer (best path to photoreal real-time skies/lighting/atmosphere).
@@ -659,7 +661,7 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 * Accuracy Manifest per preset + "silence over wrongness" + constrained environment scopes.
 
 **Risk: Mac hardware ceilings**
-* Prototype on Mac; define production hardware baseline that can hit realism targets.
+* Prototype on Mac; define production hardware baseline that can hit realism targets. The AAA fidelity bar is a Windows + NVIDIA target (Lumen, Nanite, Megalights, 3DGS streaming). Concept-trailer hardware baseline: `docs/roadster-trailer-hardware.md`.
 
 ## 22) Roadmap (From Today to the Dream State)
 
