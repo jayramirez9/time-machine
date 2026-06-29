@@ -89,7 +89,11 @@ ionToken() → string   // reads CESIUM_ION_TOKEN from env
 
 ---
 
-## A — 3DGS tileset streaming — extend `lib/cesiumTileset.js`
+## A — 3DGS tileset streaming — extend `lib/cesiumTileset.js` ✅ BUILT (2026-06-29, code-complete)
+
+**Done:** Added `buildSplatTilesetScript()` + `buildClearSplatScript()` (pure Python-RC payload builders, offline-tested), `setSplatTileset(host, {assetId, token, actorLabel})`, `clearSplatTileset(host)`, `getSplatTilesetStatus(host)`, and `DEFAULT_SPLAT_LABEL`. Find-or-spawns a **dedicated** `TM_SplatTileset` Cesium3DTileset actor (distinct from OSM Buildings / World Terrain / Google scouting tileset) via the Python RC path, configures `ion_asset_id` + `ion_access_token`, and sets `tileset_source` to ion with a **version-fallback** over the renamed source enum (`CesiumDataSource` vs `TilesetSource` — verify against the installed Cesium for Unreal on 5.8), then `refresh_tileset()`. Wired into `runtimeEngine.js` engine start alongside the Google tileset block, gated on `CESIUM_SPLAT_ASSET_ID` + `CESIUM_ION_TOKEN`; `engine.splatTileset` exposed. Removed the dead `rcProp()`. `test/cesiumTileset.test.js`: 20 offline tests (RC payload assertions in the `renderingConfig.test.js` style + mocked-fetch wrappers).
+
+**⚠️ Live-verify on the box:** (1) the `tileset_source` enum name on the installed plugin; (2) that `ion_asset_id`/`ion_access_token` accept `set_editor_property` (vs. needing a function-call setter); (3) the plugin renders `KHR_gaussian_splatting`; (4) any required feature flag / console var. Full live integration test (spawn → set ion asset → confirm streaming) pending Unreal 5.8 + Cesium for Unreal.
 
 Today the module points an existing `Cesium3DTileset` actor at a **URL** (Google scouting tiles). 3DGS from ion is referenced by **ion asset ID**, and we want a **dedicated** splat tileset actor distinct from OSM Buildings / World Terrain / the Google scouting tileset.
 

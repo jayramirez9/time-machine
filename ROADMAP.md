@@ -238,7 +238,7 @@ The one move that resolves the biggest open question with evidence before commit
 
 ### 7d.2 — Capture Pipeline Integration
 
-- [ ] **3DGS tileset streaming**: Wire Cesium for Unreal 3DGS tileset support into the engine-start path alongside the existing tileset config (`lib/cesiumTileset.js`). Make 3DGS a selectable tile source for the present-day / recent-era branch.
+- [x] **3DGS tileset streaming** *(code-complete; live-verify on the box)*: `lib/cesiumTileset.js` gains `setSplatTileset()`/`clearSplatTileset()`/`getSplatTilesetStatus()` + offline script builders `buildSplatTilesetScript()`/`buildClearSplatScript()`. Find-or-spawns a dedicated `TM_SplatTileset` Cesium3DTileset actor via the Python RC path, points it at a Cesium ion 3DGS asset (`ion_asset_id`/`ion_access_token`, source-enum version fallback for Cesium for Unreal 5.8), refreshes. Wired into `runtimeEngine.js` engine start, gated on `CESIUM_SPLAT_ASSET_ID` + `CESIUM_ION_TOKEN`; `engine.splatTileset` exposed. Dead `rcProp()` removed. 20 offline tests (`test/cesiumTileset.test.js`). *Live integration (spawn → stream → confirm KHR_gaussian_splatting renders) pending the Unreal box.*
 - [ ] **Cesium ion capture client**: `lib/` module + tool to submit imagery to Cesium ion (iTwin Capture) and retrieve a 3DGS tileset asset ID. Photos sourced from the existing photo-archive fetch (`lib/photoArchiveFetch.js`) for historical heroes, or aerial/Street-level capture for present-day.
 - [ ] **Representation selector**: Per-feature regime decision driven by Environment Profile confidence/source metadata (PRD §17). Output: each building/landform tagged `capture` | `procedural` so spawners and the streaming path know which to use. Records provenance into the accuracy manifest.
 
