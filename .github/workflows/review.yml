@@ -1,0 +1,32 @@
+name: AI Code Review
+
+# Caution: pull_request runs PR-authored code (tm-eval.js via review-pr.js) in a
+# job holding pull-requests:write + ANTHROPIC_API_KEY. Fine while this repo is
+# private and solo (fork PRs get no secrets) — revisit before going public or
+# accepting outside PRs.
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      pull-requests: write
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # review-pr.js runs tm-eval.js itself — no separate eval step needed
+      - name: Run AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node .github/scripts/review-pr.js

@@ -283,9 +283,14 @@ describe('Landmarks — buildLandmarkSpawnScript()', () => {
 });
 
 // ─── Manhattan landmarks.json integration ───────────────────────
+// terrain-data/ is gitignored; this block only runs where the local data exists.
 
-describe('Landmarks — manhattan-ny/landmarks.json', () => {
-  const filePath = path.resolve('terrain-data/manhattan-ny/landmarks.json');
+const MANHATTAN_LANDMARKS = path.resolve('terrain-data/manhattan-ny/landmarks.json');
+const SKIP_NO_TERRAIN = !fs.existsSync(MANHATTAN_LANDMARKS) &&
+  'terrain-data/manhattan-ny not present (gitignored local data)';
+
+describe('Landmarks — manhattan-ny/landmarks.json', { skip: SKIP_NO_TERRAIN }, () => {
+  const filePath = MANHATTAN_LANDMARKS;
 
   it('loads without validation errors', () => {
     const result = loadLandmarks(filePath);
