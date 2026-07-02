@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import https from 'https';
+import { EventEmitter } from 'events';
 
 import {
   assembleProfile,
@@ -88,11 +90,34 @@ describe('Profile Assembler — buildProfileId', () => {
 });
 
 // ---------------------------------------------------------------------------
-// assembleProfile — offline (no geocoding, no NOAA station probe)
+// assembleProfile — offline (no geocoding, no NOAA station probe, no network)
+//
+// assembleProfile enables newspaper enrichment, whose https.get to
+// chroniclingamerica.loc.gov hung CI runners when LOC throttled by holding
+// connections open. Stub https.get to fail immediately so these tests stay
+// genuinely offline and exercise the agent's graceful-fallback path.
+// (Enrichment with controlled responses is covered in chroniclingAmerica.test.js.)
 // ---------------------------------------------------------------------------
 
 describe('Profile Assembler — assembleProfile', () => {
-  afterEach(() => restoreEnv());
+  let restoreHttps;
+
+  beforeEach(() => {
+    const original = https.get;
+    https.get = () => {
+      const req = new EventEmitter();
+      req.end = () => {};
+      req.setTimeout = () => req;
+      process.nextTick(() => req.emit('error', new Error('offline: network disabled in tests')));
+      return req;
+    };
+    restoreHttps = () => { https.get = original; };
+  });
+
+  afterEach(() => {
+    restoreHttps();
+    restoreEnv();
+  });
 
   it('produces a valid Environment Profile', async () => {
     setEnv({ NOAA_API_TOKEN: undefined, VISUALCROSSING_API_KEY: undefined });
