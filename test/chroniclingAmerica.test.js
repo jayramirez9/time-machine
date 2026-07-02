@@ -38,6 +38,7 @@ function mockHttpsGet(handler) {
       `https://${opts.hostname}${opts.path}`;
     const req = new EventEmitter();
     req.end = () => {};
+    req.setTimeout = () => req; // lib arms a socket timeout; mock responds via nextTick so it never fires
 
     // Call handler async to simulate real behavior
     process.nextTick(() => handler(url, callback, req));
