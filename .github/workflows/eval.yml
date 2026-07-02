@@ -1,0 +1,23 @@
+name: Eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Unit suite runs natively — no execSync-timeout wrapper to race slow
+      # shared runners (the 1,500+ test suite's wall time varies widely).
+      # tm-eval covers the remaining suites.
+      - name: Run unit tests
+        run: npm test
+      - name: Run evals
+        run: ./tm-eval.js --json --skip unit

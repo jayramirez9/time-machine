@@ -1,0 +1,1315 @@
+{
+  "schemaVersion": 2,
+  "id": "gen_manhattan_new_york_united_states_1884",
+  "name": "Manhattan, New York, United States — 1884",
+  "description": "Dense urban soundscape of Manhattan, New York, United States in 1884. Steam Age era with cobblestone streets. Climate sounds: seasonal birds, wind through trees. Pedestrians, activity, and nearby commerce.",
+  "generated": true,
+  "era": {
+    "year": 1884,
+    "period": "Steam Age",
+    "confidence": 0.5
+  },
+  "listener": {
+    "position": "street level",
+    "elevation": 1.7,
+    "facing": "E",
+    "enclosure": "street"
+  },
+  "spatialConfig": {
+    "order": "HOA3",
+    "irProfile": {
+      "id": "gen_manhattan_new_york_united_states_1884_ir",
+      "file": "ir-gen_manhattan_new_york_united_states_1884.wav",
+      "fallback": "synthetic"
+    }
+  },
+  "assetGeneration": {
+    "status": "pending",
+    "generator": "elevenlabs",
+    "promptContext": "Dense urban soundscape of Manhattan, New York, United States in 1884. Steam Age era with cobblestone streets. Climate sounds: seasonal birds, wind through trees. Pedestrians, activity, and nearby commerce."
+  },
+  "beds": {
+    "base": {
+      "sources": [
+        {
+          "url": null,
+          "label": "ambient-1"
+        },
+        {
+          "url": null,
+          "label": "ambient-2"
+        },
+        {
+          "url": null,
+          "label": "ambient-3"
+        }
+      ],
+      "crossfadeSec": 14,
+      "gainDb": -8
+    },
+    "directional": {
+      "N": {
+        "sources": [
+          {
+            "url": null,
+            "label": "dir-north-near",
+            "spatial": {
+              "azimuth": 0,
+              "elevation": -5,
+              "distance": 0.3,
+              "spread": 28
+            },
+            "variantHint": "close perspective — individual sounds clearly resolved, immediate detail",
+            "gainOffsetDb": 2
+          },
+          {
+            "url": null,
+            "label": "dir-north-mid",
+            "spatial": {
+              "azimuth": 0,
+              "elevation": -5,
+              "distance": 0.6,
+              "spread": 40
+            },
+            "variantHint": "mid distance — blended activity, moderate ambience and presence",
+            "gainOffsetDb": 0
+          },
+          {
+            "url": null,
+            "label": "dir-north-far",
+            "spatial": {
+              "azimuth": 0,
+              "elevation": -5,
+              "distance": 0.9,
+              "spread": 56
+            },
+            "variantHint": "far perspective — distant rumble and reverberant tail, low-frequency emphasis",
+            "gainOffsetDb": -3
+          }
+        ],
+        "gainDb": -16,
+        "description": "Side street — muted activity, cobblestone streets"
+      },
+      "E": {
+        "sources": [
+          {
+            "url": null,
+            "label": "dir-east-near",
+            "spatial": {
+              "azimuth": 90,
+              "elevation": -5,
+              "distance": 0.3,
+              "spread": 42
+            },
+            "variantHint": "close perspective — individual sounds clearly resolved, immediate detail",
+            "gainOffsetDb": 2
+          },
+          {
+            "url": null,
+            "label": "dir-east-mid",
+            "spatial": {
+              "azimuth": 90,
+              "elevation": -5,
+              "distance": 0.4,
+              "spread": 60
+            },
+            "variantHint": "mid distance — blended activity, moderate ambience and presence",
+            "gainOffsetDb": 0
+          },
+          {
+            "url": null,
+            "label": "dir-east-far",
+            "spatial": {
+              "azimuth": 90,
+              "elevation": -5,
+              "distance": 0.9,
+              "spread": 84
+            },
+            "variantHint": "far perspective — distant rumble and reverberant tail, low-frequency emphasis",
+            "gainOffsetDb": -3
+          }
+        ],
+        "gainDb": -10,
+        "description": "Main avenue — primary traffic and pedestrians"
+      },
+      "S": {
+        "sources": [
+          {
+            "url": null,
+            "label": "dir-south-near",
+            "spatial": {
+              "azimuth": 180,
+              "elevation": -5,
+              "distance": 0.3,
+              "spread": 35
+            },
+            "variantHint": "close perspective — individual sounds clearly resolved, immediate detail",
+            "gainOffsetDb": 2
+          },
+          {
+            "url": null,
+            "label": "dir-south-mid",
+            "spatial": {
+              "azimuth": 180,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 50
+            },
+            "variantHint": "mid distance — blended activity, moderate ambience and presence",
+            "gainOffsetDb": 0
+          },
+          {
+            "url": null,
+            "label": "dir-south-far",
+            "spatial": {
+              "azimuth": 180,
+              "elevation": -5,
+              "distance": 0.9,
+              "spread": 70
+            },
+            "variantHint": "far perspective — distant rumble and reverberant tail, low-frequency emphasis",
+            "gainOffsetDb": -3
+          }
+        ],
+        "gainDb": -14,
+        "description": "Cross street — moderate traffic, voices"
+      },
+      "W": {
+        "sources": [
+          {
+            "url": null,
+            "label": "dir-west-near",
+            "spatial": {
+              "azimuth": -90,
+              "elevation": -5,
+              "distance": 0.3,
+              "spread": 21
+            },
+            "variantHint": "close perspective — individual sounds clearly resolved, immediate detail",
+            "gainOffsetDb": 2
+          },
+          {
+            "url": null,
+            "label": "dir-west-mid",
+            "spatial": {
+              "azimuth": -90,
+              "elevation": -5,
+              "distance": 0.5,
+              "spread": 30
+            },
+            "variantHint": "mid distance — blended activity, moderate ambience and presence",
+            "gainOffsetDb": 0
+          },
+          {
+            "url": null,
+            "label": "dir-west-far",
+            "spatial": {
+              "azimuth": -90,
+              "elevation": -5,
+              "distance": 0.9,
+              "spread": 42
+            },
+            "variantHint": "far perspective — distant rumble and reverberant tail, low-frequency emphasis",
+            "gainOffsetDb": -3
+          }
+        ],
+        "gainDb": -18,
+        "description": "Alley or service lane — deliveries, echoes"
+      }
+    }
+  },
+  "weather": {
+    "wind": {
+      "sources": [
+        {
+          "url": null,
+          "label": "wind-1",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": 0,
+            "distance": 0.3,
+            "spread": 90
+          }
+        },
+        {
+          "url": null,
+          "label": "wind-2",
+          "spatial": {
+            "azimuth": -45,
+            "elevation": 5,
+            "distance": 0.2,
+            "spread": 60
+          }
+        }
+      ],
+      "gustFilterRange": [
+        250,
+        2200
+      ],
+      "gustSweepPeriod": [
+        7,
+        18
+      ]
+    },
+    "rain": {
+      "sources": [
+        {
+          "url": null,
+          "label": "rain-1",
+          "spatial": {
+            "azimuth": 90,
+            "elevation": -10,
+            "distance": 0.4,
+            "spread": 120
+          }
+        },
+        {
+          "url": null,
+          "label": "rain-2",
+          "spatial": {
+            "azimuth": -30,
+            "elevation": 5,
+            "distance": 0.3,
+            "spread": 60
+          }
+        }
+      ]
+    },
+    "thunder": {
+      "sources": [
+        {
+          "url": null,
+          "label": "thunder-1",
+          "spatial": {
+            "azimuth": 0,
+            "elevation": 60,
+            "distance": 0.8,
+            "spread": 180
+          }
+        },
+        {
+          "url": null,
+          "label": "thunder-2",
+          "spatial": {
+            "azimuth": 30,
+            "elevation": 70,
+            "distance": 0.7,
+            "spread": 120
+          }
+        }
+      ],
+      "cooldownRange": [
+        50,
+        150
+      ]
+    },
+    "snow": {
+      "sources": [
+        {
+          "url": null,
+          "label": "snow-1",
+          "spatial": {
+            "azimuth": 0,
+            "elevation": 10,
+            "distance": 0.3,
+            "spread": 120
+          }
+        }
+      ]
+    }
+  },
+  "microEvents": [
+    {
+      "id": "bird_song",
+      "description": "Songbirds calling — local species, natural birdsong",
+      "sources": [
+        {
+          "url": null,
+          "label": "bird_song-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "bird_song-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 14,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -30,
+        "elevation": 15,
+        "distance": 0.5,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.85
+      },
+      "activityRange": [
+        0,
+        1
+      ],
+      "priority": "low"
+    },
+    {
+      "id": "dog_bark",
+      "description": "Dog barking — stray or domestic",
+      "sources": [
+        {
+          "url": null,
+          "label": "dog_bark-1"
+        }
+      ],
+      "avgCooldownSec": 31,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": 30,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.2,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "church_bell",
+      "description": "Church bell tolling — quarter-hour or hourly",
+      "sources": [
+        {
+          "url": null,
+          "label": "church_bell-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "church_bell-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 126,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": -45,
+        "elevation": 30,
+        "distance": 0.8,
+        "spread": 60
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "wind_gust",
+      "description": "Wind gust — natural breeze through surroundings",
+      "sources": [
+        {
+          "url": null,
+          "label": "wind_gust-1"
+        }
+      ],
+      "avgCooldownSec": 21,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 0,
+        "elevation": 5,
+        "distance": 0.3,
+        "spread": 90
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "insect_chorus",
+      "description": "Insects chirping — crickets, cicadas, or similar",
+      "sources": [
+        {
+          "url": null,
+          "label": "insect_chorus-1"
+        }
+      ],
+      "avgCooldownSec": 28,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 60,
+        "elevation": -3,
+        "distance": 0.4,
+        "spread": 40
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.7,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        0.5
+      ],
+      "secondaryWindow": {
+        "min": 0,
+        "max": 0.2
+      }
+    },
+    {
+      "id": "door_open_close",
+      "description": "Door opening and closing — wood door with latch click",
+      "sources": [
+        {
+          "url": null,
+          "label": "door_open_close-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "door_open_close-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 31,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -35,
+        "elevation": 0,
+        "distance": 0.25,
+        "spread": 8
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "door_creak",
+      "description": "Door creaking on old hinges — slow wooden groan",
+      "sources": [
+        {
+          "url": null,
+          "label": "door_creak-1"
+        }
+      ],
+      "avgCooldownSec": 63,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 40,
+        "elevation": 0,
+        "distance": 0.3,
+        "spread": 5
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "window_rattle",
+      "description": "Window rattling in wind — loose pane vibrating in frame",
+      "sources": [
+        {
+          "url": null,
+          "label": "window_rattle-1"
+        }
+      ],
+      "avgCooldownSec": 42,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": -15,
+        "elevation": 3,
+        "distance": 0.2,
+        "spread": 5
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ],
+      "weatherGate": "wind"
+    },
+    {
+      "id": "shutter_bang",
+      "description": "Shutter banging against wall — wind-driven wooden clatter",
+      "sources": [
+        {
+          "url": null,
+          "label": "shutter_bang-1"
+        }
+      ],
+      "avgCooldownSec": 84,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 25,
+        "elevation": 2,
+        "distance": 0.3,
+        "spread": 8
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ],
+      "weatherGate": "wind"
+    },
+    {
+      "id": "gate_latch",
+      "description": "Iron gate latch clicking — garden or fence gate",
+      "sources": [
+        {
+          "url": null,
+          "label": "gate_latch-1"
+        }
+      ],
+      "avgCooldownSec": 56,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": -50,
+        "elevation": -3,
+        "distance": 0.3,
+        "spread": 5
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.88
+      },
+      "activityRange": [
+        0.2,
+        1
+      ]
+    },
+    {
+      "id": "object_clatter",
+      "description": "Objects clattering — wooden crate or barrel shifted, thud and scrape",
+      "sources": [
+        {
+          "url": null,
+          "label": "object_clatter-1"
+        }
+      ],
+      "avgCooldownSec": 42,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 55,
+        "elevation": -5,
+        "distance": 0.35,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.28,
+        "max": 0.82
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "metal_clang",
+      "description": "Metal clang — iron pail, tool, or hardware dropped or struck",
+      "sources": [
+        {
+          "url": null,
+          "label": "metal_clang-1"
+        }
+      ],
+      "avgCooldownSec": 63,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -45,
+        "elevation": -3,
+        "distance": 0.4,
+        "spread": 12
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.28,
+        "max": 0.78
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "glass_clink",
+      "description": "Glass clinking — bottles or glasses touching, tavern or shop",
+      "sources": [
+        {
+          "url": null,
+          "label": "glass_clink-1"
+        }
+      ],
+      "avgCooldownSec": 49,
+      "gainDb": -26,
+      "spatial": {
+        "azimuth": -30,
+        "elevation": 0,
+        "distance": 0.25,
+        "spread": 5
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.92
+      },
+      "activityRange": [
+        0.3,
+        1
+      ],
+      "priority": "low"
+    },
+    {
+      "id": "cloth_rustle",
+      "description": "Cloth rustling — laundry on a line, awning flapping, fabric in breeze",
+      "sources": [
+        {
+          "url": null,
+          "label": "cloth_rustle-1"
+        }
+      ],
+      "avgCooldownSec": 35,
+      "gainDb": -26,
+      "spatial": {
+        "azimuth": 15,
+        "elevation": 3,
+        "distance": 0.2,
+        "spread": 8
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.85
+      },
+      "activityRange": [
+        0,
+        1
+      ],
+      "weatherGate": "wind"
+    },
+    {
+      "id": "broom_sweep",
+      "description": "Broom sweeping — bristles on stone or wood, rhythmic strokes",
+      "sources": [
+        {
+          "url": null,
+          "label": "broom_sweep-1"
+        }
+      ],
+      "avgCooldownSec": 84,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": -25,
+        "elevation": -5,
+        "distance": 0.25,
+        "spread": 8
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.28,
+        "max": 0.5
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "water_pour",
+      "description": "Water pouring or splashing — bucket emptied, trough filled, drain flow",
+      "sources": [
+        {
+          "url": null,
+          "label": "water_pour-1"
+        }
+      ],
+      "avgCooldownSec": 63,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 35,
+        "elevation": -5,
+        "distance": 0.3,
+        "spread": 8
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.82
+      },
+      "activityRange": [
+        0.2,
+        1
+      ]
+    },
+    {
+      "id": "keys_jingle",
+      "description": "Keys jingling — metal keyring, locking or unlocking a door",
+      "sources": [
+        {
+          "url": null,
+          "label": "keys_jingle-1"
+        }
+      ],
+      "avgCooldownSec": 56,
+      "gainDb": -26,
+      "spatial": {
+        "azimuth": -35,
+        "elevation": 0,
+        "distance": 0.2,
+        "spread": 3
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.92
+      },
+      "activityRange": [
+        0.3,
+        1
+      ],
+      "priority": "low"
+    },
+    {
+      "id": "horse_walk",
+      "description": "Horse walking on unpaved road — hooves on packed earth",
+      "sources": [
+        {
+          "url": null,
+          "label": "horse_walk-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "horse_walk-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 26,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -60,
+        "azimuthEnd": 60,
+        "durationSec": 10,
+        "dopplerFactor": 0.1
+      },
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.88
+      },
+      "activityRange": [
+        0.2,
+        1
+      ],
+      "surface": "dirt"
+    },
+    {
+      "id": "hand_tools",
+      "description": "Hand tools working — hammering, sawing, chopping wood",
+      "sources": [
+        {
+          "url": null,
+          "label": "hand_tools-1"
+        }
+      ],
+      "avgCooldownSec": 42,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": -50,
+        "elevation": -3,
+        "distance": 0.5,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.28,
+        "max": 0.72
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "market_voices",
+      "description": "Market crowd — voices bargaining, calling out wares",
+      "sources": [
+        {
+          "url": null,
+          "label": "market_voices-1"
+        }
+      ],
+      "avgCooldownSec": 53,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 70,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.7
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "horse_cart",
+      "description": "Horse and cart — iron-rimmed wheels on cobblestone, hooves clattering",
+      "sources": [
+        {
+          "url": null,
+          "label": "horse_cart-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "horse_cart-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 11,
+      "gainDb": -14,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.5,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -60,
+        "azimuthEnd": 60,
+        "durationSec": 8,
+        "dopplerFactor": 0.2
+      },
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.88
+      },
+      "activityRange": [
+        0.3,
+        1
+      ],
+      "surface": "cobblestone"
+    },
+    {
+      "id": "carriage",
+      "description": "Horse-drawn carriage — springs creaking, lighter and faster",
+      "sources": [
+        {
+          "url": null,
+          "label": "carriage-1"
+        }
+      ],
+      "avgCooldownSec": 21,
+      "gainDb": -16,
+      "spatial": {
+        "azimuth": 90,
+        "elevation": -5,
+        "distance": 0.4,
+        "spread": 15
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -45,
+        "azimuthEnd": 45,
+        "durationSec": 6,
+        "dopplerFactor": 0.2
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.3,
+        1
+      ],
+      "surface": "cobblestone"
+    },
+    {
+      "id": "steam_whistle",
+      "description": "Steam whistle — factory or locomotive, distant piercing tone",
+      "sources": [
+        {
+          "url": null,
+          "label": "steam_whistle-1"
+        }
+      ],
+      "avgCooldownSec": 84,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -40,
+        "elevation": 10,
+        "distance": 0.8,
+        "spread": 30
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.75
+      },
+      "activityRange": [
+        0.2,
+        1
+      ]
+    },
+    {
+      "id": "footsteps_street",
+      "description": "leather shoes on cobblestone — passerby crossing street",
+      "sources": [
+        {
+          "url": null,
+          "label": "footsteps_street-1",
+          "variantHint": "slightly closer, more present"
+        },
+        {
+          "url": null,
+          "label": "footsteps_street-2",
+          "variantHint": "slightly farther, more reverberant"
+        }
+      ],
+      "avgCooldownSec": 13,
+      "gainDb": -20,
+      "spatial": {
+        "azimuth": 50,
+        "elevation": -5,
+        "distance": 0.3,
+        "spread": 20
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -30,
+        "azimuthEnd": 30,
+        "durationSec": 6,
+        "dopplerFactor": 0.05
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.9
+      },
+      "activityRange": [
+        0.3,
+        1
+      ],
+      "surface": "cobblestone"
+    },
+    {
+      "id": "footsteps_sidewalk",
+      "description": "leather shoes on granite flag — single person on sidewalk",
+      "sources": [
+        {
+          "url": null,
+          "label": "footsteps_sidewalk-1"
+        }
+      ],
+      "avgCooldownSec": 18,
+      "gainDb": -22,
+      "spatial": {
+        "azimuth": -20,
+        "elevation": -5,
+        "distance": 0.2,
+        "spread": 10
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -20,
+        "azimuthEnd": 20,
+        "durationSec": 5,
+        "dopplerFactor": 0.03
+      },
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.92
+      },
+      "activityRange": [
+        0.2,
+        1
+      ],
+      "surface": "granite_flag"
+    },
+    {
+      "id": "gas_lamp_hiss",
+      "description": "Gas street lamp hissing — steady low flame sound nearby",
+      "sources": [
+        {
+          "url": null,
+          "label": "gas_lamp_hiss-1"
+        }
+      ],
+      "avgCooldownSec": 42,
+      "gainDb": -26,
+      "spatial": {
+        "azimuth": 40,
+        "elevation": 2,
+        "distance": 0.2,
+        "spread": 10
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.78,
+        "max": 1
+      },
+      "activityRange": [
+        0,
+        1
+      ],
+      "secondaryWindow": {
+        "min": 0,
+        "max": 0.2
+      }
+    },
+    {
+      "id": "elevated_train",
+      "description": "Elevated railway — steam locomotive on iron trestle, rhythmic clatter overhead",
+      "sources": [
+        {
+          "url": null,
+          "label": "elevated_train-1"
+        }
+      ],
+      "avgCooldownSec": 63,
+      "gainDb": -12,
+      "spatial": {
+        "azimuth": 0,
+        "elevation": 25,
+        "distance": 0.6,
+        "spread": 40
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -90,
+        "azimuthEnd": 90,
+        "durationSec": 12,
+        "dopplerFactor": 0.3
+      },
+      "timeOfDay": {
+        "min": 0.22,
+        "max": 0.95
+      },
+      "activityRange": [
+        0.2,
+        1
+      ]
+    },
+    {
+      "id": "bicycle_bell",
+      "description": "Bicycle bell — single clear ring, rider passing",
+      "sources": [
+        {
+          "url": null,
+          "label": "bicycle_bell-1"
+        }
+      ],
+      "avgCooldownSec": 42,
+      "gainDb": -24,
+      "spatial": {
+        "azimuth": 70,
+        "elevation": -5,
+        "distance": 0.3,
+        "spread": 8
+      },
+      "motion": {
+        "type": "passby",
+        "azimuthStart": -30,
+        "azimuthEnd": 30,
+        "durationSec": 4,
+        "dopplerFactor": 0.1
+      },
+      "timeOfDay": {
+        "min": 0.25,
+        "max": 0.85
+      },
+      "activityRange": [
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "voice_pushcart_vendor",
+      "description": "Street vendor — pushcart vendor calling out to passersby",
+      "voice": "pushcart_vendor",
+      "phrases": [
+        "Fresh fruit! Apples, oranges!",
+        "Vegetables! Fresh vegetables today!"
+      ],
+      "sources": [
+        {
+          "url": null,
+          "label": "voice_pushcart_vendor-1"
+        },
+        {
+          "url": null,
+          "label": "voice_pushcart_vendor-2"
+        }
+      ],
+      "avgCooldownSec": 60,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 40,
+        "elevation": -3,
+        "distance": 0.35,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.75
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    },
+    {
+      "id": "voice_newsboy",
+      "description": "Street vendor — newsboy calling out to passersby",
+      "voice": "newsboy",
+      "phrases": [
+        "Extra! Extra! Read all about it!",
+        "Paper! Get your morning paper!",
+        "Latest news, one cent!"
+      ],
+      "sources": [
+        {
+          "url": null,
+          "label": "voice_newsboy-1"
+        },
+        {
+          "url": null,
+          "label": "voice_newsboy-2"
+        }
+      ],
+      "avgCooldownSec": 60,
+      "gainDb": -18,
+      "spatial": {
+        "azimuth": 70,
+        "elevation": -3,
+        "distance": 0.35,
+        "spread": 15
+      },
+      "motion": {
+        "type": "static"
+      },
+      "timeOfDay": {
+        "min": 0.3,
+        "max": 0.75
+      },
+      "activityRange": [
+        0.4,
+        1
+      ]
+    }
+  ],
+  "mix": {
+    "masterGainDb": -4,
+    "layerGains": {
+      "baseBed": 0,
+      "directionalBeds": -2,
+      "microEvents": -2,
+      "weather": -1,
+      "occlusion": 0
+    },
+    "reverbSend": 0.12
+  },
+  "scheduling": {
+    "maxConcurrentEvents": 4,
+    "globalCooldownSec": 1.5,
+    "densityMultipliers": {
+      "subtle": 0.5,
+      "present": 1,
+      "demo": 2.5
+    }
+  }
+}
