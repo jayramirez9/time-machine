@@ -10,6 +10,10 @@ Weather Engine is a weather state generator for environmental simulation systems
 
 This is a Node.js ES modules project. No build step required.
 
+## Related Project: Henhouse ADU (the "first room")
+
+`../henhouse-adu` (formerly henhouse-spatial) is the physical venue project — the ADU whose Content Node fit-out hosts Time Machine (display-windows, multi-zone audio, single render workstation). It owns the venue-side decisions Time Machine's PRD §24 needs answered (canonical window layout, speaker topology, workstation power/thermal). Cross-reference map: `../henhouse-adu/docs/time-machine-crossref.md`. Venue hardware spec lives here: `docs/roadster-trailer-hardware.md`. Year-1 review (recommends converging on this room): `docs/review-year1-2026-07.md`.
+
 ## Quick Reference
 
 ```bash
