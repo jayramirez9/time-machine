@@ -49,12 +49,15 @@ async function runUnit() {
 }
 
 function runContract() {
+  // Local-component dates (not UTC strings) — the mock provider reads machine-
+  // local getHours(), so wall-clock anchoring keeps evals deterministic across
+  // machine timezones (see runGolden).
   const scenarios = [
-    { location: 'Baton Rouge, LA', date: new Date('1978-07-04T20:00:00Z'), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
-    { location: 'Baton Rouge, LA', date: new Date('1978-07-04T06:00:00Z'), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
-    { location: 'Baton Rouge, LA', date: new Date('1978-01-15T18:00:00Z'), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
-    { location: 'New York, NY', date: new Date('1884-06-15T18:00:00Z'), locale: { audioBaseDb: 40, activity: 0.65, hazeBias: 0.1 } },
-    { location: 'London, UK', date: new Date('1950-12-01T12:00:00Z'), locale: { audioBaseDb: 30, activity: 0.3, hazeBias: 0.15 } }
+    { location: 'Baton Rouge, LA', date: new Date(1978, 6, 4, 15, 0, 0), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
+    { location: 'Baton Rouge, LA', date: new Date(1978, 6, 4, 2, 0, 0), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
+    { location: 'Baton Rouge, LA', date: new Date(1978, 0, 15, 12, 0, 0), locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 } },
+    { location: 'New York, NY', date: new Date(1884, 5, 15, 13, 0, 0), locale: { audioBaseDb: 40, activity: 0.65, hazeBias: 0.1 } },
+    { location: 'London, UK', date: new Date(1950, 11, 1, 12, 0, 0), locale: { audioBaseDb: 30, activity: 0.3, hazeBias: 0.15 } }
   ];
 
   const errors = [];
@@ -77,8 +80,8 @@ function runRoutes() {
     validateConfig(config);
     routeCount = config.routes.length;
 
-    // Verify all sources resolve
-    const date = new Date('1978-07-04T20:00:00Z');
+    // Verify all sources resolve (local wall-clock anchoring — see runGolden)
+    const date = new Date(1978, 6, 4, 15, 0, 0);
     const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
     const state = compileWorldState({
       timeline: [weather],
@@ -179,8 +182,11 @@ function runGolden() {
   const errors = [];
   const checks = [];
 
-  // Scenario: Baton Rouge July 1978 daytime
-  const date = new Date('1978-07-04T20:00:00Z');
+  // Scenario: Baton Rouge July 1978 daytime.
+  // The mock provider reads machine-local hours (weather.js getHours() — TZ
+  // derivation is a known TODO), so anchor scenarios in local wall-clock
+  // components, not UTC instants: hour 15 is 3pm on every machine/runner.
+  const date = new Date(1978, 6, 4, 15, 0, 0);
   const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
   const state = compileWorldState({
     timeline: [weather],
@@ -212,15 +218,14 @@ function runGolden() {
   }
 
   checks.push('daytime_distortion');
-  // Heat distortion should be 0 at 20:00 UTC (which is local evening in summer)
-  // or could be nonzero depending on temp — just verify it's in bounds
+  // Could be nonzero depending on temp — just verify it's in bounds
   if (state.controls.visual.heatDistortion < 0 || state.controls.visual.heatDistortion > 1) {
     errors.push(`Heat distortion out of bounds: ${state.controls.visual.heatDistortion}`);
   }
 
   // Night scenario
   checks.push('night_luminance');
-  const nightDate = new Date('1978-07-04T06:00:00Z');
+  const nightDate = new Date(1978, 6, 4, 2, 0, 0); // 2am local wall-clock everywhere
   const nightWeather = getMockWeather({ location: 'Baton Rouge, LA', date: nightDate });
   const nightState = compileWorldState({
     timeline: [nightWeather],
