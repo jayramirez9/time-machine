@@ -24,9 +24,10 @@ import { validateConfig, evaluateRoutes } from './lib/environmentRouter.js';
 // ── Arg parsing ──────────────────────────────────────────────────────────────
 
 function parseArgs(args) {
-  const parsed = { only: null, json: false };
+  const parsed = { only: null, skip: [], json: false };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--only' && args[i + 1]) parsed.only = args[++i];
+    if (args[i] === '--skip' && args[i + 1]) parsed.skip.push(...args[++i].split(','));
     if (args[i] === '--json') parsed.json = true;
   }
   return parsed;
@@ -36,7 +37,9 @@ function parseArgs(args) {
 
 async function runUnit() {
   try {
-    // Suite is 1,500+ tests and takes several minutes; 30s here silently failed every run
+    // Local full-run path only — CI gates unit via a native npm test step
+    // (eval.yml) and calls this with --skip unit. Suite is 1,500+ tests and
+    // takes several minutes; the old 30s cap silently failed every run.
     const output = execSync('npm test 2>&1', { encoding: 'utf8', timeout: 600000, maxBuffer: 32 * 1024 * 1024 });
     const testsMatch = output.match(/ℹ tests (\d+)/);
     const failMatch = output.match(/ℹ fail (\d+)/);
@@ -268,11 +271,29 @@ const SUITES = {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const suitesToRun = args.only ? { [args.only]: SUITES[args.only] } : SUITES;
 
   if (args.only && !SUITES[args.only]) {
     console.error(`Unknown suite: ${args.only}`);
     console.error(`Available: ${Object.keys(SUITES).join(', ')}`);
+    process.exit(1);
+  }
+  for (const name of args.skip) {
+    if (!SUITES[name]) {
+      console.error(`Unknown suite in --skip: ${name}`);
+      console.error(`Available: ${Object.keys(SUITES).join(', ')}`);
+      process.exit(1);
+    }
+  }
+
+  // --skip lets CI run `npm test` as a native workflow step (no execSync
+  // timeout to race slow shared runners) and cover the rest here.
+  const suitesToRun = args.only
+    ? { [args.only]: SUITES[args.only] }
+    : Object.fromEntries(Object.entries(SUITES).filter(([k]) => !args.skip.includes(k)));
+
+  // A gate that runs nothing must not report green
+  if (Object.keys(suitesToRun).length === 0) {
+    console.error('No suites to run (everything skipped)');
     process.exit(1);
   }
 
