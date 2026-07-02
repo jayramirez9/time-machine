@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'fs';
 import path from 'path';
 import {
   researchUrbanForm,
@@ -16,10 +17,14 @@ import { validateLayerEnvelope } from '../lib/environmentProfile.js';
 const MANHATTAN_PATH = path.resolve('terrain-data/manhattan-ny');
 const NONEXISTENT_PATH = path.resolve('terrain-data/does-not-exist-xyz');
 
+// terrain-data/ is gitignored; terrain-dependent tests only run where the local data exists.
+const SKIP_NO_TERRAIN = !existsSync(MANHATTAN_PATH) &&
+  'terrain-data/manhattan-ny not present (gitignored local data)';
+
 // ─── assessTerrainData ──────────────────────────────────────────
 
 describe('assessTerrainData', () => {
-  it('reads real manhattan-ny terrain data', () => {
+  it('reads real manhattan-ny terrain data', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result, 'should return an object');
     assert.ok(result.location, 'should have location name');
@@ -28,34 +33,34 @@ describe('assessTerrainData', () => {
     assert.equal(result.slug, 'manhattan-ny');
   });
 
-  it('finds buildings in manhattan-ny', () => {
+  it('finds buildings in manhattan-ny', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result.buildings, 'should have buildings');
     assert.ok(result.buildings.count > 0, `expected buildings, got ${result.buildings.count}`);
     assert.ok(result.buildings.path.includes('buildings.geojson'));
   });
 
-  it('finds streets in manhattan-ny', () => {
+  it('finds streets in manhattan-ny', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result.streets, 'should have streets');
     assert.ok(result.streets.count > 0, `expected streets, got ${result.streets.count}`);
   });
 
-  it('finds landmarks in manhattan-ny', () => {
+  it('finds landmarks in manhattan-ny', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result.landmarks, 'should have landmarks');
     assert.ok(result.landmarks.count > 0, `expected landmarks, got ${result.landmarks.count}`);
     assert.ok(Array.isArray(result.landmarks.names));
   });
 
-  it('finds sanborn metadata in manhattan-ny', () => {
+  it('finds sanborn metadata in manhattan-ny', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result.sanborn, 'should have sanborn');
     assert.ok(result.sanborn.sheetCount > 0);
     assert.equal(result.sanborn.targetYear, 1890);
   });
 
-  it('finds vectors summary in manhattan-ny', () => {
+  it('finds vectors summary in manhattan-ny', { skip: SKIP_NO_TERRAIN }, () => {
     const result = assessTerrainData(MANHATTAN_PATH);
     assert.ok(result.vectors, 'should have vectors');
     assert.ok(result.vectors.roads > 0);
@@ -290,7 +295,7 @@ describe('researchUrbanForm', () => {
     assert.ok(layer.data.propTypes.includes('hitching_post'));
   });
 
-  it('includes terrain data references when available', () => {
+  it('includes terrain data references when available', { skip: SKIP_NO_TERRAIN }, () => {
     const layer = researchUrbanForm({
       location: 'Manhattan, NY',
       year: 1884,
@@ -339,7 +344,7 @@ describe('researchUrbanForm', () => {
     assert.equal(layer.data.sanbornCoverage, null);
   });
 
-  it('includes availability report', () => {
+  it('includes availability report', { skip: SKIP_NO_TERRAIN }, () => {
     const layer = researchUrbanForm({
       location: 'Manhattan, NY',
       year: 1884,
@@ -386,7 +391,7 @@ describe('researchUrbanForm', () => {
 // ─── Confidence varies ──────────────────────────────────────────
 
 describe('Confidence varies by data availability', () => {
-  it('higher confidence with terrain data than without', () => {
+  it('higher confidence with terrain data than without', { skip: SKIP_NO_TERRAIN }, () => {
     const withTerrain = researchUrbanForm({
       location: 'Manhattan, NY',
       year: 1884,

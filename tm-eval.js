@@ -36,7 +36,8 @@ function parseArgs(args) {
 
 async function runUnit() {
   try {
-    const output = execSync('npm test 2>&1', { encoding: 'utf8', timeout: 30000 });
+    // Suite is 1,500+ tests and takes several minutes; 30s here silently failed every run
+    const output = execSync('npm test 2>&1', { encoding: 'utf8', timeout: 600000, maxBuffer: 32 * 1024 * 1024 });
     const testsMatch = output.match(/ℹ tests (\d+)/);
     const failMatch = output.match(/ℹ fail (\d+)/);
     const tests = testsMatch ? parseInt(testsMatch[1]) : 0;
