@@ -8,13 +8,17 @@ import { validateWorldState, STATES_ENUM, CONTROL_BOUNDS } from '../lib/worldSta
  * Golden State Tests
  * Deterministic tests using the mock provider (seeded PRNG).
  * Same inputs always produce same outputs — catches drift in the compiler.
+ *
+ * Dates use local-component constructors (not UTC strings): the mock provider
+ * reads machine-local getHours() (TZ derivation is a documented TODO), so
+ * wall-clock anchoring keeps these deterministic across machine timezones.
  */
 
 describe('Golden State - Mock Provider Determinism', () => {
   const defaultLocale = { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 };
 
   describe('Baton Rouge July 1978 - Daytime', () => {
-    const date = new Date('1978-07-04T20:00:00Z'); // 3pm CDT (UTC-5 in summer)
+    const date = new Date(1978, 6, 4, 15, 0, 0); // 3pm wall-clock
     const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
     const state = compileWorldState({
       timeline: [weather],
@@ -68,7 +72,7 @@ describe('Golden State - Mock Provider Determinism', () => {
   });
 
   describe('Night scenario', () => {
-    const date = new Date('1978-07-04T06:00:00Z'); // 1am CDT
+    const date = new Date(1978, 6, 4, 2, 0, 0); // 2am wall-clock
     const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
     const state = compileWorldState({
       timeline: [weather],
@@ -101,7 +105,7 @@ describe('Golden State - Mock Provider Determinism', () => {
   });
 
   describe('Winter scenario', () => {
-    const date = new Date('1978-01-15T18:00:00Z'); // noon CST
+    const date = new Date(1978, 0, 15, 12, 0, 0); // noon wall-clock
     const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
     const state = compileWorldState({
       timeline: [weather],
@@ -116,7 +120,7 @@ describe('Golden State - Mock Provider Determinism', () => {
   });
 
   describe('Different location', () => {
-    const date = new Date('1884-06-15T18:00:00Z');
+    const date = new Date(1884, 5, 15, 13, 0, 0); // 1pm wall-clock
     const weather = getMockWeather({ location: 'New York, NY', date });
     const nycLocale = { audioBaseDb: 40, activity: 0.65, hazeBias: 0.1 };
     const state = compileWorldState({
