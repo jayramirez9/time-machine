@@ -82,9 +82,10 @@ async function main() {
   // 3. Read eval results if available
   let evalResults = '';
   try {
-    // Must exceed tm-eval's internal 600s unit-suite cap or this silently SIGTERMs
-    evalResults = execSync('./tm-eval.js --json 2>&1', {
-      encoding: 'utf8', timeout: 660000
+    // Skip the slow unit suite — eval.yml gates it as its own native step;
+    // the fast suites (contract/routes/profiles/era/golden) run in seconds.
+    evalResults = execSync('./tm-eval.js --json --skip unit 2>&1', {
+      encoding: 'utf8', timeout: 120000
     });
     console.log('Eval results captured.');
   } catch (err) {
