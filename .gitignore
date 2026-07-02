@@ -2,6 +2,8 @@ node_modules/
 .DS_Store
 .mcp.json
 .env
+.env.*
+!.env.example
 tm-engine.log
 logs/
 audio-assets/
@@ -11,4 +13,7 @@ terrain-data/
 mesh-data/
 photos/
 .claude/worktrees/
+.claude/projects/
+.codex/
+/Unreal/
 eval-out.json
