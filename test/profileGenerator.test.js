@@ -254,6 +254,22 @@ describe('generateProfile', () => {
     assert.ok(!eventIds.includes('car_traffic'), 'should not include car_traffic');
   });
 
+  it('horse_walk surface tracks the scene era, not its home group', () => {
+    // Inherited into steam-age scenes — must pick up the era's street surface
+    const p1884 = generateProfile({ ...baseOpts, year: 1884 });
+    const hw = p1884.microEvents.find(e => e.id === 'horse_walk');
+    assert.ok(hw, '1884 should include horse_walk');
+    assert.equal(hw.surface, 'cobblestone');
+    assert.match(hw.description, /cobblestone/);
+
+    // Genuine pre-1830 scenes keep the original dirt foley
+    const p1800 = generateProfile({ ...baseOpts, year: 1800 });
+    const hwDirt = p1800.microEvents.find(e => e.id === 'horse_walk');
+    assert.ok(hwDirt, '1800 should include horse_walk');
+    assert.equal(hwDirt.surface, 'dirt');
+    assert.match(hwDirt.description, /packed earth/);
+  });
+
   it('1953 gets cars not horses', () => {
     const profile = generateProfile({ ...baseOpts, year: 1953 });
     const eventIds = profile.microEvents.map(e => e.id);
