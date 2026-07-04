@@ -108,6 +108,7 @@ describe('Profile Assembler — assembleProfile', () => {
       const req = new EventEmitter();
       req.end = () => {};
       req.setTimeout = () => req;
+      req.destroy = () => req;
       process.nextTick(() => req.emit('error', new Error('offline: network disabled in tests')));
       return req;
     };

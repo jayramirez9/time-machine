@@ -60,6 +60,12 @@ describe('buildSplatTilesetScript', () => {
     assert.ok(s.includes('TOKEN = "a\\"b"'));
   });
 
+  it('safely escapes a token containing backslashes', () => {
+    const s = buildSplatTilesetScript({ assetId: 7, token: 'a\\b' });
+    // JSON.stringify('a\\b') → '"a\\\\b"' — a valid Python literal for a\b
+    assert.ok(s.includes('TOKEN = "a\\\\b"'));
+  });
+
   it('rejects a non-integer asset id', () => {
     assert.throws(() => buildSplatTilesetScript({ assetId: 1.5, token: 't' }), /positive integer/);
     assert.throws(() => buildSplatTilesetScript({ assetId: 0, token: 't' }), /positive integer/);
@@ -96,7 +102,9 @@ describe('setSplatTileset / clearSplatTileset / getSplatTilesetStatus', () => {
     let captured;
     globalThis.fetch = async (url, opts) => {
       captured = { url, body: JSON.parse(opts.body) };
-      return { ok: true, status: 200 };
+      // Include a parseable body so this exercises the happy path, not the
+      // json()-throws fallback branch (that branch has its own test below).
+      return { ok: true, status: 200, json: async () => ({ ReturnValue: true }) };
     };
     const res = await setSplatTileset(HOST, { assetId: 42, token: 'tok' });
     assert.equal(res.ok, true);

@@ -23,12 +23,19 @@ const ROOT = resolve(__dirname, '..');
 
 const args = process.argv.slice(2);
 
+// Value-taking flags only (--host, --height). A trailing flag with no value
+// (or another --flag where its value should be) is a usage error — previously
+// it was silently dropped (or worse, returned truthy `true` as the "value").
 function getFlag(name, defaultValue = null) {
   const idx = args.indexOf(name);
   if (idx === -1) return defaultValue;
   const val = args[idx + 1];
-  args.splice(idx, val && !val.startsWith('--') ? 2 : 1);
-  return val ?? true;
+  if (val === undefined || val.startsWith('--')) {
+    console.error(`${name} requires a value`);
+    process.exit(1);
+  }
+  args.splice(idx, 2);
+  return val;
 }
 
 const listIdx = args.indexOf('--list');

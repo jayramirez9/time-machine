@@ -842,7 +842,7 @@
     },
     {
       "id": "horse_walk",
-      "description": "Horse walking on unpaved road — hooves on packed earth",
+      "description": "Horse walking on cobblestone — hooves clopping",
       "sources": [
         {
           "url": null,
@@ -878,7 +878,7 @@
         0.2,
         1
       ],
-      "surface": "dirt"
+      "surface": "cobblestone"
     },
     {
       "id": "hand_tools",
