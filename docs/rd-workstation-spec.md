@@ -47,7 +47,24 @@ Record the measurements either way — they set the production BOM for the repea
 | **OS** | Windows 11 Pro | UE virtual production + NVIDIA drivers are Windows-first (unchanged from Roadster doc). |
 | **Displays (Phase A/B)** | Whatever's on hand + one decent 4K | Real window displays are a Phase C / trailer-build decision (`roadster-trailer-hardware.md`, "Displays as windows"). Don't buy OLEDs for the desk. |
 
-**Estimated cost (July 2026, volatile):** ~$6–8k for the box (no displays). The GPU (~$3k) and RAM (several hundred over normal) dominate the overage vs. 2025 pricing.
+**Estimated cost (July 2026, volatile):** ~$7.5–9k for the box (no displays). The GPU (~$3k) and RAM (~$2.2–2.8k — 128 GB kits have roughly tripled) dominate the overage vs. 2025 pricing. Concrete SKUs below.
+
+### Parts list (checked July 2026 — re-verify prices at order time)
+
+| # | Part | SKU | Price seen | Note |
+|---|---|---|---|---|
+| 1 | GPU | ASUS TUF Gaming GeForce RTX 5090 | ~$2,910 | Cheapest reputable AIB in stock. Founders Edition is $1,999 but sells out in minutes — worth a stock alert, not worth waiting for. |
+| 2 | CPU | AMD Ryzen 9 9950X | ~$475 | At a 2026 low — one of the few deflating parts. |
+| 3 | Motherboard | ASUS ROG Strix X870E-E Gaming WiFi | ~$500 | 2× Gen5 + 2× Gen4 M.2, dual USB4, 5 GbE, strong VRM. |
+| 4 | RAM | G.Skill 2×64 GB DDR5-6000 CL30-ish EXPO (Flare X5 / Trident Z5 Neo) | ~$2,200–2,800 | The painful line. Corsair Vengeance 2×64 GB 6400 seen at $2,799. Shop this one hardest; buy whichever reputable 2×64 EXPO kit is cheapest that week. Dual-rank 64 GB DIMMs stress AM5's memory controller — expect to run at 5600 if 6000 won't stabilize (harmless for this workload). |
+| 5 | SSD (OS/projects) | Samsung 9100 PRO 2 TB (Gen5) | ~$350–430 | On deep sale from $679 list — SSDs are the one component *not* inflated. |
+| 6 | SSD (render scratch) | Samsung 990 PRO 4 TB (Gen4) | ~$320–650 | Listings vary wildly (WD SN850X 4 TB alt at ~$650). Grab whichever 4 TB TLC drive is near the low end. |
+| 7 | PSU | Corsair HX1500i (ATX 3.1, 12V-2×6) | ~$400–450 | Seasonic Prime TX-1600 is the premium alternative if HX1500i is short. |
+| 8 | Cooler | Arctic Liquid Freezer III Pro 360 | ~$130 | Quiet under sustained load — matters in Phase C. |
+| 9 | Case | Fractal Design Torrent | ~$200 | High-airflow, fits 4-slot GPU + 360 mm AIO (mount the radiator on the bottom — keep the 2×180 mm front intakes that are the point of this case). |
+| 10 | OS | Windows 11 Pro (retail license) | ~$150 | |
+
+**Total ≈ $7,600–8,700 pre-tax** depending mostly on the RAM kit and which 5090 is in stock the day you order. GA sales tax adds ~$550–690, so plan on **~$8.2–9.4k out the door**.
 
 ---
 
