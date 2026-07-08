@@ -6,7 +6,7 @@
 2. **Phase B — Pre-rendered trailer videos.** Movie Render Queue cinematic renders of the demo scenes — the "window into another time" footage that exists before the real-time scene hits frame rate.
 3. **Phase C — Real-time across 3 windows.** The box moves into the trailer and becomes the Roadster compute (see `roadster-trailer-hardware.md`). Final state.
 
-**Date:** July 2026 · **Status:** Recommendation — purchase decision is Jay's · **Owner:** Henhouse Holdings / Time Machine
+**Date:** July 2026 · **Status:** **ORDERED 2026-07-08** (prebuilt — see "What was actually ordered" below) · **Owner:** Henhouse Holdings / Time Machine
 
 **Related:** `roadster-trailer-hardware.md` (venue integration: electrical, thermal, displays, audio — this box is that doc's compute, bought early), `review-year1-2026-07.md` §2 (why now), PRD §17 (topology) and §21 (Mac hardware ceiling).
 
@@ -66,6 +66,29 @@ Record the measurements either way — they set the production BOM for the repea
 
 **Total ≈ $7,600–8,700 pre-tax** depending mostly on the RAM kit and which 5090 is in stock the day you order. GA sales tax adds ~$550–690, so plan on **~$8.2–9.4k out the door**.
 
+> **Superseded by the prebuilt order below.** The DIY list stays as the reference spec — it defines the upgrade targets and the GPU-swap-gate context.
+
+---
+
+## What was actually ordered (2026-07-08)
+
+**Corsair Vengeance a7500 prebuilt** — ~$6,000 pre-tax (base $5,799.99 sale price + $200 CPU swap), ~$1.6–2.7k under the DIY list. The likely reason prebuilts undercut parts: system integrators get 5090 allocation near MSRP rather than at ~$2,910 street (inferred, not invoiced). Includes 2-year parts+labor warranty, 60-day returns.
+
+| Component | Ordered | vs. reference spec |
+|---|---|---|
+| GPU | RTX 5090 32 GB | ✅ as specced |
+| CPU | **Ryzen 9 9900X3D** (12C/24T, swapped from 9800X3D for +$200; 9950X-class not offered) | 12 vs 16 cores — most of the MRQ/compile gap closed; V-cache is a bonus for Phase C real-time |
+| RAM | 64 GB (2×32) DDR5 | Half the spec. Board has 4 slots — upgrade **only if** MRQ pressure shows |
+| Storage | 2× 2 TB NVMe Gen4 | 4 TB fast storage, but 2 TB short of the reference spec and no dedicated render-scratch drive — add a 4 TB NVMe (~$350) if EXR sequences overflow |
+| Motherboard | MSI PRO X870E-P WiFi | ✅ X870E as specced |
+| PSU | 1200 W Gold | Within the 1200–1500 W band; handles a future 600 W GPU swap |
+| Case / cooling | Corsair 3500X mid-tower, 240 mm AIO, 6 fans | Weakest link for all-day duty; acceptable because Phase C puts the box in a ventilated, isolated rack |
+| OS | Windows 11 **Home** | **Upgrade to Pro (~$99) on day one** — Remote Desktop + BitLocker |
+
+**First-boot additions to the Phase A checklist:** Windows 11 Pro upgrade; AMD chipset driver install (dual-CCD X3D thread-placement — the scheduler needs it to pin game/render threads to the V-cache CCD).
+
+**Deferred upgrades (buy only when a measurement demands it):** 128 GB RAM (if MRQ pinches), 4 TB scratch NVMe (if EXR sequences overflow), GPU swap per the gate above (if 3×4K@60 fails).
+
 ---
 
 ## Market note (July 2026): prices are climbing, not easing
@@ -98,7 +121,7 @@ Software checklist, in order:
 ## Phase B — pre-render notes
 
 - MRQ with high-quality anti-aliasing (temporal samples) at final window resolution/orientation — render time is free on a dedicated box overnight.
-- Render to EXR for grading headroom; encode deliverables to ProRes/H.265 on the 9950X.
+- Render to EXR for grading headroom; encode deliverables to ProRes/H.265 on the CPU (9900X3D as ordered).
 - Keep the render-output drive as scratch; archive finished sequences off-box.
 - Every MRQ run doubles as a measurement pass: log per-frame times and VRAM at the same settings the real-time scene will use.
 
