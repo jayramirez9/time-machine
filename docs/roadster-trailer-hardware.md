@@ -6,6 +6,8 @@
 
 **Related:** `PRD.md` §17 (Topology — single-box vs. node cluster) and §21 (Mac hardware-ceiling risk).
 
+> **Update (July 2026):** the compute in this spec is not a separate future purchase — it is bought early as the R&D workstation and moves into the trailer for its final phase. Build spec, GPU swap-path decision, and current pricing: **`rd-workstation-spec.md`**.
+
 ---
 
 ## What this powers
@@ -40,7 +42,7 @@ Synchronization across windows is a product non-negotiable ("if sync breaks, fad
 ## Why 2–3 windows on one GPU is feasible (2026)
 
 - **Gaussian-splat (3DGS) capture renders cheap** — rasterized, not ray-marched: 100–200+ FPS at 1080p, ~200–650 MB VRAM per captured scene. The photoreal environment costs a fraction of full traditional geometry.
-- **Unreal 5.8** ships *Lumen Medium* (2× faster global illumination) and *Megalights* (hundreds of shadow-casting lamps/window-glows at near-zero cost).
+- **Unreal 5.8** ships *Lumen Lite* (2× faster global illumination; announced as "Lumen Medium") and *Megalights* (hundreds of shadow-casting lamps/window-glows at near-zero cost).
 - **DLSS 4** (Blackwell) renders below native and upscales to 4K.
 
 Caveat that shapes the design: the dynamic sky/weather loop needs **relightable** geometry, and 3DGS bakes its lighting. So the scene is a **hybrid** — splats for the static backdrop, traditional mesh for the near/relightable buildings and the live sky. That hybrid is a mixed GPU load, which is why VRAM headroom (the 96 GB card) earns its place.
@@ -63,7 +65,7 @@ Caveat that shapes the design: the dynamic sky/weather loop needs **relightable*
 
 **Display output capacity is not a constraint:** both GPUs drive 4 displays; the limit is render compute / VRAM, not ports. 2 windows ≈ comfortable on a 5090; 3 windows at full 4K hybrid fidelity is where the 96 GB card (or a second GPU) earns its keep.
 
-**Pricing note (June 2026):** a GDDR7 memory shortage has inflated GPUs — RTX PRO 6000 listings ~$13,250 (vs ~$8.5k MSRP); RTX 5090 ~$2.5–4k+ (vs $1,999 MSRP). Expect volatility; may ease.
+**Pricing note (June 2026):** a GDDR7 memory shortage has inflated GPUs — RTX PRO 6000 listings ~$13,250 (vs ~$8.5k MSRP); RTX 5090 ~$2.5–4k+ (vs $1,999 MSRP). *July 2026 update: prices are climbing, not easing — shortage forecast into late 2027. Current numbers and sources in `rd-workstation-spec.md`.*
 
 ---
 
