@@ -233,20 +233,33 @@ Make the audio engine smarter about when and how events fire.
 
 The one move that resolves the biggest open question with evidence before committing further.
 
-- [ ] **Trinity Church A/B**: Reconstruct one hero building two ways and compare side by side in Unreal — (a) existing Meshy mesh pipeline vs. (b) Cesium ion photos→3DGS from archival photographs. Evaluate fidelity, effort, cost, and how each reads at street level. Document the verdict. *Decision gate: outcome determines how much of the hero pipeline shifts to capture.*
+- [ ] **Trinity Church A/B**: Reconstruct one hero building two ways and compare side by side in Unreal — (a) existing Meshy mesh pipeline vs. (b) Cesium ion photos→3DGS from archival photographs. Evaluate fidelity, effort, cost, and how each reads at street level. Document the verdict. *Downgraded from decision gate to verification pass (July 2026 research pre-confirmed the mesh route for relightable heroes — `docs/review-year1-2026-07.md`). Gated on the ion client corrections below + an ion token with `assets:write` scope (current token authenticates but can't write; ion returns a misleading 404, not 403).*
 - [ ] **Sparse-view feasibility note**: Assess how few/poor-quality historical photos still yield an acceptable splat (informs which 1884 landmarks are capture-eligible vs. procedural). Reference sparse-view 3DGS / Photo-Tourism reconstruction work.
 
 ### 7d.2 — Capture Pipeline Integration
 
 - [x] **3DGS tileset streaming** *(code-complete; live-verify on the box)*: `lib/cesiumTileset.js` gains `setSplatTileset()`/`clearSplatTileset()`/`getSplatTilesetStatus()` + offline script builders `buildSplatTilesetScript()`/`buildClearSplatScript()`. Find-or-spawns a dedicated `TM_SplatTileset` Cesium3DTileset actor via the Python RC path, points it at a Cesium ion 3DGS asset (`ion_asset_id`/`ion_access_token`, source-enum version fallback for Cesium for Unreal 5.8), refreshes. Wired into `runtimeEngine.js` engine start, gated on `CESIUM_SPLAT_ASSET_ID` + `CESIUM_ION_TOKEN`; `engine.splatTileset` exposed. Dead `rcProp()` removed. 20 offline tests (`test/cesiumTileset.test.js`). *Live integration (spawn → stream → confirm KHR_gaussian_splatting renders) pending the Unreal box.*
-- [ ] **Cesium ion capture client**: `lib/` module + tool to submit imagery to Cesium ion (iTwin Capture) and retrieve a 3DGS tileset asset ID. Photos sourced from the existing photo-archive fetch (`lib/photoArchiveFetch.js`) for historical heroes, or aerial/Street-level capture for present-day.
-- [ ] **Representation selector**: Per-feature regime decision driven by Environment Profile confidence/source metadata (PRD §17). Output: each building/landform tagged `capture` | `procedural` so spawners and the streaming path know which to use. Records provenance into the accuracy manifest.
+- [x] **Cesium ion capture client** *(code-complete; corrections owed — see next item)*: `lib/cesiumIon.js` (zero-dep SigV4 S3 signer) + `tools/cesium-capture.js` + tests. Submits imagery to Cesium ion, polls, retrieves asset ID. Merged via PR #1.
+- [ ] **Ion client corrections — NEXT CODE ITEM**: July 2026 account research corrected the API guesses: splat `sourceType` is `RASTER_IMAGERY` (not the current `RAW_IMAGERY` at `lib/cesiumIon.js:38`) with `outputs.gaussianSplats: true`, and the splat asset ID arrives in `additionalAssets[]`, not the primary asset. Fix, update tests, then re-run the Trinity submission (`node tools/cesium-capture.js --photos photos/spike-trinity/ --no-wait`) once the write-scope token is in `.env`.
+- [x] **Representation selector**: `lib/representationSelector.js` + tests — per-feature regime decision (capture | procedural) from Environment Profile confidence/source metadata (PRD §17), provenance into the accuracy manifest. Merged via PR #1.
 
 ### 7d.3 — Renderer Foundation Refresh (UE 5.8)
 
 - [ ] **Megalights migration**: Move the hundreds of `TM_Lamp_` gas lamps and `TM_Particle_` window-glow PointLights onto Megalights. Update `lib/renderingConfig.js` (`configureLampShadows`) for the Megalights path. Removes the many-shadowed-lights perf cliff.
-- [ ] **Lumen Medium tier**: Add a Lumen Medium quality option to `renderingConfig.js` for the Mac/perf-constrained baseline (PRD "Mac hardware ceiling" risk).
+- [ ] **Lumen Lite tier** (announced as "Lumen Medium"): Add a Lumen Lite quality option to `renderingConfig.js` for the perf-constrained baseline (PRD "Mac hardware ceiling" risk).
 - [ ] **Verify against 5.8**: Re-validate Lumen/Nanite/VSM config and the spawn/RC-API scripts against the 5.8 release (watch for RC API or material-pipeline changes).
+
+### 7d.4 — Live Verification Sprint (the box arrives)
+
+> **Workstation ORDERED 2026-07-08** — Corsair Vengeance a7500 (RTX 5090, Ryzen 9 9900X3D), delivery est. 07/10–14. Full spec, deltas, three-phase plan (R&D → MRQ trailer pre-renders → real-time 3-window), and GPU swap gate: `docs/rd-workstation-spec.md`. Per the year-1 review: run this sprint **before any new feature** — it converts months of "code-complete, live-verify pending" into a durable regression net.
+
+- [ ] **First boot**: Windows 11 Pro upgrade, AMD chipset driver (dual-CCD X3D thread placement), UE 5.8, cesium-unreal **v2.28.0**, Remote Control API reachable from the dev Mac (LAN 192.168.68.x).
+- [ ] **`verify:live` smoke suite** (build as durable regression, not a one-time checkout): `GET /remote/info` → ExecutePythonScript round-trip → spawn one of each `TM_*` actor type → splat tileset render → one full routes dispatch.
+- [ ] **routes.json label-based discovery**: routes reference stable `TM_*` labels, objectPaths resolved at engine start (UAID paths silently break on level rebuild — do before heavy level iteration).
+- [ ] **7d.2-A live-verify**: splat source enum name, `set_editor_property` acceptance, `KHR_gaussian_splatting` actually renders.
+- [ ] **7b editor work** (stacked): master weathering material function, `M_TM_Landscape` RVT blend nodes, POM node on `M_TM_Surface`, Niagara systems, foliage meshes, cloth physics.
+- [ ] **7d.3 items above** (Megalights, Lumen Lite, 5.8 re-validation).
+- [ ] **Frame-budget instrumentation**: per-window frame times + VRAM at window resolution with the hybrid scene — feeds the GPU swap gate and the production BOM.
 
 **Exit criteria:** Stand at street level in present-day or recent-era Baton Rouge: the trees are crisp splats, not melted photogrammetry; power lines read as lines. Stand in 1884 Manhattan: Trinity Church is a clean reconstruction from archival photos, the demolished tenement beside it is procedural massing with period materials, and you cannot tell which pipeline produced which from the experience — only the accuracy manifest knows. Gas lamps cast soft shadows at no frame cost.
 

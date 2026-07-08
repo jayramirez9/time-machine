@@ -1,12 +1,14 @@
 # PROJECT_CONTEXT.md
 
+> **Staleness note (2026-07-08):** `ROADMAP.md` is the source of truth for current work; this doc's body below is a historical snapshot (Phase 6/7 era). Only this header is kept current.
+
 ## Project
-Time Machine — Immersive environment software (LED virtual production, world state engine driving Unreal scenes)
-Version: Phase 7 complete — Agent Layer built. 978 tests pass.
+Time Machine — Immersive environment software (world state engine driving Unreal scenes, procedural + capture-based historical reconstruction)
+Version: Code-side through 7c complete (7b UE-editor work still stacked for the box); **Phase 7d (3DGS capture pipeline) active**. 1,551 tests pass. CI live (eval gate + AI PR reviewer).
 HQ: Henhouse
 
 ## Current Sprint
-Phase 7 (The Agent Layer) complete. Phase 6 (Historical Urban Form) 6.1–6.7 complete.
+**R&D workstation ordered 2026-07-08** (Corsair a7500: RTX 5090, 9900X3D — `docs/rd-workstation-spec.md`), delivery est. 07/10–14. Next code item before it lands: ion client corrections (`RASTER_IMAGERY` + `additionalAssets[]`, ROADMAP 7d.2) + write-scope ion token, then Trinity re-run. When the box arrives: Live Verification Sprint (ROADMAP 7d.4).
 
 ### Phase 7 — The Agent Layer (DONE)
 - **7.1 Profile Schema**: `docs/environment-profile-schema.md`, `lib/environmentProfile.js` — 9 PRD layers, confidence/citation envelope, accuracy manifest. `profiles/nyc_1884.json` first complete profile.

@@ -112,7 +112,7 @@ Software checklist, in order:
 
 1. Windows 11 Pro, NVIDIA Studio driver, **Unreal Engine 5.8**, **cesium-unreal v2.28.0** (contains three 3DGS crash/render fixes: splat-accumulation v2.26, Tick crash v2.27, Standalone splats v2.28).
 2. Enable Remote Control API; confirm `GET /remote/info` from the dev Mac over LAN (192.168.68.x).
-3. **`verify:live` smoke suite** (build it as durable regression, not a one-time checkout): one ExecutePythonScript round-trip → spawn one of each `TM_*` actor type → one splat tileset render (`TM_SplatTileset`, KHR_gaussian_splatting) → one full routes dispatch.
+3. **`verify:live` smoke suite** (build it as durable regression, not a one-time checkout): `GET /remote/info` → one ExecutePythonScript round-trip → spawn one of each `TM_*` actor type → one splat tileset render (`TM_SplatTileset`, KHR_gaussian_splatting) → one full routes dispatch.
 4. **routes.json label-based discovery** — do this before heavy level iteration (year-1 review §5: UAID objectPaths break on level rebuilds).
 5. The stacked UE-editor work: master weathering material function, M_TM_Landscape RVT nodes, POM node on M_TM_Surface, Niagara systems, foliage meshes, cloth physics.
 6. **Megalights migration** (7d.3) — move `TM_Lamp_` / window-glow PointLights onto Megalights; update `configureLampShadows()`.
