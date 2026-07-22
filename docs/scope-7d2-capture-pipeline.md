@@ -66,7 +66,10 @@ Submit imagery to Cesium ion, get back a 3DGS tileset **asset ID**. Mirrors `mes
 
 **Contract (`lib/cesiumIon.js`):**
 ```js
-createSplatAsset({ token, name, description, files }) → { assetId, uploadLocation }
+createSplatAsset({ name, description, files, options }, { token, onUpload })
+  → { assetId, assetType, derivedAssets, splatAssetId, splatMatchMethod }
+  // derivedAssets/splatAssetId come off the CREATE response — reconstruction
+  // outputs are not retrievable from GET /v1/assets/{id}.
 pollAsset({ token, assetId }) → { status, percentComplete }   // status: AWAITING_FILES|NOT_STARTED|IN_PROGRESS|COMPLETE|ERROR
 getAsset({ token, assetId }) → { ... }
 ionToken() → string   // reads CESIUM_ION_TOKEN from env

@@ -15,6 +15,17 @@ import {
   ION_API_BASE,
   TERMINAL_STATUSES,
   SPLAT_ASSET_TYPE,
+  SPLAT_SOURCE_OPTIONS,
+  SPLAT_OUTPUT_TYPE,
+  findSplatAsset,
+  splatAssetId,
+  derivedAssets,
+  identifySplatOutput,
+  buildSplatOutputs,
+  OUTPUT_TAG,
+  mergeSourceOptions,
+  parseExtraOptions,
+  createAssetHint,
 } from '../lib/cesiumIon.js';
 
 // ---------------------------------------------------------------------------
@@ -72,7 +83,7 @@ describe('createAsset', () => {
     let url, opts;
     globalThis.fetch = async (u, o) => { url = u; opts = o; return { ok: true, json: async () => CREATE_RESPONSE }; };
 
-    const res = await createAsset({ name: 'trinity', description: 'd', type: '3DTILES', options: { sourceType: 'RAW_IMAGERY' } });
+    const res = await createAsset({ name: 'trinity', description: 'd', type: '3DTILES', options: { sourceType: 'RASTER_IMAGERY' } });
 
     assert.equal(url, `${ION_API_BASE}/v1/assets`);
     assert.equal(opts.method, 'POST');
@@ -81,7 +92,7 @@ describe('createAsset', () => {
     const body = JSON.parse(opts.body);
     assert.equal(body.name, 'trinity');
     assert.equal(body.type, '3DTILES');
-    assert.equal(body.options.sourceType, 'RAW_IMAGERY');
+    assert.equal(body.options.sourceType, 'RASTER_IMAGERY');
     assert.equal(res.assetMetadata.id, 12345);
     assert.ok(res.uploadLocation.accessKey);
   });
@@ -292,9 +303,6 @@ describe('createSplatAsset', () => {
     }
   });
 
-  it('defaults the asset type to the splat asset type', () => {
-    assert.equal(SPLAT_ASSET_TYPE, '3DTILES');
-  });
 
   it('throws on empty file list', async () => {
     await assert.rejects(() => createSplatAsset({ name: 'x', files: [] }), /no files|files/i);
@@ -306,5 +314,330 @@ describe('constants', () => {
     assert.ok(TERMINAL_STATUSES.includes('COMPLETE'));
     assert.ok(TERMINAL_STATUSES.includes('ERROR'));
     assert.ok(TERMINAL_STATUSES.includes('DATA_ERROR'));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Splat source options — pinned against ion's OpenAPI spec
+// (https://ion.cesium.com/openapi.yaml)
+// ---------------------------------------------------------------------------
+
+describe('SPLAT_SOURCE_OPTIONS', () => {
+  it('uses RASTER_IMAGERY — the sourceType whose schema IS the reconstruction job', () => {
+    // spec: sourceType RASTER_IMAGERY -> ImageryRasterOptions, "Multiple different
+    // outputs can be generated ... for a reconstruction job."
+    assert.equal(SPLAT_SOURCE_OPTIONS.sourceType, 'RASTER_IMAGERY');
+  });
+
+  it('does not use 3D_CAPTURE, which expects an already-reconstructed model', () => {
+    // spec: "An OBJ, COLLADA, or glTF model created through photogrammetry
+    // processes" — wrong for a directory of JPEGs.
+    assert.notEqual(SPLAT_SOURCE_OPTIONS.sourceType, '3D_CAPTURE');
+  });
+
+  it('requests a splat output — without it the job cannot emit one', () => {
+    const types = SPLAT_SOURCE_OPTIONS.outputs.map((o) => o.outputType);
+    assert.ok(types.includes(SPLAT_OUTPUT_TYPE), 'must request SPLATS_3DTILES');
+  });
+
+  it('includes the required mesh output', () => {
+    // spec: "At least one 3DTILES mesh output is required."
+    const types = SPLAT_SOURCE_OPTIONS.outputs.map((o) => o.outputType);
+    assert.ok(types.includes('3DTILES'));
+  });
+
+  it('requests at most one splat output', () => {
+    // spec: "Only one SPLATS_3DTILES output is allowed."
+    const splats = SPLAT_SOURCE_OPTIONS.outputs.filter((o) => o.outputType === SPLAT_OUTPUT_TYPE);
+    assert.equal(splats.length, 1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Derived-asset resolution
+// ---------------------------------------------------------------------------
+
+describe('derivedAssets', () => {
+  const splat = { id: 2, type: 'SPLATS_3DTILES', name: 'Trinity' };
+  const mesh = { id: 1, type: '3DTILES', name: 'Trinity' };
+
+  it("reads the spec's `assets` field", () => {
+    assert.deepEqual(derivedAssets({ assets: [mesh, splat] }), [mesh, splat]);
+  });
+
+  it("reads the official example's `additionalAssets` spelling", () => {
+    assert.deepEqual(derivedAssets({ additionalAssets: [splat] }), [splat]);
+  });
+
+  it('merges spellings instead of short-circuiting on an empty array', () => {
+    // A nullish-coalescing chain would return [] here and report "no splat".
+    assert.deepEqual(derivedAssets({ additionalAssets: [], assets: [splat] }), [splat]);
+  });
+
+  it('dedupes by id across spellings', () => {
+    assert.deepEqual(derivedAssets({ assets: [splat], additionalAssets: [splat] }), [splat]);
+  });
+
+  it('is defensive about missing / non-array fields', () => {
+    for (const input of [undefined, null, {}, { assets: null }, { assets: 'nope' }]) {
+      assert.deepEqual(derivedAssets(input), []);
+    }
+  });
+});
+
+describe('findSplatAsset / splatAssetId', () => {
+  const mesh = { id: 1, type: '3DTILES', name: 'Trinity Church' };
+  const splat = { id: 2, type: 'SPLATS_3DTILES', name: 'Trinity Church' };
+
+  it('identifies the splat by its output type', () => {
+    assert.equal(splatAssetId({ assets: [mesh, splat] }), 2);
+    assert.equal(identifySplatOutput({ assets: [mesh, splat] }).method, 'type');
+  });
+
+  it('does not mistake a same-typed sibling for the splat', () => {
+    assert.equal(splatAssetId({ assets: [mesh, { id: 3, type: '3DTILES', name: 'Trinity Church' }] }), null);
+  });
+
+  it('REFUSES an ambiguous name match rather than guessing', () => {
+    // The parent job name propagates to every derived asset, so a job called
+    // "Trinity splat test" makes all of them match. Returning [0] here would
+    // stream a mesh into TM_SplatTileset and fail two layers away.
+    const a = { id: 1, type: '3DTILES', name: 'Trinity splat test' };
+    const b = { id: 2, type: '3DTILES', name: 'Trinity splat test' };
+    assert.equal(findSplatAsset({ assets: [a, b] }), null);
+  });
+
+  it('falls back to an unambiguous name hint', () => {
+    const named = { id: 4, type: '3DTILES', name: 'Trinity Gaussian Splats' };
+    assert.equal(splatAssetId({ assets: [{ id: 1, type: '3DTILES', name: 'Trinity mesh' }, named] }), 4);
+  });
+
+  it('excludes outputs that self-identify as mesh or point cloud', () => {
+    const meshy = { id: 1, type: '3DTILES', name: 'splat job — mesh' };
+    const las = { id: 2, type: '3DTILES', name: 'splat job — point cloud' };
+    assert.equal(findSplatAsset({ assets: [meshy, las] }), null);
+  });
+
+  it('returns null with no derived assets at all', () => {
+    assert.equal(splatAssetId({ assetMetadata: { id: 1 } }), null);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option merging + CLI option parsing
+// ---------------------------------------------------------------------------
+
+describe('mergeSourceOptions', () => {
+  it('preserves defaults that the caller did not override', () => {
+    // The bug this guards: rebuilding options from sourceType alone dropped
+    // `outputs`, making a splat impossible.
+    const merged = mergeSourceOptions({ sourceType: 'OTHER' });
+    assert.equal(merged.sourceType, 'OTHER');
+    assert.deepEqual(merged.outputs, SPLAT_SOURCE_OPTIONS.outputs);
+  });
+
+  it('ignores undefined overrides instead of deleting the default', () => {
+    // A trailing `--source-type` with no value yields undefined.
+    assert.equal(mergeSourceOptions({ sourceType: undefined }).sourceType, 'RASTER_IMAGERY');
+  });
+
+  it('lets a caller replace outputs entirely', () => {
+    const merged = mergeSourceOptions({ outputs: [{ outputType: 'LAS' }] });
+    assert.deepEqual(merged.outputs, [{ outputType: 'LAS' }]);
+  });
+});
+
+describe('parseExtraOptions', () => {
+  it('parses key=value pairs, JSON-decoding values', () => {
+    const out = parseExtraOptions(['--option', 'targetVersion="1.1"', '--option', 'enabled=true']);
+    assert.equal(out.targetVersion, '1.1');
+    assert.equal(out.enabled, true);
+  });
+
+  it('keeps unparseable values as raw strings', () => {
+    assert.equal(parseExtraOptions(['--option', 'sourceType=RASTER_IMAGERY']).sourceType, 'RASTER_IMAGERY');
+  });
+
+  it('preserves = inside the value', () => {
+    assert.equal(parseExtraOptions(['--option', 'k=a=b']).k, 'a=b');
+  });
+
+  it('throws on a malformed pair or a missing value', () => {
+    assert.throws(() => parseExtraOptions(['--option', 'nope']), /expected key=value/);
+    assert.throws(() => parseExtraOptions(['--option']), /requires key=value/);
+  });
+
+  it('warns on a repeated key and takes the last', () => {
+    const warnings = [];
+    const out = parseExtraOptions(['--option', 'k=1', '--option', 'k=2'], (m) => warnings.push(m));
+    assert.equal(out.k, 2);
+    assert.equal(warnings.length, 1);
+  });
+
+  it('does not let __proto__ vanish into the prototype', () => {
+    const out = parseExtraOptions(['--option', '__proto__={"a":1}']);
+    assert.ok(Object.prototype.hasOwnProperty.call(out, '__proto__'));
+  });
+
+  it('returns an empty object when no options are given', () => {
+    assert.deepEqual(parseExtraOptions(['--photos', 'x']), {});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createAsset error hints
+// ---------------------------------------------------------------------------
+
+describe('createAssetHint', () => {
+  it('explains that ion 404s a token missing assets:write', () => {
+    const hint = createAssetHint(404, 'ResourceNotFound');
+    assert.match(hint, /assets:write/);
+    assert.match(hint, /NOT that the endpoint is wrong/);
+  });
+
+  it('points at --source-type when ion rejects the sourceType', () => {
+    assert.match(createAssetHint(400, 'Invalid Parameter: sourceType'), /--source-type/);
+  });
+
+  it('stays quiet for unrelated failures', () => {
+    assert.equal(createAssetHint(500, 'boom'), '');
+    assert.equal(createAssetHint(400, 'something else'), '');
+  });
+});
+
+describe('createAsset error reporting', () => {
+  it("preserves ion's original body alongside the hint", async () => {
+    globalThis.fetch = async () => ({ ok: false, status: 404, text: async () => 'ResourceNotFound /v1/assets' });
+    await assert.rejects(() => createAsset({ name: 'x' }), (e) => {
+      assert.match(e.message, /ResourceNotFound \/v1\/assets/); // ion's own words survive
+      assert.match(e.message, /assets:write/);                  // plus our hint
+      return true;
+    });
+  });
+});
+
+describe('createSplatAsset derived-asset capture', () => {
+  it('returns derived assets and the splat id from the CREATE response', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ion-'));
+    const file = path.join(tmp, 'a.jpg');
+    fs.writeFileSync(file, 'x');
+    const created = {
+      ...CREATE_RESPONSE,
+      assets: [
+        { id: 1, type: '3DTILES', name: 'Trinity' },
+        { id: 2, type: 'SPLATS_3DTILES', name: 'Trinity' },
+      ],
+    };
+    globalThis.fetch = async (u) => (String(u).includes('uploadComplete')
+      ? { ok: true }
+      : String(u).startsWith('https://s3.')
+        ? { ok: true }
+        : { ok: true, json: async () => created });
+
+    const res = await createSplatAsset({ name: 'trinity', files: [file] });
+    assert.equal(res.assetId, 12345);
+    assert.equal(res.splatAssetId, 2, 'splat id must be captured at create time');
+    assert.equal(res.derivedAssets.length, 2);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tagged outputs — making identification deterministic
+// ---------------------------------------------------------------------------
+
+describe('buildSplatOutputs', () => {
+  it('names each output with its type tag, so the splat is an exact match later', () => {
+    // spec: outputs[].name "specifies the name of the asset to be generated".
+    const outputs = buildSplatOutputs('Trinity Church');
+    const splat = outputs.find((o) => o.outputType === 'SPLATS_3DTILES');
+    assert.equal(splat.name, `Trinity Church ${OUTPUT_TAG.SPLATS_3DTILES}`);
+  });
+
+  it('still requests the mandatory mesh output', () => {
+    assert.ok(buildSplatOutputs('x').some((o) => o.outputType === '3DTILES'));
+  });
+
+  it('falls back to a placeholder rather than emitting a blank name', () => {
+    for (const bad of [undefined, null, '', '   ']) {
+      assert.ok(buildSplatOutputs(bad).every((o) => o.name.trim().length > 0));
+    }
+  });
+});
+
+describe('identifySplatOutput — precedence and honesty', () => {
+  it('matches our own name tag when ion does not mark the type', () => {
+    const res = { assets: [
+      { id: 1, type: '3DTILES', name: `Trinity ${OUTPUT_TAG['3DTILES']}` },
+      { id: 2, type: '3DTILES', name: `Trinity ${OUTPUT_TAG.SPLATS_3DTILES}` },
+    ] };
+    const hit = identifySplatOutput(res);
+    assert.equal(hit.asset.id, 2);
+    assert.equal(hit.method, 'tag');
+  });
+
+  it('prefers the output type over the name tag', () => {
+    const res = { assets: [
+      { id: 1, type: 'SPLATS_3DTILES', name: 'untagged' },
+      { id: 2, type: '3DTILES', name: `x ${OUTPUT_TAG.SPLATS_3DTILES}` },
+    ] };
+    assert.equal(identifySplatOutput(res).method, 'type');
+    assert.equal(identifySplatOutput(res).asset.id, 1);
+  });
+
+  it('refuses when a hint is inherited from the parent job name', () => {
+    // "Trinity splat test" propagates 'splat' to every output, so a lone
+    // derived asset (the mesh) would otherwise look like the splat.
+    const res = {
+      assetMetadata: { id: 9, name: 'Trinity splat test' },
+      assets: [{ id: 1, type: '3DTILES', name: 'Trinity splat test' }],
+    };
+    assert.equal(identifySplatOutput(res), null);
+    assert.equal(splatAssetId(res), null);
+  });
+
+  it('flags a name-only match as the weak guess it is', () => {
+    const res = {
+      assetMetadata: { id: 9, name: 'Trinity Church' },
+      assets: [
+        { id: 1, type: '3DTILES', name: 'Trinity mesh' },
+        { id: 2, type: '3DTILES', name: 'Trinity Gaussian' },
+      ],
+    };
+    assert.equal(identifySplatOutput(res).method, 'name');
+  });
+
+  it("does not exclude place names containing 'las' as point-cloud outputs", () => {
+    const res = {
+      assetMetadata: { id: 9, name: 'Dallas' },
+      assets: [{ id: 1, type: '3DTILES', name: 'Dallas Gaussian' }],
+    };
+    assert.equal(splatAssetId(res), 1);
+  });
+
+  it('still excludes a genuine LAS point-cloud output', () => {
+    const res = {
+      assetMetadata: { id: 9, name: 'Trinity' },
+      assets: [{ id: 1, type: '3DTILES', name: 'Trinity gaussian LAS' }],
+    };
+    assert.equal(splatAssetId(res), null);
+  });
+});
+
+describe('derivedAssets — merge semantics', () => {
+  it('merges records for the same id instead of first-wins', () => {
+    // A sparse record in one spelling must not hide a marker in the other.
+    const merged = derivedAssets({
+      assets: [{ id: 2, name: 'Trinity' }],
+      additionalAssets: [{ id: 2, type: 'SPLATS_3DTILES' }],
+    });
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].type, 'SPLATS_3DTILES');
+    assert.equal(merged[0].name, 'Trinity');
+  });
+
+  it('treats numeric and string ids as the same asset', () => {
+    const merged = derivedAssets({ assets: [{ id: 2, type: 'SPLATS_3DTILES' }], additionalAssets: [{ id: '2' }] });
+    assert.equal(merged.length, 1);
   });
 });
