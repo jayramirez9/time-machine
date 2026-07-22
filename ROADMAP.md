@@ -227,7 +227,7 @@ Make the audio engine smarter about when and how events fire.
 
 > **Why this is now the priority.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
 >
-> **Key external facts (June 2026):** Cesium for Unreal now streams **3DGS tilesets with hierarchical LOD** from Cesium ion (the existing dependency — no new vendor). Cesium ion reconstructs **photos → mesh / point cloud / Gaussian splats** (iTwin Capture). Format is standardized via Khronos glTF extensions `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Unreal **5.8** (releasing this month) ships **Megalights** (production-ready — many shadowed lights cheaply) and **Lumen Medium** (2× faster GI). These de-risk the lamp-heavy lighting design and the Mac/perf ceiling.
+> **Key external facts (June 2026):** Cesium for Unreal now streams **3DGS tilesets with hierarchical LOD** from Cesium ion (the existing dependency — no new vendor). Cesium ion reconstructs **photos → mesh / point cloud / Gaussian splats** (iTwin Capture). Format is standardized via Khronos glTF extensions `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Unreal **5.8** (releasing this month) ships **Megalights** (production-ready — many shadowed lights cheaply) and **Lumen Lite** (2× faster GI; announced as "Lumen Medium"). These de-risk the lamp-heavy lighting design and the Mac/perf ceiling.
 
 ### 7d.1 — Hero Building Spike (decision gate)
 
@@ -251,8 +251,9 @@ The one move that resolves the biggest open question with evidence before commit
 
 ### 7d.4 — Live Verification Sprint (the box arrives)
 
-> **Workstation ORDERED 2026-07-08** — Corsair Vengeance a7500 (RTX 5090, Ryzen 9 9900X3D), delivery est. 07/10–14. Full spec, deltas, three-phase plan (R&D → MRQ trailer pre-renders → real-time 3-window), and GPU swap gate: `docs/rd-workstation-spec.md`. Per the year-1 review: run this sprint **before any new feature** — it converts months of "code-complete, live-verify pending" into a durable regression net.
+> **Workstation: first unit DOA (shipping damage) — free-upgrade replacement due 2026-07-23.** Corsair is replacing the ordered a7500 (Ryzen 9 9900X3D) with a higher-tier unit (**Ryzen 9 9950X3D**, 16C/32T, same RTX 5090) at no cost — the reference spec's core count, fully closing the MRQ/compile gap the order note had conceded. Full spec, deltas, arrival checks, three-phase plan (R&D → MRQ trailer pre-renders → real-time 3-window), and GPU swap gate: `docs/rd-workstation-spec.md`. Per the year-1 review: run this sprint **before any new feature** — it converts months of "code-complete, live-verify pending" into a durable regression net.
 
+- [ ] **Arrival checks** (before powering on): inspect for shipping damage; confirm CPU reports as **9950X3D** and 4 TB across two volumes; note the board model and whether it supports x8/x8 bifurcation (informational — the swap gate already prefers the PRO 6000 over dual-GPU). **Thermal is the one real regression**: the 9950X3D is a ~170 W TDP part vs the 9900X3D's ~120 W into the same 240 mm AIO, so log package temp *and effective all-core clock* in the Phase B pass, and check whether the case takes a 360 mm radiator.
 - [ ] **First boot**: Windows 11 Pro upgrade, AMD chipset driver (dual-CCD X3D thread placement), UE 5.8, cesium-unreal **v2.28.0**, Remote Control API reachable from the dev Mac (LAN 192.168.68.x).
 - [ ] **`verify:live` smoke suite** (build as durable regression, not a one-time checkout): `GET /remote/info` → ExecutePythonScript round-trip → spawn one of each `TM_*` actor type → splat tileset render → one full routes dispatch.
 - [ ] **routes.json label-based discovery**: routes reference stable `TM_*` labels, objectPaths resolved at engine start (UAID paths silently break on level rebuild — do before heavy level iteration).
@@ -261,7 +262,22 @@ The one move that resolves the biggest open question with evidence before commit
 - [ ] **7d.3 items above** (Megalights, Lumen Lite, 5.8 re-validation).
 - [ ] **Frame-budget instrumentation**: per-window frame times + VRAM at window resolution with the hybrid scene — feeds the GPU swap gate and the production BOM.
 
-**Exit criteria:** Stand at street level in present-day or recent-era Baton Rouge: the trees are crisp splats, not melted photogrammetry; power lines read as lines. Stand in 1884 Manhattan: Trinity Church is a clean reconstruction from archival photos, the demolished tenement beside it is procedural massing with period materials, and you cannot tell which pipeline produced which from the experience — only the accuracy manifest knows. Gas lamps cast soft shadows at no frame cost.
+### 7d.5 — Generative Far-Field Backdrop (bounded application of PRD §17)
+
+> Runs **after** the 7d.4 sprint — it needs the near-field 1884 scene standing to judge the seam. Full plan: `docs/spike-generative-backdrop.md`. Triggered by [`image-blaster`](https://github.com/neilsonnn/image-blaster) (MIT, reviewed at `4acb43b`) → World Labs Marble `marble-1.1`, ~$1.20/world.
+>
+> **Not a PRD amendment.** `PRD.md:485` already permits generative models for *"clearly-flagged low-confidence distant background that no archival source covers."* The policy is settled and stays settled; what's open is whether our zone meets that qualifier, what it costs to build, and how it's labelled.
+
+- [ ] **Pre-test first — free, and may end this outright**: does the 1884 Manhattan horizon satisfy PRD §17's *"no archival source covers"* qualifier? We hold Sanborn coverage (`lib/sanborn.js`) and the era is rich in panoramas and bird's-eye views; the band may also be occluded by near-field massing from every walkable position. **If archival sources cover it, the PRD routes it to procedural — stop and record that.**
+- [ ] **Answer before spending: is the accuracy manifest internal or guest-facing?** If guest-facing (the North Star implies it), a provenance class reading "invented" is a liability and may pre-decide the verdict. Product decision, not a spike finding.
+- [ ] **Arm C plumbing** (panorama backdrop): the seam grade must come from a **per-backdrop MID driven from WorldState via `material_scalar`** — *not* `resolveToneMapping(year)`, which is year-only, session-constant, and dispatched at one scene-wide `PostProcessVolume` that moves near- and far-field together. New plumbing; cost it honestly.
+- [ ] **Anachronism control**: inject `getExclusionText(year)` into the Marble text prompt; audit against `getAuditPatterns(year)`. Any leakage fails the spike outright (Law 5.6).
+- [ ] **Monochrome risk**: every archival plate on hand is B&W ≤640px. Lead with a Gemini plate, use the archival plate as the control, and score the degradation — if only invented colour input works, the "archival" justification weakens considerably.
+- [ ] **If adopted**: add the third value to `REGIMES` in `lib/representationSelector.js` + a manifest provenance class — described as *implementing* §17's existing carve-out, not amending it.
+
+**Separate, ungated finding:** `image-blaster` structures its pipeline as resumable Claude skills (`.claude/skills/*/SKILL.md`, `context: fork`, thin `.mjs` helpers writing provenance JSON beside each artifact) — the same job `tools/bootstrap-scene.js` does, decomposed into independently-invokable units. Worth evaluating as a refactor target regardless of the Marble verdict.
+
+**Phase 7d exit criteria:** Stand at street level in present-day or recent-era Baton Rouge: the trees are crisp splats, not melted photogrammetry; power lines read as lines. Stand in 1884 Manhattan: Trinity Church is a clean reconstruction from archival photos, the demolished tenement beside it is procedural massing with period materials, and you cannot tell which pipeline produced which from the experience — only the accuracy manifest knows. Gas lamps cast soft shadows at no frame cost.
 
 ---
 
@@ -328,7 +344,7 @@ Currently US-only for terrain, building data, and cultural context. This phase u
 
 ---
 
-## Technology Watch (June 2026)
+## Technology Watch (June 2026; spot-updated July 2026)
 
 External technology that informs the roadmap. Volatile by nature — this is where dated, vendor-specific facts live so the PRD (the constitution) doesn't carry them. Re-scan periodically; promote anything that changes the plan into a phase above.
 
@@ -337,7 +353,7 @@ External technology that informs the roadmap. Volatile by nature — this is whe
 - **Cesium for Unreal 3DGS streaming** (Cesium blog, Apr 27 2026) — hierarchical-LOD splat tilesets stream from Cesium ion. *On the dependency we already use.*
 - **Cesium ion iTwin Capture** — photos → mesh / point cloud / **Gaussian splats**, hosted. Turns the historical-photo→splat path from a research spike into a service call.
 - **Khronos glTF splat extensions** — `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Standardized format; safe to build against.
-- **Unreal Engine 5.8** (preview May 13 2026; full release ~mid-June; Unreal Fest Jun 16–19) — **Megalights** production-ready (many shadowed lights, cheap), **Lumen Medium** (2× faster GI), updated PCG framework, improved Procedural Vegetation Editor, experimental **MetaHuman Crowd** plugin.
+- **Unreal Engine 5.8** (preview May 13 2026; full release ~mid-June; Unreal Fest Jun 16–19) — **Megalights** production-ready (many shadowed lights, cheap), **Lumen Lite** (2× faster GI; announced as "Lumen Medium"), updated PCG framework, improved Procedural Vegetation Editor, experimental **MetaHuman Crowd** plugin.
 
 **Watching (not yet acted on):**
 - **Unreal Engine 6** (announced May 24 2026) — early access late 2026, beta early 2027, stable ~late 2027. Modular plugin core, fully parallel execution, AI-assisted authoring, Nanite/Lumen on animated/dynamic geometry, unified UE+UEFN. *Implication: avoid deep custom rendering plumbing that UE6 is likely to rework; the modular direction is friendly to our loosely-coupled renderer stance.*
@@ -347,3 +363,4 @@ External technology that informs the roadmap. Volatile by nature — this is whe
 
 **Quarantined (explicitly out of bounds for the historical core — PRD §17 generative-world-model boundary):**
 - **Google Genie 3** (public Jan 29 2026; AI Ultra US; 720p/24fps; ~few-min consistency) and generative world models generally. They invent rather than cite — fine for present-day/live or clearly-flagged low-confidence background, never a source of historical truth.
+- **World Labs Marble** (`marble-1.1`, ~$1.20/world; single image → 3DGS + collider mesh + panorama) — same quarantine, same carve-out. **Phase 7d.5 tests whether the far-field backdrop actually falls inside §17's existing "no archival source covers" exception** — it does not seek to widen the boundary, and the pre-test may close the question for free. Surfaced by [`image-blaster`](https://github.com/neilsonnn/image-blaster) (MIT).

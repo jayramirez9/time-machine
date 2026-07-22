@@ -8,7 +8,7 @@ Version: Code-side through 7c complete (7b UE-editor work still stacked for the 
 HQ: Henhouse
 
 ## Current Sprint
-**R&D workstation ordered 2026-07-08** (Corsair a7500: RTX 5090, 9900X3D — `docs/rd-workstation-spec.md`), delivery est. 07/10–14. Next code item before it lands: ion client corrections (`RASTER_IMAGERY` + `additionalAssets[]`, ROADMAP 7d.2) + write-scope ion token, then Trinity re-run. When the box arrives: Live Verification Sprint (ROADMAP 7d.4).
+**R&D workstation — first unit DOA (shipping damage); free higher-tier replacement due 2026-07-23** (Corsair a7500: RTX 5090, **Ryzen 9 9950X3D** 16C, up from the ordered 9900X3D — `docs/rd-workstation-spec.md`, incl. arrival checks and a thermal caveat on the 240 mm AIO). Next code item before it lands: ion client corrections (`RASTER_IMAGERY` + `additionalAssets[]`, ROADMAP 7d.2) + write-scope ion token, then Trinity re-run. When the box arrives: Live Verification Sprint (ROADMAP 7d.4), then **7d.5** generative far-field backdrop (`docs/spike-generative-backdrop.md` — free pre-test first; it may close the question without spend).
 
 ### Phase 7 — The Agent Layer (DONE)
 - **7.1 Profile Schema**: `docs/environment-profile-schema.md`, `lib/environmentProfile.js` — 9 PRD layers, confidence/citation envelope, accuracy manifest. `profiles/nyc_1884.json` first complete profile.

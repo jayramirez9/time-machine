@@ -6,7 +6,7 @@
 2. **Phase B — Pre-rendered trailer videos.** Movie Render Queue cinematic renders of the demo scenes — the "window into another time" footage that exists before the real-time scene hits frame rate.
 3. **Phase C — Real-time across 3 windows.** The box moves into the trailer and becomes the Roadster compute (see `roadster-trailer-hardware.md`). Final state.
 
-**Date:** July 2026 · **Status:** **ORDERED 2026-07-08** (prebuilt — see "What was actually ordered" below) · **Owner:** Henhouse Holdings / Time Machine
+**Date:** July 2026 · **Status:** **first unit DOA (shipping damage); free-upgrade replacement due 2026-07-23** — see "What was actually ordered" and "DOA and replacement" below · **Owner:** Henhouse Holdings / Time Machine
 
 **Related:** `roadster-trailer-hardware.md` (venue integration: electrical, thermal, displays, audio — this box is that doc's compute, bought early), `review-year1-2026-07.md` §2 (why now), PRD §17 (topology) and §21 (Mac hardware ceiling).
 
@@ -72,6 +72,8 @@ Record the measurements either way — they set the production BOM for the repea
 
 ## What was actually ordered (2026-07-08)
 
+> **This machine never ran — it arrived DOA.** Kept as the order record and as the baseline the replacement is measured against. See "DOA and replacement" below for what actually shipped.
+
 **Corsair Vengeance a7500 prebuilt** — ~$6,000 pre-tax (base $5,799.99 sale price + $200 CPU swap), ~$1.6–2.7k under the DIY list. The likely reason prebuilts undercut parts: system integrators get 5090 allocation near MSRP rather than at ~$2,910 street (inferred, not invoiced). Includes 2-year parts+labor warranty, 60-day returns.
 
 | Component | Ordered | vs. reference spec |
@@ -88,6 +90,43 @@ Record the measurements either way — they set the production BOM for the repea
 **First-boot additions to the Phase A checklist:** Windows 11 Pro upgrade; AMD chipset driver install (dual-CCD X3D thread-placement — the scheduler needs it to pin game/render threads to the V-cache CCD).
 
 **Deferred upgrades (buy only when a measurement demands it):** 128 GB RAM (if MRQ pinches), 4 TB scratch NVMe (if EXR sequences overflow), GPU swap per the gate above (if 3×4K@60 fails).
+
+---
+
+## DOA and replacement (2026-07-22)
+
+The first unit arrived **damaged in shipping and dead on arrival**. Corsair is replacing it with a **higher-tier a7500** at no cost — [`CS-9050140-NA`](https://www.corsair.com/us/en/p/gaming-computers/cs-9050140-na/vengeance-a7500-air-gaming-pc-amd-ryzen-9-9950x3d-geforce-rtx-5090-64gb-ddr5-4tb-2tb-2tb-m2-ssd-win11-home-cs-9050140-na), list **$6,599.99**. **ETA 2026-07-23.** Net effect: a free CPU-tier bump and roughly two weeks lost.
+
+*(On the value: the ~$6,000 paid was a **sale** price, so comparing it to the replacement's **list** overstates the gain. The honest read is a one-tier CPU upgrade — 9900X3D → 9950X3D — at no charge; the dollar figure depends on the replacement's street price, not its MSRP.)*
+
+| Component | Was ordered | Replacement | Effect |
+|---|---|---|---|
+| CPU | Ryzen 9 9900X3D (12C/24T) | **Ryzen 9 9950X3D (16C/32T)** | **The upgrade that matters.** The reference spec wanted 16 cores and the order note conceded "12 vs 16 — *most* of the MRQ/compile gap closed." That gap now **closes on paper**, at no cost. Confirm it in the Phase B measurement pass rather than assuming: the reference target was a 9950X (non-X3D), only one CCD carries V-cache, and sustained all-core clocks differ — see the cooling note below |
+| GPU | RTX 5090 32 GB | RTX 5090 32 GB | unchanged — GPU swap gate logic stands as written |
+| RAM | 64 GB (2×32) DDR5 | 64 GB (2×32) DDR5 | unchanged — still half the reference spec; 128 GB stays a deferred upgrade |
+| Storage | 2× 2 TB NVMe | 2× 2 TB NVMe (4 TB) | unchanged — scratch-drive note still applies |
+| Case | Corsair 3500X mid-tower | **Corsair FRAME 4000D mid-tower** | Modest airflow improvement on the noted "weakest link for all-day duty" — does not resolve it |
+| Cooling | 240 mm AIO, 6 fans | iCUE LINK TITAN RX 240 mm AIO, 6× RX120 | Cooler unchanged, **but the heat load is not** — see the thermal note below. This is the real cost of the CPU upgrade |
+| PSU | 1200 W Gold | 1200 W ATX 80+ Gold | unchanged — still headroom for a 600 W GPU swap |
+| OS | Windows 11 Home | Windows 11 Home | unchanged — **Pro upgrade still day one** |
+| Warranty | 2 yr | 2 yr | unchanged |
+
+### ⚠️ Thermal — the one real regression
+
+The upgrade is not thermally free, and the driver is **TDP class, not core count**. The 9900X3D is a ~120 W TDP part (~162 W PPT); the **9950X3D is a ~170 W TDP part (~230 W PPT)** — roughly **+40% sustained package power** into the same 240 mm AIO. *(Verify against AMD's spec pages at arrival.)*
+
+Expect the CPU to **power/thermal-clamp under sustained all-core load** — which is exactly the Phase B MRQ encode profile. Therefore:
+
+- During the Phase B measurement pass, log **package temperature *and* effective all-core clock**. Temperature alone will look fine while clocks quietly sag; the clock number is what tells you whether the 16 cores are actually delivering.
+- **Check whether the FRAME 4000D accepts a 360 mm radiator.** If it does, that's a ~$130 fix and worth knowing *before* the "does opening a prebuilt affect the warranty" question comes up.
+- This compounds the pre-existing note that case/cooling was already the weakest link for all-day duty.
+
+### Verify on arrival
+
+- No further shipping damage — **inspect before powering on**.
+- CPU reports as **9950X3D**; 4 TB present as two volumes.
+- **Board model, and whether it supports x8/x8 bifurcation or a usable second x16-length slot.** Corsair lists the chipset as X870 where the original shipped X870E — but chipset tier is *not* the operative fact here: both use the same Promontory 21 silicon (X870E = two dies), and the CPU provides the same 24 PCIe 5.0 lanes either way; the extra X870E lanes are downstream. What actually decides "can a second GPU go in" is board-level bifurcation, common on upper X870E boards and rare on X870.
+  **Informational only** — the swap gate at the top of this doc *already* ranks the PRO 6000 above dual-GPU, so this changes no decision. And the harder constraints on dual-GPU are physical and electrical regardless of chipset: a mid-tower with a 4-slot 5090 and a 1200 W PSU cannot take a second 5090-class card. (Separately, dual-GPU would break the single-process/free-sync premise in `roadster-trailer-hardware.md` — out of scope here.)
 
 ---
 
@@ -121,7 +160,7 @@ Software checklist, in order:
 ## Phase B — pre-render notes
 
 - MRQ with high-quality anti-aliasing (temporal samples) at final window resolution/orientation — render time is free on a dedicated box overnight.
-- Render to EXR for grading headroom; encode deliverables to ProRes/H.265 on the CPU (9900X3D as ordered).
+- Render to EXR for grading headroom; encode deliverables to ProRes/H.265 on the CPU (9950X3D per the replacement — 16 cores, so CPU encode is no longer the constraint it would have been on 12).
 - Keep the render-output drive as scratch; archive finished sequences off-box.
 - Every MRQ run doubles as a measurement pass: log per-frame times and VRAM at the same settings the real-time scene will use.
 
