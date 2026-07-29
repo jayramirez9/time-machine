@@ -4,7 +4,7 @@
 
 ## Project
 Time Machine — Immersive environment software (world state engine driving Unreal scenes, procedural + capture-based historical reconstruction)
-Version: Code-side through 7c complete (7b UE-editor work still stacked for the box); **Phase 7d (3DGS capture pipeline) active**. 1,592 tests (CI-green; one pre-existing TZ-dependent local flake in `test/worldStateCompiler.test.js:55` — logged for a fix build in `docs/scope-code-provenance-refactor.md`). CI live (eval gate + AI PR reviewer).
+Version: Code-side through 7c complete (7b UE-editor work still stacked for the box); **Phase 7d (3DGS capture pipeline) active**. 1,592 tests. (A pre-existing TZ-dependent local flake in `test/worldStateCompiler.test.js` — the compiler read the scene hour in the daemon's timezone, not the scene's — was fixed in PR #7 `fix-worldstate-local-hour` by deriving the hour from `timestampLocal`; suite is now green on non-UTC boxes too.) CI live (eval gate + AI PR reviewer).
 HQ: Henhouse
 
 **PRD is now v3.0 (Flinch Standard, 2026-07-29).** The governing law is "would someone who was there flinch?" — accuracy is worth what it costs to prevent that flinch, nothing beyond. The confidence/citation apparatus is demoted from a product requirement to internal engineering metadata. **Phase 7's accuracy-manifest deliverables (7.1 confidence/citation envelope, 7.8 Accuracy Manifest generator) are superseded** by the Provenance Declaration (PRD §14.6/§23); the code that emits them (`lib/environmentProfile.js` layer envelope, `lib/agents/*` confidence emission) is scheduled for refactor — see `docs/scope-code-provenance-refactor.md`. The PRD also drew a software-vs-hardware scope boundary: physical display/audio architecture moved to `../henhouse-adu`.
