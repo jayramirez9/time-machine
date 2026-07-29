@@ -4,13 +4,17 @@ PRD + Brand Constitution for the Time Machine Platform
 
 ## Version
 
-v2.2 — Experience Bible / Product Requirements Document
+v3.0 — Experience Bible / Product Requirements Document
 Owner: Henhouse Holdings / Time Machine
-Status: North Star + v2 build specification (Historical Environment Reconstruction (primary) + Personal Memory Reconstruction)
+Status: North Star + v3 build specification (Programmable Environment Engine — historical, observed, and authored provenance; Personal Memory Reconstruction as a second application)
 
-**v2.1 amendment (June 2026):** Adds the **Representation Regimes** model (§17) — geometry representation is chosen per-feature by available evidence, not by a single pipeline — and codifies the **generative-world-model boundary** (§17) that follows from Laws 5.5 and 5.6. These are the only constitutional changes from the 2026 technology review; all specific technologies (3D Gaussian Splatting, Unreal versions, asset generators) are deliberately kept out of this document and tracked in `ROADMAP.md`, per the §3 principle that the pipeline rides the quality curve without architectural change.
+**v3.0 amendment (July 2026):** Replaces the **Accuracy Contract** with the **Flinch Standard** (§5.0) as the governing law — accuracy is worth exactly what it costs to prevent the flinch of someone who was there, and nothing beyond that. Inverts the authoring pipeline to **photo-first** (§3.1): a dated, located photograph is the specification, not reference material. Reframes Time Machine's identity as a **programmable environment engine** spanning three provenance modes — historical, observed, authored (§2, §17 Provenance Modes) — rather than one product's render layer. Demotes the confidence/citation envelope from a product contract to internal engineering metadata (§17, §23), and the accuracy manifest to a **provenance declaration**. Adds diurnal state authoring (§25), the witness window (§26), and the Photo/Witness acceptance tests (§27).
 
-**v2.2 amendment (July 2026):** Adds **§3.5 — The Second Mode (Personal Memory Reconstruction)**, a second application of the same engine in which the source of ground truth is the guest's own photographs and memory rather than the archival record. It introduces one constitutional refinement — the **relocated-authority principle** (§3.5, §17): the Laws are not suspended in this mode, but their ground-truth source shifts from *the cited archive* to *the person whose memory it is, present to verify*. The historical North Star (§3) is unchanged and remains primary.
+**Scope boundary (software vs. hardware).** v3.0 draws the line between the *engine* and the *venue*. This PRD governs software only — world state, provenance, authoring, audio logic, acceptance. The physical display and audio architecture the same July 2026 working session specified (surface classes, panel-vs-LED, aperture emitters, the side-aperture pre-provision rule) lives in `../henhouse-adu`, the venue project, cross-referenced in `docs/time-machine-crossref.md` there. This document does not spec hardware; where earlier versions did, those references are demoted to pointers.
+
+**v2.2 amendment (July 2026):** Adds **§3.5 — The Second Mode (Personal Memory Reconstruction)**, a second application of the same engine in which the source of ground truth is the guest's own photographs and memory rather than the archival record. It introduces one constitutional refinement — the **relocated-authority principle** (§3.5, §17): the Laws are not suspended in this mode, but their ground-truth source shifts from *the cited archive* to *the person whose memory it is, present to verify*. Under v3.0 this is recognizable as the Flinch Standard's own logic — the guest **is** the witness. The historical North Star (§3) is unchanged and remains primary.
+
+**v2.1 amendment (June 2026):** Adds the **Representation Regimes** model (§17) — geometry representation is chosen per-feature by available evidence, not by a single pipeline — and codifies the **generative-world-model boundary** (§17). Under v3.0 its justification rests on date-gating (§5.6) rather than citation. All specific technologies (3D Gaussian Splatting, Unreal versions, asset generators) are deliberately kept out of this document and tracked in `ROADMAP.md`, per the §3 principle that the pipeline rides the quality curve without architectural change.
 
 ## 1) What This Is
 
@@ -20,22 +24,27 @@ If a future decision contradicts this, the decision is wrong—unless we explici
 
 ## 2) Product Summary
 
-Time Machine recreates a specific time and place and renders it through multiple displays that behave like real architectural windows, plus environmental audio that is invisible but essential. The room becomes a portal into a coherent, living world: one universe, many windows.
+Time Machine is a **programmable environment engine**. It recreates a specific place — historical, present-day, or authored — and renders it through surfaces that behave like real architectural apertures, with environmental audio driven by the same world state. The room becomes a portal into a coherent, living world: one universe, many windows.
 
-The platform supports:
+The environment is not tied to one product. The immersive cartridge is simply the configuration where the environment *is* the product rather than the backdrop; the same engine can dress any room. (How the environment is *displayed* — surface count, panel classes, speaker topology — is a venue-hardware decision and lives in `../henhouse-adu`, not here.)
 
-* Multi-window realism (directional accuracy + synchronization + exposure/color coherence)
-* World-state simulation (time-of-day, weather, atmosphere, environment semantics)
+The engine supports:
+
+* Programmable environments across three **provenance modes**: historical, observed, and authored (§17 Provenance Modes)
+* World-state simulation (time-of-day, weather, atmosphere, environment semantics) driving a full 24-hour cycle
 * Environmental audio driven by the same world state (directional, contextual, non-looping, period-aware)
+* Multi-surface coherence where the configuration calls for it (directional accuracy + synchronization + exposure/color coherence)
 * Content presets that are versioned and operable by non-technical staff
 
 ## 3) The Dream State (North Star)
 
-The best expression of Time Machine is a fully immersive, historically accurate "Google Street View you can inhabit."
+The best expression of Time Machine is **being inside a photograph, and staying there for a day.**
 
-You can step into any time and place in history and navigate the world naturally — walk alleys, cross plazas, look down streets — and every cue agrees. The weather is what actually happened that day. The buildings are what actually stood there. The sounds are what you would actually have heard. The world is assembled from archival truth, not artistic interpretation.
+You look out and the place is real — not a documentary reconstruction of it, but the place, at that hour, in that weather, with that light and those sounds. You can navigate it naturally — walk alleys, cross plazas, look down streets — and every cue agrees. The weather is what actually happened that day. The buildings are what actually stood there. The sounds are what you would actually have heard. Then the hour moves: the light changes, the signs come on, the street empties and refills, the soundscape hands off from day to night, and none of it tells you it is a screen.
 
-An AI research layer scours historical archives — weather records, fire insurance maps, photographs, ornithological surveys, newspaper archives, published music catalogs — and assembles a complete environment profile for any Place × Time coordinate. Every fact is cited. Every gap is acknowledged. The system knows what it knows and what it doesn't.
+The places are programmable — 1970s Chinatown, Fremont Street in 1958, 1985 Baton Rouge, Lake Oconee at 6am, snowy woods. The engine does not care which; it cares that the place is coherent. A research layer still does the work of establishing what was there — weather records, fire insurance maps, photographs, ornithological surveys, newspaper archives, published music catalogs — but under v3.0 its output is *gates and content that feed the scene*, not a cited dossier that certifies it (§23).
+
+**The measure is a person, not a source.** Someone who was actually there sits in the room and does not flinch. That, not a footnote, is what "accurate" means here (§5.0).
 
 Every cue agrees:
 
@@ -47,8 +56,29 @@ Every cue agrees:
 * Period-accurate brands and products
 * Period-accurate materials and physics (down to how objects sound when they contact surfaces of the era)
 
-Historical accuracy is the true north. Not "vibes." Not "close enough."
-Absolute realism is the product.
+Coherence is the true north. Not "vibes." Not "close enough." The bar is a witness who does not flinch — a harder standard than a citation, and pointed somewhere useful (§5.0).
+
+### §3.1) The Photograph Is the Spec
+
+A dated, located photograph is not reference material. It is the specification.
+
+A single frame already contains what archival research reassembles from scattered sources and mostly fails to recover: exact signage and typography, the specific colors of awnings and paint, how much sky the fire escapes eat, light quality, what people wore and how they stood, what was stacked on the sidewalk. No fire-insurance map contains any of that. The photograph contains all of it at once, and it is self-validating — the evidence *is* the brief.
+
+The pipeline therefore runs:
+
+```
+Photo (dated, located)
+  → reconstruct the view in frame
+  → extend procedurally beyond frame edge
+  → author the other 23 hours (§25)
+  → drive with weather, sound, motion
+```
+
+This inverts the v2 pipeline (Place × Time → research → assemble → generate → validate). Research does not disappear — it moves downstream, and its job changes from *establishing what was there* to *filling what the frame does not show and gating what may appear.*
+
+**Where no dated frame exists** — a demolished side street known only from a Sanborn footprint and a stereograph of the wrong block — the photo cannot be the spec, and the procedural + archival regime (§17) carries the scene as it did under v2. Photo-first is the *primary* mode wherever a dated frame survives, not the only one. What both modes answer to is the same witness.
+
+**Product definition, one sentence: make me be inside this photograph.**
 
 ### Visual Fidelity Bar
 
@@ -74,7 +104,7 @@ Rule: Missing detail is forgivable. Incorrect detail breaks trust.
 
 ## 3.5) The Second Mode — Personal Memory Reconstruction
 
-The North Star (§3) points at *history* — any Place × Time, assembled from cited archival truth, for anyone. The same engine, pointed at a different source of truth, produces a second thing that may matter to people even more: **a day you can walk back into.**
+The North Star (§3) points at *history* — any Place × Time, assembled from the archival record, for anyone. The same engine, pointed at a different source of truth, produces a second thing that may matter to people even more: **a day you can walk back into.**
 
 A guest brings photographs of a place that mattered to them and the date it happened — a wedding, a childhood home, a grandparent's shop, a last summer. Time Machine reconstructs that specific place and re-creates the true environment of that specific day, and the guest sits inside it again. Not a slideshow. Not a recreation "in the style of." **The actual day.**
 
@@ -89,10 +119,12 @@ This mode works because responsibility splits cleanly, and each half is sourced 
 
 ### The relocated-authority principle
 
-Historical mode forbids invention (Laws 5.5, 5.6) because there is a knowable, cited ground truth that invention would *falsify*. Memory reconstruction fills in what the photographs did not capture — the far wall, the back of the room. This is not a violation of those Laws; it is those Laws operating under a **different authority.**
+Historical mode forbids invention (Laws 5.5, 5.6) because there is a knowable ground truth in the archival record that invention would *falsify*. Memory reconstruction fills in what the photographs did not capture — the far wall, the back of the room. This is not a violation of those Laws; it is those Laws operating under a **different authority.**
 
 In historical mode, the arbiter of truth is **the archival record.**
 In memory mode, the arbiter is **the person whose memory it is, present to verify.**
+
+Under v3.0 this is not a separate principle but the Flinch Standard (§5.0) at its purest: the witness is not someone we go find who happened to be there — the witness is the guest, sitting in the room, verifying in real time. Memory mode is the case where the person who would flinch is the customer.
 
 Filling in the unseen wall is not falsifying history — it is *collaboration with the memory's owner*, who can say "no, the light came from the other side" and be right. The Laws still bind: **Silence Over Wrongness becomes deference to the person over wrongness** (where the guest is unsure, the system stays neutral rather than inventing a confident detail), and **No Anachronisms still holds absolutely** (nothing from after that date leaks into that date). What changes is only the *source* of ground truth, not the obligation to it.
 
@@ -139,6 +171,16 @@ If someone says "It felt like a display," we failed.
 
 These are the product's "Haunted Mansion rules." They do not get negotiated away during implementation.
 
+### 5.0 The Flinch Standard (governing law)
+
+**Would someone who was there flinch?**
+
+Every scene has a witness — a person who lived that place at that time. Accuracy is worth exactly what it costs to prevent their flinch, and nothing beyond that.
+
+Nobody fact-checks a room; everybody feels wrongness. No guest will catch a mis-attributed source. Every guest will feel a synthesizer in 1958, a seagull a mile from open water, cicadas singing at midnight — instantly, and without being able to say what is wrong.
+
+This law governs every other law in §5. Where a rule serves the flinch, keep it. Where it serves the record, cut it. **This is not a lowered bar. It is a harder one, pointed somewhere useful** — documentation is checkable and forgiving; a witness is neither.
+
 ### 5.1 One Universe
 
 All windows + audio share one authoritative WorldState.
@@ -160,12 +202,31 @@ We choose fewer features at higher realism over more features at lower believabi
 
 ### 5.5 Silence Over Wrongness
 
-If we can't be accurate, we must be neutral—not incorrect.
-(Examples: reduce event density, remove specific brand references, shift to generic ambience.)
+If we can't render a detail convincingly, we reduce density rather than assert it—we must be neutral, not incorrect.
+(Examples: fewer events, generic ambience over specific signage, massing over modeled facade.)
 
-### 5.6 No Anachronisms
+Justification under §5.0: an asserted wrong detail flinches; an absent detail does not. Absence reads as the ordinary emptiness of a real place; wrongness reads as a mistake. The law is unchanged in practice and now rests on perception rather than on epistemic honesty.
 
-Nothing modern leaks into a past world: language, UI metaphors, products, media, signage, behaviors.
+### 5.6 Date-Gating Is Absolute
+
+Nothing may appear in a scene that did not exist at the WorldState date — language, UI metaphors, products, media, signage, behaviors. This is mechanical, automated, and admits no exception.
+
+The Phase 4.5 music rule — nothing released after the scene date, enforced automatically, no manual curation for the hard cutoff — is the model. **Generalize it to every asset class:**
+
+| Class | Gate |
+|---|---|
+| Music | Release date ≤ scene date |
+| Vehicles | Model year ≤ scene date |
+| Signage & typography | Introduction date ≤ scene date |
+| Materials & surfaces | Availability date ≤ scene date |
+| Clothing | Period bracket contains scene date |
+| Technology & infrastructure | Installation date ≤ scene date |
+| Language & speech | Regionally and generationally correct for scene date |
+| Wildlife | Species present *and seasonally and diurnally active* at scene date |
+
+Date-gating is cheap, mechanical, and does more to prevent flinch than any other single mechanism. **It is the one place where rigor pays for itself at scale.**
+
+Wildlife gating is not a footnote. A Georgia scene running annual cicadas at 10pm is wrong to every person who grew up there — cicadas are temperature-gated daytime singers and katydids hold the night. Periodical broods run on a 13-year clock in the South; rendering that chorus in a year the brood was not out makes a false claim about a specific summer to someone who was there for it. Both gates take inputs the weather engine already produces.
 
 ### 5.7 Audio Is Essential and Invisible
 
@@ -262,20 +323,24 @@ Requirement: WorldState must be authoritative for both audio and visuals.
 
 ## 12) Visual System: Multi-Window Reality
 
-### Window Model
+The engine treats every surface as a **camera into one world**. How many surfaces there are, at what pixel pitch, on what panel technology, and how they are wired is a **venue-hardware decision** and is specified in `../henhouse-adu` (surface classes, panel-vs-LED, wiring), not here. This section governs only what the software must do to make any such surface read as an aperture rather than a screen.
 
-Each window has:
+### Surface Model (software view)
 
-* Window ID
-* Physical position in room coordinates (x,y,z)
-* Orientation (yaw/pitch/roll)
-* Display specs: size, resolution, color profile, max nits, black performance
+Each surface the engine drives has:
+
+* Surface ID
+* Physical position in room coordinates (x,y,z) and orientation (yaw/pitch/roll) — supplied by the venue calibration profile
+* A **scene-authored opening shape.** An aperture is authored content: the scene masks the surface down to an opening it defines — a tenement window, a shop front, a bay onto water — so that in a dark room the unlit area reads as real wall, not as the edge of a display. This is a rendering/authoring responsibility; the hardware property that makes it possible (true per-pixel black) is an adu concern.
+
+Concrete display specs (size, resolution, color profile, max nits, black performance) are hardware and live in the venue spec, not in this document.
 
 ### Rendering Requirements
 
-* Each window is a camera into the same world with correct transform.
-* Exposure/white balance match across windows.
-* Motion coherence across seams (clouds, shadows, moving objects).
+* Each surface is a camera into the same world with correct relative transform and off-axis projection.
+* Exposure/white balance match across surfaces.
+* Motion coherence across the gaps (clouds, shadows, precipitation, moving objects).
+* Single machine, single Unreal process at install scale (see §17 Topology) — no nDisplay, no genlock, no drift detection at this scale.
 * Optional (later): viewer tracking for subtle perspective correction.
 
 ### Visual Calibration
@@ -312,11 +377,14 @@ Audio is world-driven, layered, spatially plausible, and historically constraine
 
 ### 13.3 Spatial Approach
 
-v1: Multi-zone speakers (4-zone N/E/S/W minimum; 8-zone preferred) + subwoofer
+The physical speaker topology — driver type, count, placement, aperture-anchored emitters, room acoustic treatment — is a **venue-hardware decision specified in `../henhouse-adu`**, not here. This section governs the software: how the engine positions sound in the world, independent of how many drivers realize it.
+
+Software behavior (minimum: 4-zone N/E/S/W mapping, more where the install provides it):
 
 * Panning based on world azimuth relative to room orientation
 * Distance cues via EQ roll-off and dynamic shaping
 * Conservative reverb tuned for "outside," not "cathedral"
+* **Anchored near-field events vs. the ambient bed are routed separately.** The bed (wind, rain, room tone, distance, thunder) and anchored near events (hooves, a vendor, a shutter, a door) are distinct routing classes so that a near event can originate exactly where the eye sees it. The engine emits this distinction; whether the install has dedicated aperture emitters to receive it is an adu concern. Where it does not, anchored events fall back to the nearest zone.
 
 v1.5+: Optional sweet-spot head tracking for subtle stabilization—not theme-park binaural.
 
@@ -397,18 +465,19 @@ The system uses a two-layer architecture:
 
 The music system adds a `musicRadio` control to WorldState, driven by the locale preset. This control specifies format (radio station format, jukebox, street performer, none), genre weights, and whether music is diegetic (coming from a radio in the scene) or non-diegetic (ambient underscore). For the fixed-room installation, diegetic radio is the primary mode — the music comes from "a radio in the next room" or "a passing car." For headset experiences, spatial positioning anchors the music source in the world.
 
-### 14.6 Authenticity QA (Required)
+### 14.6 Authenticity QA — the Provenance Declaration (Required)
 
-Every historical preset ships with an Accuracy Manifest:
+Under v3.0 the **Accuracy Manifest is replaced by a Provenance Declaration.** It no longer certifies facts against sources; it declares what the scene *is* and what gates it runs under. The old citation-and-confidence dossier served an auditor no guest ever reads (§5.0, §23); it is not a product requirement.
 
-* Date/time window
-* Location scope
-* Media catalogs included + cutoff rules
-* Slang/lexicon set + citations/source notes (internal)
-* Brand/product list + availability rationale (internal)
-* Audio source taxonomy (what types exist and why)
-* Music catalog: date cutoff, genre weights, format, source database, known gaps
-* Known compromises (explicitly listed)
+Every scene declares:
+
+* Provenance mode: historical / observed / authored (§17)
+* Date/time window and location scope
+* The **gates in force** — the date-gating cutoffs per asset class (§5.6): media, vehicles, signage, materials, clothing, technology, language, wildlife
+* Music catalog: date cutoff, genre weights, format
+* Where density was reduced under Silence Over Wrongness (§5.5) — i.e. what the scene deliberately does *not* assert
+
+Source citations and the verified/likely/interpolated/assumed confidence taxonomy are **not** part of this declaration. Where confidence is genuinely useful as internal engineering metadata — the representation selector's evidence thresholds (§17) — it stays inside that module as an implementation detail, not surfaced, stored as a contract, or promised to anyone.
 
 ## 15) Presets and Content
 
@@ -423,7 +492,7 @@ A WorldPreset includes:
 * AudioProfile (layer rules, directional sources map, event scheduler config)
 * MusicProfile (format, genre weights, date authority source, playback config)
 * Optional narrative script (timed transitions)
-* Accuracy Manifest (for historical presets)
+* Provenance Declaration (§14.6) — mode, date window, gates in force
 
 ### Offline Reliability
 
@@ -517,11 +586,11 @@ An Environment Profile is the complete description of a place at a moment in his
 | **Materials** | Surface types that affect sound and visual character | Cobblestone, dirt, granite flagstone, wood plank, brick |
 | **Infrastructure** | Technology present: lighting type, transport, utilities | Gas street lamps (electric only on Broadway below 14th), elevated railway, horse-drawn carriages |
 
-Each layer has a **confidence rating** and an explicit **known compromises** manifest, honoring the "Silence Over Wrongness" law.
+Each layer declares its **provenance mode** and, where it reduced density rather than assert a detail, what it left out (Silence Over Wrongness, §5.5). Per-fact confidence ratings and source citations are not a layer contract under v3.0 (§14.6, §23); confidence survives only where a module genuinely consumes it as an engineering input (e.g. the representation selector below).
 
 ### Representation Regimes
 
-Geometry is not produced by a single pipeline. The right way to represent a building, street, or landform depends on **what evidence survives for that specific feature**, and the system chooses per feature, driven by the same confidence/source metadata the Environment Profile already carries.
+Geometry is not produced by a single pipeline. The right way to represent a building, street, or landform depends on **what evidence survives for that specific feature**, and the system chooses per feature. The selector consumes evidence as an internal engineering input (the one place confidence survives under v3.0 — §14.6, §23); it is not a contract the profile publishes.
 
 There are two regimes:
 
@@ -537,11 +606,25 @@ demolished / no usable imagery             → procedural + archival
 low confidence everywhere                  → reduce detail (Law 5.5), do not invent
 ```
 
-**The generative-world-model boundary.** Generative world models — systems that *invent* navigable environments from a prompt — are explicitly **out of bounds for the historical core**. They produce plausible fiction, not cited fact, and so violate Law 5.5 (Silence Over Wrongness), Law 5.6 (No Anachronisms), and the "every fact is cited, every gap is acknowledged" promise of the North Star. They may be used only where invention is honest: present-day/live scenes, or clearly-flagged low-confidence distant background that no archival source covers. They are never a source of historical truth.
+**The generative-world-model boundary.** Generative world models — systems that *invent* navigable environments from a prompt — remain **out of bounds for the historical and observed regimes**. Under v3.0 the reason is no longer citation. It is that **they cannot be date-gated (§5.6).** A generative model asked for 1958 Fremont Street will produce a plausible sign in a typeface introduced in 1971, a car body that never existed, a fixture from the wrong decade — and it has no mechanism to know it did. It produces anachronism it cannot detect, which is precisely the failure §5.6 exists to make impossible. They remain usable where invention is honest: present-day or live scenes, distant background no source covers, and the authored regime (§17 Provenance Modes), where there is no date to violate.
 
-Both regimes feed the same Environment Profile and hang off the same WorldState. As with weather inputs, the downstream pipeline does not care which regime produced a given feature — only that its provenance and confidence are recorded.
+Both regimes feed the same Environment Profile and hang off the same WorldState. As with weather inputs, the downstream pipeline does not care which regime produced a given feature — only that its provenance is recorded (§14.6).
 
-**Authority in memory mode.** The boundary above governs the *historical core*, where the archive is the arbiter and invention is forbidden. In Personal Memory Reconstruction (§3.5), the arbiter is the guest, present to verify — so filling in geometry the guest's photographs did not capture is permitted, because it is corrected against a living authority rather than fabricated against a cited one. The provenance discipline is unchanged: contributed geometry and dressing are recorded as guest-authored, at guest-verified confidence, in the same accuracy manifest. Memory mode reconstructs place and environment only; it never synthesizes people (§3.5).
+**Authority in memory mode.** The boundary above governs the *historical core*, where the archive is the arbiter and invention is forbidden. In Personal Memory Reconstruction (§3.5), the arbiter is the guest, present to verify — so filling in geometry the guest's photographs did not capture is permitted, because it is corrected against a living authority rather than fabricated against a cited one. The provenance discipline is unchanged: contributed geometry and dressing are recorded as guest-authored in the same provenance declaration (§14.6). Memory mode reconstructs place and environment only; it never synthesizes people (§3.5).
+
+### Provenance Modes
+
+Provenance is declared per scene. It determines what "correct" means, not how much correctness is required — **the flinch bar (§5.0) is identical across all three.**
+
+| Mode | Truth standard | Characteristic failure |
+|---|---|---|
+| **Historical** | Date-gated, witness-verified | Anachronism |
+| **Observed** (present-day, natural) | Geographic, meteorological, ecological fidelity | Generic-looking place |
+| **Authored** (fiction, licensed IP) | Canon fidelity to the source work | Off-model |
+
+**Observed is not the easy mode.** Fewer surfaces can flinch, but each carries far more of the guest's attention and there is nothing to hide behind. In Chinatown, slightly wrong birds are masked by neon, traffic, a radio, conversation, truck idle. At Lake Oconee at 6am the soundscape *is* the scene, and one wrong bird is not one percent of what is perceived — it is a third of it. Visually the same inversion holds: brick and signage is tractable geometry; water, wind-driven vegetation, and dappled canopy light are the hardest problems in real-time rendering, and the natural scene is all three at once with nothing else to look at.
+
+The provenance declaration (§14.6) states which mode a scene runs under. That is the whole of what it declares about truth — not an evidence audit.
 
 ### Topology
 
@@ -666,17 +749,23 @@ For Time Machine, Cesium provides the fast path: type a location, the plugin pla
 
 ## 19) MVP Definition (What "Done" Means)
 
-MVP = one venue profile + 4 windows + directional audio + 10 presets where:
+The software MVP is stated in experience terms, not hardware counts. Surface count and display type are defined by the venue (`../henhouse-adu`); the engine's MVP is:
+
+**One authored scene, a full 24-hour cycle, a matched soundscape, every surface coherent as a camera into one world, and a living witness who does not flinch (§5.0, §27).**
+
+Acceptance, against whatever surface set the venue provides:
 
 **Visual:**
 * Cardinal directions are correct.
-* Exposure/white balance matches across windows.
-* A moving object can cross windows without visible seams.
+* Exposure/white balance matches across all surfaces.
+* A moving object can cross the gaps between surfaces without visible seams.
 * Stable frame rate with low variance.
+* The full diurnal cycle runs: light, signage, activity, and soundscape hand off day-to-night coherently (§25).
 
 **Audio:**
 * Directional beds feel anchored (east traffic feels east).
-* No obvious repetition in a 30-minute continuous run per preset.
+* Anchored near-field events originate where the eye sees them.
+* No obvious repetition in a 30-minute continuous run.
 * Weather transitions align with visuals (rain/wind coherence).
 * No dropouts during a 4-hour session.
 
@@ -714,11 +803,11 @@ MVP = one venue profile + 4 windows + directional audio + 10 presets where:
 **Risk: Drift kills coherence**
 * Single master clock; explicit drift detection; graceful fallback.
 
-**Risk: Historical accuracy becomes unscalable**
-* Accuracy Manifest per preset + "silence over wrongness" + constrained environment scopes.
+**Risk: Accuracy becomes unscalable**
+* Automated date-gating (§5.6) does the heavy lifting at scale — it is mechanical and needs no per-scene curator. Silence Over Wrongness (§5.5) covers the rest, and the flinch bar (§5.0) keeps effort pointed only where a witness would notice. What does not scale is the *witness* — see §26.
 
-**Risk: Mac hardware ceilings**
-* Prototype on Mac; define production hardware baseline that can hit realism targets. The AAA fidelity bar is a Windows + NVIDIA target (Lumen, Nanite, Megalights, 3DGS streaming). Concept-trailer hardware baseline: `docs/roadster-trailer-hardware.md`.
+**Risk: Compute ceilings for the fidelity bar**
+* The AAA fidelity bar is a Windows + NVIDIA target (Lumen, Nanite, Megalights, 3DGS streaming). Selecting and provisioning that compute is a **venue-hardware decision**, kept out of this PRD's body; the concept-trailer and R&D-workstation baselines are tracked in `docs/roadster-trailer-hardware.md` and `docs/rd-workstation-spec.md`, and venue integration (electrical/thermal/rack) is an `../henhouse-adu` concern.
 
 ## 22) Roadmap (From Today to the Dream State)
 
@@ -807,7 +896,7 @@ Working and tested:
 |------|------|-------------|
 | 3.1 | NOAA historical provider | New weather provider for pre-1940 daily observations (GHCN-Daily) |
 | 3.2 | Daily→hourly interpolation | Reconstruct hourly curves from daily high/low/precip using solar position and diurnal models |
-| 3.3 | Confidence metadata | Pre-1940 data gets lower confidence scores; WorldState consumers can react accordingly |
+| 3.3 | Confidence metadata | Pre-1940 data gets lower confidence scores, consumed as an internal engineering input (v3.0: internal only, not surfaced as a contract — §14.6) |
 | 3.4 | 1884 NYC weather test | Pull actual weather for every day of 1884 in New York City |
 | 3.5 | Provider fallback chain | `openmeteo (1940+)` → `noaa_archive (1800s+)` → `mock` — automatic selection by date |
 
@@ -824,12 +913,12 @@ Working and tested:
 | 4.1 | Locale preset: `nyc_1884` | New locale with era-appropriate parameters (no cars, high horse traffic, gas lamps) |
 | 4.2 | Audio profile: `nyc_manhattan_1884` | Full profile: horse hooves on cobblestone, barrel organs, church bells, harbor sounds, species-correct birds |
 | 4.3 | Surface material system | Locale defines ground surface types → swaps weather audio (rain-on-cobblestone vs rain-on-asphalt) |
-| 4.4 | Ecology data model | Species pools keyed to location + month + time-of-day with source citations |
+| 4.4 | Ecology data model | Species pools keyed to location + month + time-of-day, gated by presence and seasonal/diurnal activity (§5.6) |
 | 4.5 | Cultural audio layer | Period music (barrel organ tunes, brass band in park), street vendor calls, era-correct church bells |
 | 4.6 | Infrastructure sounds | Elevated railway (steam, 6th/9th Ave), horse-drawn carriages, work whistles |
 | 4.7 | Agent-assisted profile research | AI agent cross-references Audubon records, historical ecology papers, period newspapers to populate species pools and cultural audio metadata |
 
-**Exit Criteria:** Play NYC 1884 with eyes closed. No cars. No airplanes. No electrical hum. Horse hooves on stone. Church bells on the quarter hour. Sparrows, not starlings (starlings weren't introduced until 1890). Every sound has a citation.
+**Exit Criteria:** Play NYC 1884 with eyes closed. No cars. No airplanes. No electrical hum. Horse hooves on stone. Church bells on the quarter hour. Sparrows, not starlings (starlings weren't introduced until 1890). Every sound is date-gated and seasonally/diurnally correct (§5.6) — the test is a witness who does not flinch, not a footnote.
 
 ---
 
@@ -894,16 +983,16 @@ Working and tested:
 
 | Step | Task | Description |
 |------|------|-------------|
-| 7.1 | Profile schema specification | Formal JSON schema for Environment Profiles: all layers, all fields, confidence ratings, source citations |
+| 7.1 | Profile schema specification | Formal JSON schema for Environment Profiles: all layers, all fields, provenance mode, gates in force. (v2 shipped this with confidence/citation fields; v3.0 demotes those to internal engineering metadata — §14.6, §23.) |
 | 7.2 | Weather research agent | Given a place + date range, finds the best available weather data source (Open-Meteo, NOAA GHCN, reconstructed) and produces a weather provider config |
 | 7.3 | Ecology research agent | Given a place + date, queries historical biodiversity records (Audubon, eBird historical, natural history surveys) and produces species pools with seasonal/diurnal weights |
 | 7.4 | Urban form research agent | Given a place + date, locates Sanborn maps, historical atlases, census records, and produces a GIS-compatible urban form dataset |
 | 7.5 | Cultural research agent | Given a place + date, researches period music, language/slang, commerce, social customs, and produces a cultural metadata bundle |
 | 7.6 | Photo archive agent | Given a place + date, scours digitized photo archives (NYPL, LOC, Museum of City of NY, stereograph collections) and produces a tagged reference image set with location + angle metadata |
-| 7.7 | Profile assembler | Orchestrator agent that invokes specialist agents and assembles a complete Environment Profile with confidence ratings and known compromises |
-| 7.8 | Accuracy manifest generator | Auto-generates the Accuracy Manifest (Section 14.5) from agent research, listing sources, confidence, and gaps |
+| 7.7 | Profile assembler | Orchestrator agent that invokes specialist agents and assembles a complete Environment Profile with a Provenance Declaration (mode, date window, gates in force) |
+| 7.8 | Provenance declaration generator | Auto-generates the Provenance Declaration (§14.6) from agent research: mode, date window, gates in force, and where density was reduced. (Superseded the v2 "accuracy manifest" under v3.0 — §23.) |
 
-**Exit Criteria:** Tell the system "NYC, June 15, 1884." An agent pipeline produces a complete Environment Profile — weather, soundscape, urban form metadata, cultural context, reference photos — with source citations for every claim. A human reviews it, approves it, and the system can run it.
+**Exit Criteria:** Tell the system "NYC, June 15, 1884." An agent pipeline produces a complete Environment Profile — weather, soundscape, urban form metadata, cultural context, reference photos — emitting gates and content plus a Provenance Declaration (mode, date window, gates in force). A human reviews it, approves it, and the system can run it.
 
 ---
 
@@ -953,16 +1042,17 @@ AI agents change this equation. The research model works like this:
 4. **The Urban Form Agent** locates the Robinson Atlas of NYC (1885) and Sanborn fire insurance maps. Extracts block-level building footprints, heights, materials, use-types. Cross-references with city records for street surface types. Outputs a GIS dataset.
 5. **The Cultural Agent** researches 1884 NYC: newspaper archives (street vendor calls, social customs), infrastructure records (which streets had gas lamps, the elevated railway schedule, horse car routes). Outputs cultural metadata. For the music dimension, queries MusicBrainz for recordings available at the target date and cross-references published song catalogs (pre-recording era) to build a date-locked music profile.
 6. **The Photo Agent** searches NYPL Digital Collections, Library of Congress, Museum of the City of New York. Finds stereographs of Broadway, photos of Trinity Church, illustrations of the elevated railway. Tags each with location, date, viewing angle. Outputs a reference image set.
-7. **The Assembler** combines all agent outputs into a single Environment Profile. Generates the Accuracy Manifest: what's verified, what's interpolated, what's missing. A human reviews and approves.
+7. **The Assembler** combines all agent outputs into a single Environment Profile and emits the Provenance Declaration (§14.6): mode, date window, and the gates in force. A human reviews and approves.
 
-### The Accuracy Contract
+### What Agents Emit
 
-Every fact in an Environment Profile must have:
-* A **source citation** (archive, database, publication)
-* A **confidence level** (verified, likely, interpolated, assumed)
-* A **known compromise** entry if accuracy is uncertain
+Agents emit **gates and content, not scores.** The ecology agent does not report a confidence level in its species pool; it reports which species may appear, in what season, at what hour, at what density, at what temperature. The cultural agent does not cite its sources for street-vendor calls; it produces the calls and the language they are in. The weather agent produces a driveable curve.
 
-The system will never fabricate. If the agent can't find what birds were in Manhattan in June 1884, the profile says "ecology: low confidence, defaulting to modern regional species minus post-1884 introductions." The Silence Over Wrongness law applies to agents too.
+The source-citation requirement and the verified/likely/interpolated/assumed confidence taxonomy are **removed as product requirements** (this is the old "Accuracy Contract," deleted under v3.0 — §5.0, §14.6). Where confidence is genuinely useful as internal engineering metadata — the representation selector's evidence thresholds (§17) — it remains an implementation detail of that module and is not surfaced, stored as a contract, or promised to anyone.
+
+Silence Over Wrongness still binds the agents: where the record is thin, they reduce density rather than assert — if the agent can't establish what birds were in Manhattan in June 1884, the ecology layer thins to regional species minus post-1884 introductions rather than inventing a specific dawn chorus. What changed is that this is now a *content* decision the agent makes, not a confidence score it reports.
+
+This deletes a compliance department, not a research layer. The agents (ecology, cultural, urban form, photo archive, assembler) are all retained; only their citation output is gone.
 
 ### Skinning the World from Photos
 
@@ -987,9 +1077,9 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 
 ### Near-Term Architecture Decisions
 
-1. Canonical window layout (count, size, placement, cardinal mapping)
-2. Canonical speaker topology (4-zone vs 8-zone + subwoofer)
-3. Audio engine deployment model (browser WebAudio vs. native DSP vs. hybrid)
+1. Canonical surface layout (count, size, placement, cardinal mapping) — **venue-hardware decision, owned by `../henhouse-adu`** (§12). The engine consumes it via the calibration profile; it does not make it.
+2. Canonical speaker topology (zone count, driver placement, aperture emitters) — **venue-hardware decision, owned by `../henhouse-adu`** (§13.3). The engine emits directional/anchored audio against whatever the install provides.
+3. Audio engine deployment model (browser WebAudio vs. native DSP vs. hybrid) — genuinely software, and this document's to decide.
 
 ### Research Spikes (Can Start Anytime)
 
@@ -1002,3 +1092,45 @@ This is the "Google Street View skinned with history" concept. Modern photogramm
 7. **Geographic data pipeline:** Evaluate Cesium for Unreal + Google Photorealistic 3D Tiles as the terrain/building ingestion path. Key questions: API access and licensing for Google 3D Tiles, Cesium Ion tile budgets at scale, DEM resolution for natural terrain (Grand Canyon, coastlines), workflow for converting streamed 3D tiles into editable Unreal Landscape actors (vs. runtime streaming only), and feasibility of selectively replacing modern buildings with historical geometry on top of the same terrain base.
 
 Pick the physical specs and Phase 0 is locked. Start the research spikes and Phase 3-6 planning becomes concrete.
+
+## 25) Diurnal State Authoring
+
+The photograph is one keyframe. It is ground truth for a single instant and silent about the other twenty-three hours.
+
+1970s Chinatown at 10pm is a different image entirely: neon lit, restaurant interiors glowing through glass, the truck and crates and dolly gone, the sidewalk crowd thinner and moving differently, fire escapes reduced to black shapes against lit windows. None of that is in the frame.
+
+Each scene therefore carries **state declarations the photo cannot supply:**
+
+* Which signage is lit, and on what schedule
+* Business open/close hours by establishment
+* Traffic density curve across the day
+* Pedestrian density and behavior curve
+* Which surfaces are wet-capable, and how they read wet
+* Lighting handoff points (dusk ignition, dawn extinguish)
+* Soundscape handoff points (the day-to-night species and event exchange)
+
+This is the visual counterpart to `activityMultiplierAt()`. The machinery exists on the audio side and does not yet exist on the render side — scoping it is an open item.
+
+**Photo is truth for one state. The day is authored.**
+
+**Canonical hour.** Some places live at one hour. Fremont Street at noon is a mediocre scene; Fremont Street at dusk is the reason anyone came. Scenes may declare a canonical hour, and the 24-hour cycle exists partly so that arriving at it feels earned rather than staged.
+
+## 26) The Witness Window
+
+The Flinch Standard (§5.0) has teeth only where a witness is alive.
+
+Someone who was eight on Fremont Street in 1958 is seventy-six. Someone who worked Mott Street in 1972 is in their seventies or eighties. These people are findable now — neighborhood historical societies, church congregations, the "I grew up in ___" groups that exist for every neighborhood in America. In fifteen years many of these scenes move from *verifiable* to *merely researched*, and the standard becomes unenforceable on them.
+
+**This sets content priority.** Build scenes with living witnesses first — not because they are easier, but because they are the only ones where the standard can be tested at all.
+
+**This also creates a role that is not on the org chart.** Not a historian. Someone whose job is to find the person who was there and sit them in front of the render.
+
+**The ground truth is expiring. That is a real deadline and it is not ours.**
+
+## 27) Scene Acceptance (The Photo Test and The Witness Test)
+
+These replace the accuracy manifest as the scene acceptance gate. They work identically for historical, observed, and authored scenes, and they measure the only failure that costs anything.
+
+**The Photo Test.** Print the source photograph. Mount it beside the aperture. Render the same view, same hour, same weather. Show a person. Ask what is different. Every gap they name is a backlog item.
+
+**The Witness Test.** Seat someone who was there (§26). Run the full cycle. Record every moment their face changes. Every flinch is a defect.
