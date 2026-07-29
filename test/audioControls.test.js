@@ -116,11 +116,11 @@ describe('Audio Controls — Extended', () => {
   describe('activityLevel', () => {
     it('is higher during midday than at night', () => {
       const midday = compile({
-        timestampUtc: '1978-07-04T17:00:00.000Z', // ~noon
+        timestampLocal: '1978-07-04T12:00:00', // noon scene-local (naive, no Z)
         solar: { altitude: 65, azimuth: 180, isDaytime: true }
       });
       const night = compile({
-        timestampUtc: '1978-07-04T06:00:00.000Z', // ~1am
+        timestampLocal: '1978-07-04T01:00:00', // 1am scene-local (naive, no Z)
         solar: { altitude: 0, azimuth: 0, isDaytime: false }
       });
       assert.ok(midday.controls.audio.activityLevel > night.controls.audio.activityLevel);
@@ -147,18 +147,16 @@ describe('Audio Controls — Extended', () => {
     });
 
     it('increases from morning to afternoon', () => {
-      // Use timestamps that are 6 hours apart — regardless of timezone,
-      // the later one should have a higher phase
+      // Phase derives from the scene-local hour (timestampLocal), so a later
+      // local time always yields a higher phase — independent of machine TZ.
       const morning = compile({
-        timestampUtc: '1978-07-04T10:00:00.000Z',
+        timestampLocal: '1978-07-04T10:00:00', // 10am scene-local (naive, no Z)
         solar: { altitude: 30, azimuth: 120, isDaytime: true }
       });
       const afternoon = compile({
-        timestampUtc: '1978-07-04T16:00:00.000Z',
+        timestampLocal: '1978-07-04T16:00:00', // 4pm scene-local (naive, no Z)
         solar: { altitude: 50, azimuth: 220, isDaytime: true }
       });
-      // Phase is based on getHours() which is local — but the 6-hour gap
-      // should always produce a higher phase for the later timestamp
       assert.ok(afternoon.controls.audio.timeOfDayPhase > morning.controls.audio.timeOfDayPhase);
     });
   });
