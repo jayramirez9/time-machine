@@ -1,5 +1,7 @@
 # Environment Profile Schema (v1)
 
+> **PRD v3.0 (Flinch Standard) supersedes this schema's compliance envelope — but the code still implements v1.** Under v3.0 (PRD §5.0/§14.6/§23) the per-layer `confidence`/`sources` envelope and the Accuracy Manifest are **no longer product requirements.** They are demoted to internal engineering metadata (kept only where a module genuinely consumes them, e.g. the representation selector's evidence thresholds), and the Accuracy Manifest is renamed the **Provenance Declaration** (mode, date window, gates in force — not an evidence audit). Agents will emit **gates and content, not scores** (PRD §23). This document still describes the v1 envelope because the *code* still implements it; the schema change is a pending refactor scoped in `docs/scope-code-provenance-refactor.md`. Read the sections below as "current implementation," and the banner as "where it's going." Design Principles 1, 2, and the Accuracy Manifest section are the parts v3.0 changes.
+
 An Environment Profile is the complete description of a place at a moment in history. It is the master document that the agent research pipeline (Phase 7) produces and that `startEngine()` consumes.
 
 It replaces the simpler "locale preset" concept as the system matures. A locale preset becomes a lightweight pointer — `{ audioProfileId, hazeBias, ... }` — while the Environment Profile holds the full research output with sources and confidence ratings.
@@ -421,7 +423,9 @@ Technology present: lighting, transport, utilities.
 }
 ```
 
-## Accuracy Manifest
+## Accuracy Manifest → Provenance Declaration (v3.0)
+
+> **Renamed and re-scoped under PRD v3.0.** The Accuracy Manifest is superseded by the **Provenance Declaration** (PRD §14.6/§23): it declares *what the scene is* — provenance mode (historical / observed / authored), date window, and the date-gates in force per asset class — not an evidence audit with per-layer confidence and citations. The confidence rollup, status taxonomy (verified/likely/interpolated/assumed), and source lists below are v1 implementation detail, retained internally where the representation selector consumes them but no longer surfaced or promised. Refactor scoped in `docs/scope-code-provenance-refactor.md`. The v1 shape is documented below for the current code.
 
 Auto-generated summary for human review. Lives at `accuracyManifest` in the profile or standalone at `profiles/{id}-accuracy-manifest.json`.
 

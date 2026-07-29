@@ -2,6 +2,8 @@
 
 Living document. Phase numbering matches PRD. Phases are sequential but items within a phase are not prioritized.
 
+> **PRD v3.0 (Flinch Standard, 2026-07-29) — what changed for this roadmap.** The governing law is now the flinch of a witness, not a citation; the confidence/citation apparatus is demoted to internal engineering metadata. Two roadmap consequences: **(1) content priority is living-witness-first** (PRD §26 — the ground truth is expiring: build scenes with people still alive to test them, before those scenes become merely-researched); **(2) a photo-first authoring pipeline** becomes the primary path where a dated frame exists (PRD §3.1) — see the new **Phase 10** below. The pending **provenance refactor** (accuracy manifest → provenance declaration; strip confidence from agent outputs; ecology diurnal/temperature gating) is scoped in `docs/scope-code-provenance-refactor.md`. All Technology Watch content is retained.
+
 ---
 
 ## Phase 0 — Complete the Weather Loop (DONE)
@@ -271,7 +273,7 @@ The one move that resolves the biggest open question with evidence before commit
 > **Not a PRD amendment.** `PRD.md:485` already permits generative models for *"clearly-flagged low-confidence distant background that no archival source covers."* The policy is settled and stays settled; what's open is whether our zone meets that qualifier, what it costs to build, and how it's labelled.
 
 - [ ] **Pre-test first — free, and may end this outright**: does the 1884 Manhattan horizon satisfy PRD §17's *"no archival source covers"* qualifier? We hold Sanborn coverage (`lib/sanborn.js`) and the era is rich in panoramas and bird's-eye views; the band may also be occluded by near-field massing from every walkable position. **If archival sources cover it, the PRD routes it to procedural — stop and record that.**
-- [ ] **Answer before spending: is the accuracy manifest internal or guest-facing?** If guest-facing (the North Star implies it), a provenance class reading "invented" is a liability and may pre-decide the verdict. Product decision, not a spike finding.
+- [ ] **Answer before spending: is the provenance declaration internal or guest-facing?** (Under PRD v3.0 the accuracy manifest is renamed the **provenance declaration** — §14.6.) If guest-facing (the North Star implies it), a provenance class reading "invented" is a liability and may pre-decide the verdict. Product decision, not a spike finding — and note v3.0's acceptance gate is now the Witness/Photo test (§27), which *is* guest-facing.
 - [ ] **Arm C plumbing** (panorama backdrop): the seam grade must come from a **per-backdrop MID driven from WorldState via `material_scalar`** — *not* `resolveToneMapping(year)`, which is year-only, session-constant, and dispatched at one scene-wide `PostProcessVolume` that moves near- and far-field together. New plumbing; cost it honestly.
 - [ ] **Anachronism control**: inject `getExclusionText(year)` into the Marble text prompt; audit against `getAuditPatterns(year)`. Any leakage fails the spike outright (Law 5.6).
 - [ ] **Monochrome risk**: every archival plate on hand is B&W ≤640px. Lead with a Gemini plate, use the archival plate as the control, and score the degradation — if only invented colour input works, the "archival" justification weakens considerably.
@@ -292,7 +294,7 @@ The full dream. Walk through a historically accurate 3D reconstruction. See PRD 
 - [ ] Dynamic population (procedural pedestrians, carriages, vendors — era-appropriate: horses & carriages for 1880s, mixed traffic for 1970s, modern for 2000s)
 - [ ] Period-accurate lighting transitions (lamplighter NPC, sunrise through canyons)
 - [ ] Interactive audio anchoring (spatial audio tied to world position)
-- [ ] Multi-era support (same block, different year)
+- [ ] Multi-era support (same block, different year) — *moved to the temporal asset library workstream (Phase 10 / `docs/temporal-asset-library.md`): under v3.0 this is a lookup by location + date, not a per-era heroic rebuild.*
 - [ ] Narrative mode (scripted time-lapse: sunrise→sunset, decade→decade)
 - [ ] **Street-level inhabited feel** — the empty-city problem. Parked vehicles, window displays, laundry lines, trash, street vendors, market stalls. The difference between "accurate geometry" and "a place where people live." Hardest for pre-photographic eras where reference is sparse.
 
@@ -343,6 +345,20 @@ Currently US-only for terrain, building data, and cultural context. This phase u
 - [ ] **Metric dimensions** — Street widths and lamp spacing are currently in US-centric dimensions. International streets follow different standards (narrower European streets, wider Asian boulevards).
 - [ ] **Locale auto-detection for international** — `resolveLocale()` uses population + year for US presets. International scenes need country/region detection from geocode `countryCode` (already exposed from Open-Meteo) to select appropriate architecture styles, street rules, and audio culture.
 - [ ] **Per-country data source registry** — Map out, for each target country, what historical building data is available and in what format. Some countries have excellent digital archives (UK, Netherlands), others have almost nothing digitized (most of Africa, Central Asia).
+
+---
+
+## Phase 10 — Photo-First Scene Authoring (PRD v3.0)
+
+The v3.0 pipeline inversion (PRD §3.1: *the photograph is the spec*) as concrete work. Where a dated, located frame exists, reconstruct the view in frame, extend procedurally beyond the edge, then author the other 23 hours (PRD §25). The v2 Place×Time → research → assemble path is retained for frameless scenes (demolished/pre-photographic); research moves downstream from *establishing what was there* to *filling what the frame does not show and gating what may appear*. Elevated above the tail phases in priority — this is the primary authoring path now, not a someday item.
+
+- [ ] **Photo ingest** — a dated, located source photograph as the scene's specification: EXIF/manual date + geolocation, framing metadata, the opening shape the frame implies (PRD §12 authored aperture).
+- [ ] **In-frame view reconstruction** — reconstruct exactly what the frame shows (signage, typography, awning colors, materials, posture) at the highest available fidelity, capture-regime where the structure survives, procedural where it doesn't. The frame is self-validating — the evidence *is* the brief.
+- [ ] **Beyond-frame procedural extension** — extend the reconstructed view past the frame edge with the existing Sanborn/massing/street/architecture systems (Phases 6/7b), now in their v3.0 role: *extension mechanism beyond frame edge*, not source of truth.
+- [ ] **Diurnal state authoring (render side)** — the visual counterpart to `activityMultiplierAt()`, which exists only on the audio side today (PRD §25). Per-scene state declarations the photo cannot supply: lit-signage schedules, business open/close hours, traffic + pedestrian density curves, wet-capable surfaces, lighting handoff points (dusk ignition / dawn extinguish), soundscape day↔night handoff. Machinery does not exist yet — scope it.
+- [ ] **Canonical hour** — scenes may declare the hour they live at (Fremont Street at dusk, not noon); the 24-hour cycle exists partly so arriving at it feels earned (PRD §25).
+- [ ] **Scene acceptance: Photo Test + Witness Test** — print the source frame beside the aperture, render the same view/hour/weather, ask a person what's different (every gap = backlog item); seat a witness, run the full cycle, record every flinch (every flinch = defect). These replace the accuracy-manifest gate (PRD §27).
+- [ ] **Temporal asset library** — the versioned-building catalog every reconstructed frame deposits into and the next scene draws from. This is the compounding moat; it is a CMS problem, not an agent problem. Spec: `docs/temporal-asset-library.md`. (Absorbs the Phase 8 "multi-era support" item — multi-era becomes a lookup by location + date, not a heroic re-build.)
 
 ---
 

@@ -20,7 +20,7 @@ Two of the three need **no hardware** and can be built now with mocked tests; th
 
 ## C — Representation selector — `lib/representationSelector.js` ✅ BUILT (2026-06-15)
 
-**Done:** `lib/representationSelector.js` + `test/representationSelector.test.js` (18 tests, green). Pure function, no I/O. Exports `selectRepresentation()`, `summarizeRegimes()`, `DEFAULT_THRESHOLDS`, `REGIMES`, `METHODS`. The Trinity spike case (5 photos @ 640px) correctly routes to `mesh_meshy` — the resolution gate working as designed. **Remaining for full 7d.2 item:** wire the tag into `buildingMassing.js`/`spawn-buildings.js` (skip procedural spawn for `capture` features) and record the decision + `summarizeRegimes()` into the accuracy manifest (`environmentProfile.js`). That integration is deferred until B/A exist so there's something for `capture` features to point at.
+**Done:** `lib/representationSelector.js` + `test/representationSelector.test.js` (18 tests, green). Pure function, no I/O. Exports `selectRepresentation()`, `summarizeRegimes()`, `DEFAULT_THRESHOLDS`, `REGIMES`, `METHODS`. The Trinity spike case (5 photos @ 640px) correctly routes to `mesh_meshy` — the resolution gate working as designed. **Remaining for full 7d.2 item:** wire the tag into `buildingMassing.js`/`spawn-buildings.js` (skip procedural spawn for `capture` features) and record the decision + `summarizeRegimes()` into the **provenance declaration** (`environmentProfile.js`). *(PRD v3.0: the accuracy manifest is renamed the provenance declaration — §14.6; this integration lands on it, per the pending refactor in `docs/scope-code-provenance-refactor.md`.)* That integration is deferred until B/A exist so there's something for `capture` features to point at.
 
 Pure function implementing the PRD §17 regime decision. No I/O → trivially testable. **Do this first** (it encodes the decision the whole phase serves, and needs nothing external).
 
@@ -50,7 +50,7 @@ evidenceConfidence < floor everywhere                → procedural + reduce det
 ```
 Thresholds (`opts`, with defaults) are tunable from the 7d.1 spike findings. **Note:** the spike already shows Trinity's archival set is ~4–5 images at ≤640px → falls *below* the `splat_archival` resolution gate → routes to `mesh_meshy`. That is the model working as intended.
 
-**Integration:** spawners (`buildingMassing.js`/`spawn-buildings.js`) consult the tag — `capture` features are skipped by procedural spawn (handled by the tileset) and the choice + reason is recorded in the accuracy manifest (`environmentProfile.js`).
+**Integration:** spawners (`buildingMassing.js`/`spawn-buildings.js`) consult the tag — `capture` features are skipped by procedural spawn (handled by the tileset) and the choice + reason is recorded in the provenance declaration (`environmentProfile.js`; PRD v3.0 §14.6, formerly the accuracy manifest).
 
 **Tests** (`test/representationSelector.test.js`, write first): full rule table, boundary cases (exactly-at-threshold), low-confidence fallback, manifest field shape.
 
@@ -121,7 +121,7 @@ getSplatTilesetStatus(host) → { ok, found, assetId?, error? }
 
 ## Definition of done (7d.2)
 
-- [ ] `selectRepresentation()` tags every feature `capture`|`procedural` with reason → accuracy manifest; spawners honor the tag.
+- [ ] `selectRepresentation()` tags every feature `capture`|`procedural` with reason → provenance declaration (PRD v3.0 §14.6, formerly accuracy manifest); spawners honor the tag.
 - [ ] `cesius-capture.js` submits `photos/spike-trinity/` and returns/records an ion asset ID (or cleanly reports web-UI-only fallback).
 - [ ] `setSplatTileset()` streams that asset into Unreal as a dedicated `TM_SplatTileset` actor, wired into engine start.
 - [ ] One end-to-end proof: a single hero (or present-day block) rendered from a 3DGS tileset while the procedural pipeline renders the rest of the scene — the two regimes coexisting, exactly as PRD §17 describes.
