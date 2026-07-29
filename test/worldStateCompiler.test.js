@@ -33,15 +33,20 @@ describe('World State Compiler', () => {
   describe('time of day classification', () => {
     it('classifies morning correctly', () => {
       const weather = createWeather({
-        timestampUtc: '1978-07-04T14:00:00.000Z', // 9am local-ish
+        timestampLocal: '1978-07-04T09:00:00', // 9am scene-local (naive, no Z) — TZ-independent
         solar: { altitude: 30, azimuth: 120, isDaytime: true }
       });
-      // Adjust hour for test - this depends on implementation
+      const result = compileWorldState({
+        timeline: [weather],
+        locale: defaultLocale,
+        now: new Date(weather.timestampUtc)
+      });
+      assert.strictEqual(result.states.timeOfDay, 'morning');
     });
 
     it('classifies night when isDaytime is false', () => {
       const weather = createWeather({
-        timestampUtc: '1978-07-04T06:00:00.000Z', // 1am local-ish
+        timestampLocal: '1978-07-04T01:00:00', // 1am scene-local (naive, no Z) — TZ-independent
         solar: { altitude: 0, azimuth: 0, isDaytime: false }
       });
       const result = compileWorldState({
@@ -54,7 +59,7 @@ describe('World State Compiler', () => {
 
     it('classifies day when isDaytime is true and midday', () => {
       const weather = createWeather({
-        timestampUtc: '1978-07-04T17:00:00.000Z', // noon local-ish
+        timestampLocal: '1978-07-04T12:00:00', // noon scene-local (naive, no Z) — TZ-independent
         solar: { altitude: 65, azimuth: 180, isDaytime: true }
       });
       const result = compileWorldState({
