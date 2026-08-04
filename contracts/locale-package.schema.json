@@ -1,0 +1,315 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "contracts/locale-package.schema.json",
+  "title": "Time Machine Locale Package Manifest",
+  "description": "Contract v0.1 — the unit of environment content. All provenance pipelines compile to this format; the engine runtime loads nothing else. Governing decision: docs/decisions/D001-locale-package-contract.md. The engine MUST treat 'provenance' as opaque metadata and MUST keep 'schedule' and 'weather' as separate channels.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "package", "provenance", "spatial", "weather", "schedule", "audio", "viewpoints", "evals"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^0\\.1\\.\\d+$",
+      "description": "Contract version this manifest targets (semver)."
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "version", "status", "created", "engine_min_version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "kebab-case package id, matches locales/{id}/ directory" },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "status": { "type": "string", "enum": ["draft", "published"], "description": "published requires all required evals passed; enforced by the loader" },
+        "created": { "type": "string", "format": "date" },
+        "engine_min_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "OPAQUE TO THE ENGINE. Display, logging, and evals only. Runtime behavior must never branch on this block.",
+      "additionalProperties": false,
+      "required": ["mode", "truth_standard", "anchor"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["historical_reconstruction", "observed", "authored"] },
+        "truth_standard": { "type": "string", "minLength": 1, "description": "One line: what wrongness means for this package. Shared bar across modes: would someone who was there flinch?" },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "photo_ref": { "type": "string" },
+            "capture_ref": { "type": "string" },
+            "date": { "type": "string", "format": "date" },
+            "location_text": { "type": "string" },
+            "source_text": { "type": "string" }
+          }
+        }
+      }
+    },
+    "spatial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_type", "content_ref"],
+      "properties": {
+        "content_type": {
+          "type": "string",
+          "enum": ["unreal_level_v1", "gaussian_splat_v1", "hybrid_v1"],
+          "description": "Implemented: unreal_level_v1. RESERVED (loader must reject with 'not implemented'): gaussian_splat_v1, hybrid_v1. Implementing a reserved type requires a new D-record."
+        },
+        "content_ref": { "type": "string", "minLength": 1, "description": "Unreal level/map path resolved by the transport, e.g. /Game/Locales/NYC1884/Main" },
+        "extension_method": { "type": "string", "description": "Informational: how the world was extended beyond the anchor frame (e.g. procedural_sanborn)" }
+      }
+    },
+    "weather": {
+      "type": "object",
+      "description": "Environmental data channel. Separate from schedule end to end.",
+      "additionalProperties": false,
+      "required": ["binding", "provider", "location", "date_policy"],
+      "properties": {
+        "binding": { "type": "string", "enum": ["live", "archive", "authored"] },
+        "provider": { "type": "string", "enum": ["open_meteo", "visualcrossing", "ghcn_daily", "authored", "mock"], "description": "ghcn_daily is implemented by lib/noaa.js (NOAA CDO, GHCND dataset). Package-declared provider overrides the CLI auto-selection chain." },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lat", "lon"],
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+            "elevation_m": { "type": "number" }
+          }
+        },
+        "date_policy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "const": "live" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "date"],
+              "properties": {
+                "type": { "const": "fixed" },
+                "date": { "type": "string", "format": "date" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "start", "end"],
+              "properties": {
+                "type": { "const": "window" },
+                "start": { "type": "string", "format": "date" },
+                "end": { "type": "string", "format": "date" },
+                "loop": { "type": "boolean", "default": true }
+              }
+            }
+          ]
+        },
+        "era_bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {
+            "start": { "type": "string", "format": "date" },
+            "end": { "type": "string", "format": "date" }
+          },
+          "description": "Validity range of the archive source"
+        },
+        "augmentation_ref": { "type": "string", "description": "Authored hourly texture composited over daily-resolution records; must respect daily max/min bounds (enforced by weather-record-diff eval)" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "binding": { "const": "live" } } },
+          "then": { "properties": { "date_policy": { "properties": { "type": { "const": "live" } } } } }
+        },
+        {
+          "if": { "properties": { "binding": { "const": "archive" } } },
+          "then": { "properties": { "date_policy": { "properties": { "type": { "enum": ["fixed", "window"] } } } } }
+        }
+      ]
+    },
+    "schedule": {
+      "type": "object",
+      "description": "Authored life channel — 'the other 23 hours.' Separate from weather end to end. Required in all modes; observed-mode packages composite this over live data.",
+      "additionalProperties": false,
+      "required": ["timezone", "events"],
+      "properties": {
+        "timezone": { "type": "string", "minLength": 1, "description": "IANA timezone" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/scheduleEvent" }
+        },
+        "ambient": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["curves_ref"],
+          "properties": { "curves_ref": { "type": "string" } }
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "Host-agnostic asset declarations only. No engine- or host-specific parameters. Physical channel mapping (5.1.2) is venue-profile configuration.",
+      "additionalProperties": false,
+      "required": ["beds"],
+      "properties": {
+        "beds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "role", "ref"],
+            "properties": {
+              "id": { "type": "string" },
+              "role": { "type": "string", "enum": ["base", "directional", "weather"] },
+              "ref": { "type": "string" },
+              "facing_deg": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "role": { "const": "directional" } }, "required": ["role"] },
+                "then": { "required": ["facing_deg"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "viewpoints": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Named camera anchors the world offers. Aperture-to-viewpoint mapping is venue-profile configuration, not package content. Units for unreal_level_v1: centimeters (Unreal convention); future content types define their own frames.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "position", "facing_deg"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "position": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["x", "y", "z"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "z": { "type": "number" }
+            }
+          },
+          "facing_deg": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
+          "fov_hint": { "type": "number", "exclusiveMinimum": 0, "maximum": 179 }
+        }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "description": "v0.1 placeholder — intentionally loose until the motion story firms up.",
+      "additionalProperties": false,
+      "properties": {
+        "cues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "trigger", "ref"],
+            "properties": {
+              "id": { "type": "string" },
+              "trigger": { "type": "string" },
+              "ref": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "results"],
+      "properties": {
+        "required": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["schedule-validity", "loop-detection", "lineage-completeness", "flinch-historical", "sun-astro", "weather-record-diff", "flinch-observed", "live-coherence", "flinch-authored", "plausibility"] },
+          "description": "Suite ids that must pass for status: published. Closed registry — adding a suite id is a schema-minor bump. The contract validator additionally asserts this contains at least the per-mode minimum set (build-time mode branching; the runtime opacity invariant is untouched). Per-mode defaults in contracts/locale-package-v0.1.md."
+        },
+        "results": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "date"],
+            "properties": {
+              "status": { "type": "string", "enum": ["pass", "fail", "pending"] },
+              "date": { "type": "string", "format": "date" },
+              "run_ref": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          },
+          "description": "Written by tm-eval, read by the loader's publish gate."
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources"],
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "ref"],
+            "properties": {
+              "type": { "type": "string", "enum": ["photo", "map", "record", "dataset", "license", "other"] },
+              "id": { "type": "string", "description": "Optional stable id; referenceable as lineage:{id} from provenance.anchor" },
+              "ref": { "type": "string" },
+              "date": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "licenses": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "Optional structurally; lineage-completeness eval enforces per-mode expectations (required in practice for historical_reconstruction)."
+    }
+  },
+  "definitions": {
+    "scheduleEvent": {
+      "type": "object",
+      "required": ["id", "type", "anchor", "ref"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["audio_event", "trigger"], "description": "Dispatched on by the schedule player; extend the enum (schema-minor bump) before introducing new event kinds" },
+        "anchor": { "type": "string", "enum": ["clock", "solar"] },
+        "time": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "description": "HH:MM local, required iff anchor=clock" },
+        "solar": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "offset_min"],
+          "properties": {
+            "event": { "type": "string", "enum": ["dawn", "sunrise", "sunset", "dusk"] },
+            "offset_min": { "type": "number", "minimum": -180, "maximum": 180 }
+          },
+          "description": "Required iff anchor=solar. Resolved by the schedule player's solar module (new in Build P3 — standard NOAA solar equations) from weather.location; weather providers supply only per-hour altitude/azimuth, not event times."
+        },
+        "ref": { "type": "string" },
+        "recurrence": { "type": "string", "description": "v0.1: 'daily' or omitted" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "anchor": { "const": "clock" } } },
+          "then": { "required": ["time"], "not": { "required": ["solar"] } }
+        },
+        {
+          "if": { "properties": { "anchor": { "const": "solar" } } },
+          "then": { "required": ["solar"], "not": { "required": ["time"] } }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -10,6 +10,34 @@ Weather Engine is a weather state generator for environmental simulation systems
 
 This is a Node.js ES modules project. No build step required.
 
+## Locale Package Refactor Rules (v3 architecture)
+
+Governing decision: `docs/decisions/D001-locale-package-contract.md`. Plan: `docs/refactor-plan.md`. Architecture: `docs/architecture-v3.md`.
+
+### Architecture invariants (hard rules)
+
+1. **Never branch engine code on `provenance.mode` or any field in the `provenance` block.** It is opaque metadata — display, logging, and evals only. If a task appears to require mode-specific runtime behavior, STOP and flag it: the difference belongs in the authoring pipeline, the eval suites, or package data. This invariant is what keeps the engine liftable to platform level. (Authoring-side code — agents, era-audit, classifiers — MAY branch on mode; that is where mode routing lives.)
+2. **Schedule and weather are separate channels, end to end.** Never merge them into one timeline structure. They meet only at the router's output stream. Observed-mode packages composite an authored schedule over live data.
+3. **The loader enforces the publish gate.** `status: published` + unpassed required evals = refuse to load. `--allow-draft` is the only dev override. Never weaken the gate to unblock a build — mark the package `draft` instead.
+4. **`content_type`: only `unreal_level_v1` is implemented.** `gaussian_splat_v1` and `hybrid_v1` are reserved names — the loader rejects them with a clear "not implemented" error. Do not implement a reserved type without a new D-record.
+5. **Audio stays host-agnostic.** Package audio fields are asset refs and roles only. No engine- or host-specific parameters — the audio runtime host is a named deferred decision. Physical channel mapping (5.1.2) is venue-profile configuration.
+6. **Package = world, venue profile = installation.** Aperture-to-viewpoint mapping never goes in a manifest.
+
+### Contract discipline
+
+7. **Contract changes require, in the same commit:** semver bump on `schema_version`, updated reference manifests (`locales/*/manifest.json`), passing contract eval suite, and an amendment note appended to D001.
+8. **The schema is the documentation.** If prose in `contracts/locale-package-v0.1.md` and the schema disagree, the schema wins — then fix the prose in the same commit.
+
+### Process discipline
+
+9. **One build per session.** Read `builds.md` first; take the next sequential build numbers. Commit format `B{NNN}: description`. Update `builds.md` and `ROADMAP.md` at the build boundary.
+10. **Epic boundaries hold.** Weather providers → E01. Unreal → E04. Eval suites → E06. Package/loader/schedule/ports → E08. Profile/agent refactor + authoring front-ends → E09 (do not start E09 *front-end* builds during this refactor; the provenance refactor Builds A/B/C do belong to E09).
+11. **No file moves mixed into feature builds.** New code lands in the target layout (`docs/architecture-v3.md`); existing `lib/` modules move only in a dedicated build, or not at all.
+12. **Parity before improvement.** Locale ports reproduce pre-refactor behavior first, proven by replay comparison. Enhancements are separate builds.
+13. **Supersession grep targets (Build P9):** `preset`, `accuracy layer`, `accuracy manifest`, `silence over wrongness`. Live references to the superseded architecture outside decision history are defects — but `lib/localePresets.js`, `lib/scalePresets.js`, and Remote Control presets are legitimate, distinct from the retired preset system; do not sweep them.
+14. **Doctrine watch.** If analysis in these docs starts reading as prescription beyond its evidence — the Accuracy Contract failure mode — flag it in the session rather than encoding it. Decisions harden only as D-records in `docs/decisions/`.
+15. **Level paths are contract surface.** Unreal content lives in the separate `time-machine-unreal` repo once Build U1 creates it (UE 5.8.1, pinned; until then the local `Unreal/` working dir remains); manifests reference it via `content_ref`. Never rename or move a level path referenced by any manifest without bumping that package's version and updating its manifest in the same change set. Engine version upgrades are dedicated builds with replay-parity regression — never opportunistic.
+
 ## Related Project: Henhouse ADU (the "first room")
 
 `../henhouse-adu` (formerly henhouse-spatial) is the physical venue project — the ADU whose Content Node fit-out hosts Time Machine (display-windows, multi-zone audio, single render workstation). It owns the venue-side decisions Time Machine's PRD §24 needs answered (canonical window layout, speaker topology, workstation power/thermal). Cross-reference map: `../henhouse-adu/docs/time-machine-crossref.md`. Venue hardware spec lives here: `docs/roadster-trailer-hardware.md`; the R&D/trailer workstation (ordered 2026-07-08 — three-phase plan, GPU swap gate, Phase A first-boot checklist) is `docs/rd-workstation-spec.md`. Year-1 review (recommends converging on this room): `docs/review-year1-2026-07.md`.

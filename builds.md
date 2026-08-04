@@ -6,13 +6,15 @@ Epics and builds for the Time Machine project. See `~/.claude/memory/programming
 
 | ID | Name | Status |
 |----|------|--------|
-| E01 | Weather Providers | Active |
+| E01 | Weather Providers | Active — extended (`docs/refactor-plan.md` P5) |
 | E02 | World State Pipeline | Active |
 | E03 | Audio Engine | Active |
-| E04 | Unreal Dispatch | Active |
+| E04 | Unreal Dispatch | Active — extended (`docs/refactor-plan.md` U1–U2) |
 | E05 | Terrain Pipeline | Active |
-| E06 | Eval System | Active |
+| E06 | Eval System | Active — extended (`docs/refactor-plan.md` P8) |
 | E07 | Cesium Integration | Active |
+| E08 | Locale Package | Planned — `docs/refactor-plan.md` |
+| E09 | Authoring Pipeline | Stub (provenance refactor A/B/C land here; no front-end builds yet) |
 
 ---
 
@@ -64,3 +66,8 @@ All work prior to 2026-03-06. Not individually tracked. Covers the full foundati
 - **Files**: `.github/review-prompt.md`, `.github/scripts/review-pr.js`, `.github/workflows/review.yml`
 - **Eval**: Push test PR with `ANTHROPIC_API_KEY` secret set, verify review comment posted
 - **Status**: Complete (requires `ANTHROPIC_API_KEY` repository secret)
+
+---
+
+### Numbering gap note (2026-08-04)
+Work from 2026-03 through 2026-08 (Phases 4–7d and PRs #1–#8: era soundscapes, geo pipeline, historical urban form, agent layer, capture pipeline, PRD v3.0) was tracked in `ROADMAP.md` and PR history, not as numbered builds here. Numbering resumes at **B047** with the Locale Package refactor (`docs/refactor-plan.md`).
