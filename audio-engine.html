@@ -1465,6 +1465,7 @@ class MicroEventScheduler {
     const windLevel = worldState.controls?.audio?.windLevel ?? 0;
     const rainLevel = worldState.controls?.audio?.rainLevel ?? 0;
     const gustiness = worldState.controls?.audio?.gustiness ?? 0;
+    const temperatureC = worldState.controls?.audio?.temperatureC ?? null;
 
     // Activity curve: modulate effective activity by time of day
     // Quiet at 3am (0.125), building at 7am, peak at noon, taper at 10pm
@@ -1475,10 +1476,15 @@ class MicroEventScheduler {
     if (now - this.lastGlobalFire < this.globalCooldownSec) return;
 
     for (const pool of this.pools) {
+      // Ecology-authoritative suppression (B048): pool exists but never fires
+      if (pool.suppressed) continue;
+
       // Cooldown check
       if (now - pool.lastFiredAt < pool.cooldownSec / this.densityMultiplier) continue;
 
-      // Time-of-day constraint
+      // Time-of-day constraint. Windows are clock-fixed (phase = (h+m/60)/24),
+      // not solar — at high latitude/winter, 0.3 can be pre-dawn. P3's solar
+      // module is the eventual anchor for these.
       const tod = pool.timeOfDay;
       if (tod) {
         const inPrimary = timePhase >= tod.min && timePhase <= tod.max;
@@ -1490,6 +1496,12 @@ class MicroEventScheduler {
       // Activity range (using curve-adjusted activity)
       if (pool.activityRange) {
         if (effectiveActivity < pool.activityRange[0] || effectiveActivity > pool.activityRange[1]) continue;
+      }
+
+      // Temperature gate (ectotherm choruses; null = pre-B047 state, gate stays open)
+      if (pool.temperatureGate && temperatureC != null) {
+        if (pool.temperatureGate.minC != null && temperatureC < pool.temperatureGate.minC) continue;
+        if (pool.temperatureGate.maxC != null && temperatureC > pool.temperatureGate.maxC) continue;
       }
 
       // Weather-reactive gating

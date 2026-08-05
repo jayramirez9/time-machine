@@ -253,6 +253,7 @@ function collectSources(profile, only) {
   // Micro-events
   if ((!only || only === 'micro') && profile.microEvents) {
     for (const event of profile.microEvents) {
+      if (event.suppressed) continue; // ecology-suppressed: no assets, no credits
       if (event.sources) {
         for (const s of event.sources) {
           s._eventDescription = event.description;

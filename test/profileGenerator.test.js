@@ -289,7 +289,8 @@ describe('generateProfile', () => {
   it('arctic excludes insects', () => {
     const profile = generateProfile({ ...baseOpts, lat: 70 });
     const eventIds = profile.microEvents.map(e => e.id);
-    assert.ok(!eventIds.includes('insect_chorus'), 'arctic should not have insects');
+    assert.ok(!eventIds.includes('insect_chorus_day'), 'arctic should not have day insects');
+    assert.ok(!eventIds.includes('insect_chorus_night'), 'arctic should not have night insects');
     assert.ok(!eventIds.includes('bird_song'), 'arctic should not have temperate bird_song');
   });
 
@@ -376,13 +377,24 @@ describe('generateProfile — diurnal/seasonal enrichment', () => {
     assert.ok(birdEvt.diurnalWeights.night < 0.15, 'Night weight should be near zero');
   });
 
-  it('attaches diurnalWeights to insect_chorus when environment profile provided', () => {
+  it('attaches diurnalWeights to insect_chorus_night when environment profile provided', () => {
     const profile = generateProfile({ ...baseOpts, environmentProfile: mockEnvProfile });
-    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
-    assert.ok(insectEvt, 'Should have insect_chorus event');
-    assert.ok(insectEvt.diurnalWeights, 'insect_chorus should have diurnalWeights');
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.ok(insectEvt, 'Should have insect_chorus_night event');
+    assert.ok(insectEvt.diurnalWeights, 'insect_chorus_night should have diurnalWeights');
     assert.ok(insectEvt.diurnalWeights.night > 0.7, 'Night weight should be high for crickets');
     assert.ok(insectEvt.diurnalWeights.day < 0.2, 'Day weight should be low for crickets');
+  });
+
+  it('suppresses the day chorus when ecology lists no day-singing insects', () => {
+    // mockEnvProfile has only Field Cricket (night-dominant): ecology is
+    // authoritative, so the generic cicada bed must not survive enrichment.
+    // The suppressed flag is what the scheduler and asset fetcher skip on —
+    // a high cooldown alone still fires (~0.36x/hr at the 10Hz tick).
+    const profile = generateProfile({ ...baseOpts, environmentProfile: mockEnvProfile });
+    const day = profile.microEvents.find(e => e.id === 'insect_chorus_day');
+    assert.strictEqual(day.suppressed, true, 'no day species -> suppressed flag set');
+    assert.ok(!day.diurnalWeights, 'suppressed pool must not carry enrichment');
   });
 
   it('applies seasonal cooldown modulation in winter (birds less active)', () => {
@@ -396,14 +408,14 @@ describe('generateProfile — diurnal/seasonal enrichment', () => {
 
   it('suppresses insects in winter (seasonal weight 0)', () => {
     const profile = generateProfile({ ...baseOpts, month: 1, environmentProfile: mockEnvProfile });
-    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
-    assert.ok(insectEvt, 'insect_chorus should still exist');
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.ok(insectEvt, 'insect_chorus_night should still exist');
     assert.ok(insectEvt.avgCooldownSec > 1000, `Winter insect cooldown should be very high, got ${insectEvt.avgCooldownSec}`);
   });
 
   it('insects are frequent in summer', () => {
     const profile = generateProfile({ ...baseOpts, month: 7, environmentProfile: mockEnvProfile });
-    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus');
+    const insectEvt = profile.microEvents.find(e => e.id === 'insect_chorus_night');
     assert.ok(insectEvt.avgCooldownSec < 100, `Summer insect cooldown should be reasonable, got ${insectEvt.avgCooldownSec}`);
   });
 
@@ -649,5 +661,146 @@ describe('generateProfile — voice events', () => {
     const profile = generateProfile({ ...baseOpts, year: 1900, population: 50000 });
     const voiceEvents = profile.microEvents.filter(e => e.id.startsWith('voice_'));
     assert.equal(voiceEvents.length, 0, 'Suburban should have no voice events');
+  });
+});
+
+describe('W2 wildlife day/night split (B048)', () => {
+  const baseOpts = {
+    location: 'Baton Rouge, LA',
+    year: 1985,
+    population: 220000,
+    countryCode: 'US',
+    lat: 30.45,
+    lon: -91.19,
+  };
+
+  // Minimal Environment Profile fixture: the three species whose blending
+  // caused the flinch, with real SPECIES_DB-shaped diurnal/seasonal data
+  const ecoFixture = {
+    layers: {
+      ecology: {
+        data: {
+          species: [
+            { commonName: 'Annual Cicada', type: 'insect', density: 0.6,
+              diurnal: { dawn: 0.3, day: 0.9, dusk: 0.5, night: 0.0 },
+              seasonal: { spring: 0.0, summer: 0.9, fall: 0.3, winter: 0.0 } },
+            { commonName: 'Field Cricket', type: 'insect', density: 0.7,
+              diurnal: { dawn: 0.3, day: 0.1, dusk: 0.7, night: 1.0 },
+              seasonal: { spring: 0.3, summer: 0.8, fall: 0.9, winter: 0.0 } },
+            { commonName: 'Katydid', type: 'insect', density: 0.5,
+              diurnal: { dawn: 0.1, day: 0.0, dusk: 0.6, night: 1.0 },
+              seasonal: { spring: 0.0, summer: 0.6, fall: 0.8, winter: 0.0 } },
+            { commonName: 'Common Eastern Firefly', type: 'insect', sonorous: false, density: 0.45,
+              diurnal: { dawn: 0.0, day: 0.0, dusk: 0.9, night: 0.7 },
+              seasonal: { spring: 0.3, summer: 0.9, fall: 0.1, winter: 0.0 } },
+          ],
+        },
+      },
+    },
+  };
+
+  it('replaces the single insect_chorus with separately-gated day/night events', () => {
+    const profile = generateProfile(baseOpts);
+    const ids = profile.microEvents.map(e => e.id);
+    assert.ok(ids.includes('insect_chorus_day'), 'missing insect_chorus_day');
+    assert.ok(ids.includes('insect_chorus_night'), 'missing insect_chorus_night');
+    assert.ok(!ids.includes('insect_chorus'), 'blended insect_chorus must be gone');
+  });
+
+  it('day chorus is windowed to daytime and gated on real heat', () => {
+    const profile = generateProfile(baseOpts);
+    const day = profile.microEvents.find(e => e.id === 'insect_chorus_day');
+    assert.deepStrictEqual(day.timeOfDay, { min: 0.3, max: 0.78 },
+      `day window [${day.timeOfDay.min}, ${day.timeOfDay.max}] drifted`);
+    assert.ok(!day.secondaryWindow, 'day chorus must not have a night secondary window');
+    assert.ok(day.temperatureGate?.minC >= 20,
+      `cicadas need real heat, got minC ${day.temperatureGate?.minC}`);
+  });
+
+  it('night chorus is windowed to night with a pre-dawn secondary window', () => {
+    const profile = generateProfile(baseOpts);
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.deepStrictEqual(night.timeOfDay, { min: 0.7, max: 1 },
+      `night window [${night.timeOfDay.min}, ${night.timeOfDay.max}] drifted`);
+    assert.ok(night.secondaryWindow && night.secondaryWindow.max <= 0.25,
+      'night chorus keeps the pre-dawn secondary window');
+    assert.ok(night.temperatureGate?.minC != null && night.temperatureGate.minC < 20,
+      'crickets tolerate cool but not freezing — low gate expected');
+  });
+
+  it('bird_song window already excludes night (regression guard)', () => {
+    const profile = generateProfile(baseOpts);
+    const birds = profile.microEvents.find(e => e.id === 'bird_song');
+    assert.ok(birds.timeOfDay.min >= 0.2 && birds.timeOfDay.max <= 0.85,
+      `bird window [${birds.timeOfDay.min}, ${birds.timeOfDay.max}] leaks into night`);
+    assert.ok(!birds.secondaryWindow, 'birds must not fire in a night window');
+  });
+
+  it('ecology enrichment routes species to the correct chorus', () => {
+    const profile = generateProfile({ ...baseOpts, environmentProfile: ecoFixture });
+    const day = profile.microEvents.find(e => e.id === 'insect_chorus_day');
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+
+    assert.ok(day.description.includes('Annual Cicada'), 'day chorus should name the cicada');
+    assert.ok(!day.description.includes('Katydid') && !day.description.includes('Cricket'),
+      `day chorus leaked night species: ${day.description}`);
+
+    assert.ok(night.description.includes('Katydid') && night.description.includes('Field Cricket'),
+      `night chorus should name katydid + cricket: ${night.description}`);
+    assert.ok(!night.description.includes('Cicada'),
+      `night chorus leaked the cicada: ${night.description}`);
+  });
+
+  it('split diurnalWeights no longer average day species with night species', () => {
+    const profile = generateProfile({ ...baseOpts, environmentProfile: ecoFixture });
+    const day = profile.microEvents.find(e => e.id === 'insect_chorus_day');
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+
+    // The flinch mechanism: blended weights gave the night slot a cicada bed.
+    // Split weights: day event near-zero at night, night event peaks at night.
+    assert.ok(day.diurnalWeights.night <= 0.1,
+      `day chorus night weight ${day.diurnalWeights.night} — cicada still audible at midnight`);
+    assert.ok(day.diurnalWeights.day >= 0.7, 'day chorus should peak in daytime');
+    assert.ok(night.diurnalWeights.night >= 0.8, 'night chorus should peak at night');
+    assert.ok(night.diurnalWeights.day <= 0.2, 'night chorus should be quiet in daytime');
+  });
+
+  it('non-sonorous species never reach a chorus description', () => {
+    const profile = generateProfile({ ...baseOpts, environmentProfile: ecoFixture });
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.ok(!night.description.includes('Firefly'),
+      `a silent species reached an SFX prompt: ${night.description}`);
+  });
+
+  it('end-to-end: researchEcology output keeps silent species out of prompts', async () => {
+    // The real pipeline, not a fixture: SPECIES_DB -> ecology agent -> generator.
+    // Guards the agent's hand-built species mapping (the third field-drop site
+    // of this class after easeWorldState and the event assembler).
+    const { researchEcology } = await import('../lib/agents/ecologyAgent.js');
+    const eco = researchEcology({
+      location: 'Baton Rouge, LA', year: 1985, lat: 30.45, lon: -91.19,
+      month: 6, countryCode: 'US', locationType: 'suburban', population: 220000,
+    });
+    const firefly = eco.data.species.find(s => s.commonName.includes('Firefly'));
+    if (firefly) {
+      assert.strictEqual(firefly.sonorous, false, 'agent mapping dropped the sonorous flag');
+    }
+    const profile = generateProfile({
+      ...baseOpts,
+      environmentProfile: { layers: { ecology: { data: eco.data } } },
+    });
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.ok(night.description.includes('insect') || night.description.includes('chorus'),
+      'night chorus should exist for a subtropical suburb');
+    assert.ok(!night.description.includes('Firefly'),
+      `silent species reached the real-pipeline prompt: ${night.description}`);
+  });
+
+  it('winter month suppresses both choruses via seasonal cooldown', () => {
+    const profile = generateProfile({ ...baseOpts, month: 1, environmentProfile: ecoFixture });
+    const day = profile.microEvents.find(e => e.id === 'insect_chorus_day');
+    const night = profile.microEvents.find(e => e.id === 'insect_chorus_night');
+    assert.ok(day.avgCooldownSec >= 9999, 'cicadas do not sing in January');
+    assert.ok(night.avgCooldownSec >= 9999, 'crickets do not sing in a Louisiana January frost month');
   });
 });
