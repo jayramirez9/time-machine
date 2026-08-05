@@ -38,7 +38,7 @@ Governing decision: `docs/decisions/D001-locale-package-contract.md`. Plan: `doc
 14. **Doctrine watch.** If analysis in these docs starts reading as prescription beyond its evidence — the Accuracy Contract failure mode — flag it in the session rather than encoding it. Decisions harden only as D-records in `docs/decisions/`.
 15. **No view-dependent geometry.** All locale geometry is real geometry — no billboards standing in for volumes, no omitted backs, no detail authored to work from a single sightline. Band C is low-detail real geometry, never a painted plane. Required by three apertures with different sightlines, occupant parallax within the room, and Lumen HWRT sampling offscreen geometry for reflections and bounce light. Fidelity bands are authored against the occupied region of the room, not a single point.
 16. **Movement within a locale is deferred and unmodeled.** Do not implement, scaffold, or design around position changes within a locale. The model is undecided — granularity, control surface, and venue-profile interaction are all open. `viewpoints` being an array is not a commitment to any movement design. Implementation requires a new D-record.
-17. **Level paths are contract surface.** Unreal content lives in the separate `time-machine-unreal` repo once Build U1 creates it (UE 5.8.1, pinned; until then the local `Unreal/` working dir remains); manifests reference it via `content_ref`. Never rename or move a level path referenced by any manifest without bumping that package's version and updating its manifest in the same change set. Engine version upgrades are dedicated builds with replay-parity regression — never opportunistic.
+17. **Level paths are contract surface.** Unreal content lives in the separate `time-machine-unreal` repo (created by B049/U1; UE 5.8 — the exact point release is pinned in that repo's README at project adoption; the local `Unreal/` working dir remains a migration quarry until P7); manifests reference it via `content_ref`. Never rename or move a level path referenced by any manifest without bumping that package's version and updating its manifest in the same change set. Engine version upgrades are dedicated builds with replay-parity regression — never opportunistic.
 
 ## Related Project: Henhouse ADU (the "first room")
 
@@ -78,6 +78,7 @@ export MESHY_API_KEY="your-key"             # Meshy (AI 3D model generation, $20
 export GOOGLE_AI_API_KEY="your-key"         # Google AI / Gemini (reference image generation)
 export CESIUM_ION_TOKEN="your-token"        # Cesium ion (photos→3DGS capture reconstruction, Phase 7d.2)
 export CESIUM_SPLAT_ASSET_ID="123456"       # Cesium ion 3DGS asset ID to stream into TM_SplatTileset on engine start (Phase 7d.2-A)
+export UNREAL_RC_HOST="http://192.168.68.79:30010"  # a7500 Unreal RC API (only used when routes.json has no unreal endpoint). Precedence everywhere: --host flag > routes.json unreal endpoint > UNREAL_RC_HOST > localhost:30010 (lib/rcHelpers.js defaultRcHost()). Note: only the daemon launcher sources .env — export in your shell profile for spawn tools run directly.
 ```
 
 Provider auto-selection: `--provider auto` (default) uses NOAA for pre-1940 dates (if token set), Visual Crossing for 1940+ (if key set), else Open-Meteo.

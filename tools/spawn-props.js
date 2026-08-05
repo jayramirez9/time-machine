@@ -19,13 +19,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { placeProps, buildPropSpawnScript, PROP_PREFIX } from '../lib/propPlacement.js';
 import { summarizePropsForYear } from '../lib/propCatalog.js';
-import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
+import { createRcClient, parseSpawnArgs, defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
 const YEAR = getFlag('--year', null);
@@ -39,7 +40,7 @@ if (!positionalArg || !YEAR) {
   console.error('Options:');
   console.error('  --year N            Target year (required)');
   console.error('  --era KEY           Street classification era override');
-  console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL          Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --dry-run           Show placement stats without touching Unreal');
   console.error('  --clear             Remove all TM_Prop_* actors from the level');
   console.error('  --only <types>      Comma-separated list of prop types to place');

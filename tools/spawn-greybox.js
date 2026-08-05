@@ -11,9 +11,11 @@
  *        node tools/spawn-greybox.js --clean   # Remove all spawned actors
  */
 
+import { defaultRcHost } from '../lib/rcHelpers.js';
+
 const HOST = process.argv.includes('--host')
   ? process.argv[process.argv.indexOf('--host') + 1]
-  : 'http://localhost:30010';
+  : defaultRcHost();
 
 const CLEAN = process.argv.includes('--clean');
 const LEVEL = '/Game/TimeMachine-scene2a.TimeMachine-scene2a:PersistentLevel';

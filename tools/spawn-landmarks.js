@@ -20,13 +20,14 @@ import {
   loadLandmarks, filterByYear, landmarksToSpawnList,
   buildLandmarkSpawnScript, LANDMARK_PREFIX
 } from '../lib/landmarks.js';
-import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
+import { createRcClient, parseSpawnArgs, defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
 const YEAR_FLAG = getFlag('--year', null);
@@ -35,7 +36,7 @@ if (!positionalArg) {
   console.error('Usage: node tools/spawn-landmarks.js terrain-data/<slug>/  [options]');
   console.error('');
   console.error('Options:');
-  console.error('  --host URL      Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL      Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --dry-run       Show spawn data without touching Unreal');
   console.error('  --clear         Remove all TM_Landmark_* actors from the level');
   console.error('  --year N        Era filter year (default: from landmarks.json era)');

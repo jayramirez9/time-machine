@@ -20,13 +20,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { manifestToSpawnData, buildMeshImportScript, buildMeshClearScript, ACTOR_PREFIX } from '../lib/meshImport.js';
-import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
+import { createRcClient, parseSpawnArgs, defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DAEMON_URL = getFlag('--daemon-url', 'http://localhost:3000');
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
@@ -36,7 +37,7 @@ if (!positionalArg) {
   console.error('Usage: node tools/spawn-meshes.js terrain-data/<slug>/ [options]');
   console.error('');
   console.error('Options:');
-  console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL          Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --daemon-url URL    Mac daemon URL reachable from PC (default: http://localhost:3000)');
   console.error('  --dry-run           Show what would be imported without touching Unreal');
   console.error('  --clear             Remove all TM_Mesh_* actors from the level');

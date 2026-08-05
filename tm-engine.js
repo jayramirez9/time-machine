@@ -19,6 +19,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { startEngine } from './lib/runtimeEngine.js';
+import { defaultRcHost } from './lib/rcHelpers.js';
 import { smartGeocode } from './lib/openmeteo.js';
 import { LOCALES, DEFAULT_LOCALE } from './lib/localePresets.js';
 import { getApiKey as getVCKey } from './lib/visualcrossing.js';
@@ -249,7 +250,7 @@ function createServer(engineRef) {
 
     if (req.method === 'GET' && urlPath === '/api/unreal-status') {
       const routesConfig = engineRef.routesConfigPath ? JSON.parse(fs.readFileSync(engineRef.routesConfigPath, 'utf8')) : null;
-      const host = routesConfig?.endpoints?.unreal?.host || 'http://localhost:30010';
+      const host = routesConfig?.endpoints?.unreal?.host || defaultRcHost();
       const reachable = await isUnrealReachable(host);
       let cesiumFound = false;
       let origin = null;

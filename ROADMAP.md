@@ -255,6 +255,8 @@ The one move that resolves the biggest open question with evidence before commit
 
 ### 7d.4 — Live Verification Sprint (the box arrives)
 
+> **Absorbed into the U-track (refactor-plan Reconciliation 8).** The a7500 arrived and the fresh UE 5.8 project exists — first-boot + verification items below now run against the *new* `time-machine-unreal` project during U1/U2 and the locale ports, not the old level. **B049 (2026-08-05)** did the Mac side: repo + `SETUP.md` bootstrap checklist + `UNREAL_RC_HOST` threading; box-side checklist is in `time-machine-unreal/SETUP.md`.
+
 > **Workstation: first unit DOA (shipping damage) — free-upgrade replacement due 2026-07-23.** Corsair is replacing the ordered a7500 (Ryzen 9 9900X3D) with a higher-tier unit (**Ryzen 9 9950X3D**, 16C/32T, same RTX 5090) at no cost — the reference spec's core count, fully closing the MRQ/compile gap the order note had conceded. Full spec, deltas, arrival checks, three-phase plan (R&D → MRQ trailer pre-renders → real-time 3-window), and GPU swap gate: `docs/rd-workstation-spec.md`. Per the year-1 review: run this sprint **before any new feature** — it converts months of "code-complete, live-verify pending" into a durable regression net.
 
 - [ ] **Arrival checks** (before powering on): inspect for shipping damage; confirm CPU reports as **9950X3D** and 4 TB across two volumes; note the board model and whether it supports x8/x8 bifurcation (informational — the swap gate already prefers the PRO 6000 over dual-GPU). **Thermal is the one real regression**: the 9950X3D is a ~170 W TDP part vs the 9900X3D's ~120 W into the same 240 mm AIO, so log package temp *and effective all-core clock* in the Phase B pass, and check whether the case takes a 360 mm radiator.

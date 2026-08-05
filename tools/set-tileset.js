@@ -15,6 +15,7 @@
  */
 
 import { setTilesetUrl, clearTileset, getTilesetStatus, googleTilesUrl } from '../lib/cesiumTileset.js';
+import { defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -30,7 +31,8 @@ function hasFlag(name) {
   return args.includes(name);
 }
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const customUrl = getFlag('--url', null);
 const wantsClear = hasFlag('--clear');
 const wantsStatus = hasFlag('--status');
