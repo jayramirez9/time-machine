@@ -77,7 +77,11 @@ Micro-events that make sound do so by carrying audio asset refs in `ref`; the sc
 - No engine- or host-specific parameters. Channel mapping to the physical 5.1.2 layout is venue-profile configuration, not package content.
 
 ### `viewpoints` (required)
-Named camera anchors in the world: `{ id, label, position: {x, y, z}, facing_deg, fov_hint? }`. Units for `unreal_level_v1` are centimeters (Unreal convention); future content types define their own frames. The package declares what views the world offers; the venue profile maps physical apertures to viewpoints. Same world, different rooms.
+Named eye anchors in the world: `{ id, label, position: {x, y, z}, facing_deg, fov_hint? }`. Units for `unreal_level_v1` are centimeters (Unreal convention); future content types define their own frames.
+
+**Semantics:** `position` is the **eye origin** — where the room's viewer stands in the world. `facing_deg` and `fov_hint` are authoring/framing hints (default orientation, band planning), **not** camera parameters. Screen geometry — the physical size, position, and orientation of each aperture relative to the eye — lives entirely in the venue profile, which derives off-axis frusta from it. A package never describes apertures. Same world, different rooms.
+
+The array holds one entry in v0.1. It is an array for shape, not as a commitment to any future multi-position design (see movement deferral in `docs/architecture-v3.md`).
 
 ### `motion` (optional, v0.1 placeholder)
 `cues[]`: `{ id, trigger, ref }`. Loose by design until the motion story firms up.

@@ -51,3 +51,7 @@ The codebase must now catch up to the doctrine change. The Unreal rebuild on the
 - Environment engine as platform layer (prior decision)
 - Forge v0.2 — contract-first, eval-driven, one build per session
 - `henhouse-adu` E07-system-manifest (the contract-handshake precedent)
+
+## Amendments
+
+- **2026-08-05 — planning packet v2 absorbed.** Viewpoint semantics clarified: `position` is the eye origin, `facing_deg`/`fov_hint` are authoring hints, screen geometry and off-axis frusta belong to the venue profile — a package never describes apertures. Unreal Project Architecture section added to `docs/architecture-v3.md` (bounded world, fidelity bands A/B/C, no-view-dependent-geometry invariant, nDisplay config as the venue profile, historical pipeline stages). New Build U3 (era kit + PCG foundation) gates the Baton Rouge port. Movement within a locale explicitly deferred pending its own D-record. Pre-P1 schema edits: viewpoints description updated and `maxItems: 1` added (enforcing the one-entry-in-v0.1 rule; widening later is the schema-minor bump the versioning section already describes) — sanctioned pre-Build-1, no `schema_version` bump. `/Game/Display/` (nDisplay venue-profile configs) lives in the Unreal repo for asset-format reasons but is installation config: never package content, never referenced from a manifest — decision 5 stands.
