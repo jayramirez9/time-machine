@@ -71,3 +71,10 @@ All work prior to 2026-03-06. Not individually tracked. Covers the full foundati
 
 ### Numbering gap note (2026-08-04)
 Work from 2026-03 through 2026-08 (Phases 4–7d and PRs #1–#8: era soundscapes, geo pipeline, historical urban form, agent layer, capture pipeline, PRD v3.0) was tracked in `ROADMAP.md` and PR history, not as numbered builds here. Numbering resumes at **B047** with the Locale Package refactor (`docs/refactor-plan.md`).
+
+### B047 — simMonth + temperatureC threading (E02-world-state-pipeline)
+- **Date**: 2026-08-05
+- **What**: WorldState carries scene-local calendar month and raw air temperature end-to-end (refactor-plan W1, wildlife-flinch prerequisite). Compiler emits root `simMonth` (1–12, local clock) and `controls.audio.temperatureC` (raw °C — the `comfort` category is too coarse for ectotherm chorus gating); contract adds bounds [-90, 60], `simMonth` to REQUIRED_FIELDS, 1–12 integer check. **Bug caught in-build**: `easeWorldState` rebuilds `controls.audio` field-by-field and silently dropped `temperatureC` from every published state — added to the ease block with a `??` fallback for pre-B047 states (old logs/replays). `audio-engine.html` status strip shows month + temp (live plumbing verification; scheduler already receives full state — W2 adds the gates).
+- **Files**: `lib/worldStateCompiler.js`, `lib/worldStateContract.js`, `lib/runtimeEngine.js`, `audio-engine.html`, `test/goldenState.test.js`
+- **Eval**: 1601/1601 `npm test`; `tm-eval` exit 0. New tests: simMonth July=7 / December=12 (off-by-one guard), temperatureC bounds + equals rounded provider celsius, out-of-range/missing simMonth rejected, ease-path survival (simMonth carried, temperatureC eased not dropped, legacy-state fallback, eased state validates).
+- **Status**: Complete

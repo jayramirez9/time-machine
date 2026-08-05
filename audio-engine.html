@@ -2307,7 +2307,9 @@ function showStates(states) {
     html += `snow: <span class="val">${(audio.snowLevel ?? 0).toFixed(2)}</span> `;
     html += `windDir: <span class="val">${(audio.windDirection ?? 0).toFixed(0)}&deg;</span><br>`;
     html += `activity: <span class="val">${(audio.activityLevel ?? 0).toFixed(2)}</span> `;
-    html += `phase: <span class="val">${(audio.timeOfDayPhase ?? 0).toFixed(3)}</span>`;
+    html += `phase: <span class="val">${(audio.timeOfDayPhase ?? 0).toFixed(3)}</span> `;
+    html += `month: <span class="val">${currentState?.simMonth ?? '--'}</span> `;
+    html += `temp: <span class="val">${audio.temperatureC != null ? audio.temperatureC.toFixed(1) + '&deg;C' : '--'}</span>`;
     html += `</div>`;
   }
   statesEl.innerHTML = html;
