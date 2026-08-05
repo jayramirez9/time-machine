@@ -15,6 +15,7 @@
 
 import { geocode } from '../lib/openmeteo.js';
 import { setGeoreference, estimateHeight } from '../lib/cesiumGeoreference.js';
+import { defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -26,7 +27,8 @@ function getFlag(name, defaultValue) {
   return args[idx + 1];
 }
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const heightArg = getFlag('--height', null);
 const HEIGHT_EXPLICIT = heightArg !== null ? parseFloat(heightArg) : null;
 const directLat = getFlag('--lat', null);

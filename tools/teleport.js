@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { setGeoreference, estimateHeight } from '../lib/cesiumGeoreference.js';
+import { defaultRcHost } from '../lib/rcHelpers.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -54,13 +55,7 @@ function loadLandmarks() {
 }
 
 function defaultHost() {
-  if (hostOverride) return hostOverride;
-  try {
-    const routes = JSON.parse(readFileSync(resolve(ROOT, 'routes.json'), 'utf-8'));
-    return routes?.endpoints?.unreal?.host ?? 'http://localhost:30010';
-  } catch {
-    return 'http://localhost:30010';
-  }
+  return hostOverride || defaultRcHost();
 }
 
 const landmarks = loadLandmarks();

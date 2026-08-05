@@ -9,6 +9,8 @@ Per `docs/refactor-plan.md` §Merged Build Sequence, two in-flight builds preced
 - [x] **W1** — simMonth + temperatureC threading — **B047, 2026-08-05.** (Fixture surgery turned out unnecessary — golden tests compile states, and the hand-built fixtures are invalid-case tests; they got `simMonth` added for single-failure hygiene. Real find: `easeWorldState` was dropping `temperatureC` from every published state.)
 - [x] **W2** — wildlife day/night split — **B048, 2026-08-05.** (Birds turned out already night-suppressed by the `bird_song` window — now regression-guarded. Follow-up owed at P6: regenerate `gen_*` profiles + ElevenLabs assets for the new event ids; committed profiles keep the old blended event until then.)
 
+- [x] **U1 (Mac side)** — fresh Unreal project bootstrap — **B049, 2026-08-05.** `time-machine-unreal` repo live (LFS + conventions + `SETUP.md` a7500 checklist); `UNREAL_RC_HOST` threaded through all RC tools + dispatch; native UE 5.8 MCP kept, Aura skipped, old unrealMCP + Ludus removed from config. **Open box-side (Jay, `SETUP.md` steps 1–7):** drivers/Defender/DDC, project settings + plugins, RC LAN bind + firewall, repo adoption, then the U1 exit eval (RC `/remote/info` from Mac, property round-trip, LFS round-trip). Confirm the a7500's LAN IP (routes.json assumes `192.168.68.79`).
+
 P1 is set up below and can be picked up as soon as W1/W2 land (or first, if Jay reorders — P1 touches no runtime code, so there is no dependency either way).
 
 ## Build P1 — Locale Package contract validation (E08-locale-package)

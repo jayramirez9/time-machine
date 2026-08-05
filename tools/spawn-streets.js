@@ -22,13 +22,14 @@ import path from 'path';
 import { streetsToSpawnList, buildStreetSpawnScript, STREET_PREFIX, SIDEWALK_PREFIX } from '../lib/streetMeshing.js';
 import { placeLamps, buildLampSpawnScript, LAMP_PREFIX } from '../lib/lampPlacement.js';
 import { SURFACE_TYPES } from '../lib/streetLayout.js';
-import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
+import { createRcClient, parseSpawnArgs, defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DAEMON_URL = getFlag('--daemon-url', 'http://localhost:3000');
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
@@ -42,7 +43,7 @@ if (!positionalArg) {
   console.error('Usage: node tools/spawn-streets.js terrain-data/<slug>/  [options]');
   console.error('');
   console.error('Options:');
-  console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL          Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --daemon-url URL    Mac daemon URL reachable from PC (default: http://localhost:3000)');
   console.error('  --dry-run           Show spawn data without touching Unreal');
   console.error('  --clear             Remove all TM_Street_*/TM_Sidewalk_*/TM_Lamp_* actors');

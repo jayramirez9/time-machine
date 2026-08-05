@@ -20,13 +20,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { placeStreetTrees, placeGroundCover, buildFoliageSpawnScript, TREE_PREFIX, FOLIAGE_PREFIX } from '../lib/foliagePlacement.js';
 import { summarizeFoliageForYear } from '../lib/foliageCatalog.js';
-import { createRcClient, parseSpawnArgs } from '../lib/rcHelpers.js';
+import { createRcClient, parseSpawnArgs, defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
 const { getFlag, hasFlag, positionalArg } = parseSpawnArgs(process.argv.slice(2));
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DRY_RUN = hasFlag('--dry-run');
 const CLEAR = hasFlag('--clear');
 const NO_GROUND = hasFlag('--no-ground');
@@ -47,7 +48,7 @@ if (!positionalArg || !YEAR) {
   console.error('  --month N           Month 1-12 for seasonal weighting (default: 6)');
   console.error('  --density N         Density multiplier 0-1 (default: 0.5)');
   console.error('  --era KEY           Street classification era override');
-  console.error('  --host URL          Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL          Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --dry-run           Show placement stats without touching Unreal');
   console.error('  --clear             Remove all TM_Tree_* and TM_Foliage_* actors');
   console.error('  --no-ground         Skip ground cover placement');

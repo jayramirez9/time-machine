@@ -20,6 +20,7 @@ import fs from 'fs';
 import path from 'path';
 import { isUnrealReachable } from '../lib/cesiumGeoreference.js';
 import { importLandscape } from '../lib/landscapeImport.js';
+import { defaultRcHost } from '../lib/rcHelpers.js';
 
 // ─── Argument parsing ────────────────────────────────────────────
 
@@ -33,7 +34,8 @@ function getFlag(name, defaultValue) {
 
 const hasFlag = (name) => args.includes(name);
 
-const HOST = getFlag('--host', 'http://localhost:30010');
+const HOST = getFlag('--host', defaultRcHost());
+console.error(`Unreal RC target: ${HOST}`);
 const DAEMON_URL = getFlag('--daemon-url', null);
 const DRY_RUN = hasFlag('--dry-run');
 const MANUAL = hasFlag('--manual');
@@ -45,7 +47,7 @@ if (!terrainDir) {
   console.error('Usage: node tools/import-terrain.js <terrain-data-dir/> [options]');
   console.error('');
   console.error('Options:');
-  console.error('  --host URL         Unreal RC API host (default: http://localhost:30010)');
+  console.error('  --host URL         Unreal RC API host (default: routes.json → UNREAL_RC_HOST → local editor)');
   console.error('  --daemon-url URL   Mac daemon URL reachable from PC (for automated import)');
   console.error('  --manual           Force manual instructions (skip automated import)');
   console.error('  --dry-run          Show what would be imported without sending to Unreal');
