@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { compileWorldState } from '../lib/worldStateCompiler.js';
 import { getMockWeather } from '../lib/weather.js';
 import { validateWorldState, STATES_ENUM, CONTROL_BOUNDS } from '../lib/worldStateContract.js';
+import { easeWorldState } from '../lib/runtimeEngine.js';
 
 /**
  * Golden State Tests
@@ -55,6 +56,17 @@ describe('Golden State - Mock Provider Determinism', () => {
     it('reports mock provider in metadata', () => {
       assert.strictEqual(state.metadata.provider, 'mock');
       assert.strictEqual(state.metadata.dataset, 'generated');
+    });
+
+    it('exposes simMonth from the sim date', () => {
+      assert.strictEqual(state.simMonth, 7);
+    });
+
+    it('exposes raw temperatureC in controls.audio', () => {
+      const t = state.controls.audio.temperatureC;
+      assert.strictEqual(typeof t, 'number');
+      assert.ok(t >= -90 && t <= 60, `temperatureC ${t} outside contract bounds`);
+      assert.strictEqual(t, Math.round(weather.temperature.celsius * 10) / 10);
     });
 
     it('is deterministic across runs', () => {
@@ -165,6 +177,7 @@ describe('WorldState Contract Module', () => {
     const state = {
       timeUtc: '2024-01-01T00:00:00Z',
       timeLocal: '2024-01-01T00:00:00',
+      simMonth: 1,
       states: {
         timeOfDay: 'day', sky: 'clear', precip: 'none',
         wind: 'calm', comfort: 'comfortable'
@@ -193,6 +206,7 @@ describe('WorldState Contract Module', () => {
     const state = {
       timeUtc: '2024-01-01T00:00:00Z',
       timeLocal: '2024-01-01T00:00:00',
+      simMonth: 1,
       states: {
         timeOfDay: 'midnight', // invalid
         sky: 'clear', precip: 'none', wind: 'calm', comfort: 'comfortable'
@@ -215,5 +229,76 @@ describe('WorldState Contract Module', () => {
     const result = validateWorldState(state);
     assert.strictEqual(result.valid, false);
     assert.ok(result.errors.some(e => e.includes('midnight')));
+  });
+
+  it('rejects out-of-range simMonth', () => {
+    const date = new Date(1978, 6, 4, 15, 0, 0);
+    const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
+    const good = compileWorldState({ timeline: [weather], locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 }, now: date });
+    const bad = { ...good, simMonth: 13 };
+    const result = validateWorldState(bad);
+    assert.strictEqual(result.valid, false);
+    assert.ok(result.errors.some(e => e.includes('simMonth')));
+  });
+
+  it('rejects missing simMonth', () => {
+    const date = new Date(1978, 6, 4, 15, 0, 0);
+    const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
+    const good = compileWorldState({ timeline: [weather], locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 }, now: date });
+    const { simMonth, ...withoutMonth } = good;
+    const result = validateWorldState(withoutMonth);
+    assert.strictEqual(result.valid, false);
+    assert.ok(result.errors.some(e => e.includes('simMonth')));
+  });
+});
+
+describe('Winter month extraction', () => {
+  it('exposes simMonth 12 for a December sim date', () => {
+    const date = new Date(1978, 11, 25, 15, 0, 0);
+    const weather = getMockWeather({ location: 'Baton Rouge, LA', date });
+    const state = compileWorldState({ timeline: [weather], locale: { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 }, now: date });
+    assert.strictEqual(state.simMonth, 12);
+  });
+});
+
+describe('Publish path preserves B047 fields (easeWorldState)', () => {
+  const locale = { audioBaseDb: 24, activity: 0.15, hazeBias: 0.03 };
+  const dateA = new Date(1978, 6, 4, 15, 0, 0);
+  const dateB = new Date(1978, 6, 4, 2, 0, 0);
+  const stateA = compileWorldState({ timeline: [getMockWeather({ location: 'Baton Rouge, LA', date: dateA })], locale, now: dateA });
+  const stateB = compileWorldState({ timeline: [getMockWeather({ location: 'Baton Rouge, LA', date: dateB })], locale, now: dateB });
+  const eased = easeWorldState(stateA, stateB, 0.25);
+
+  it('carries simMonth through easing', () => {
+    assert.strictEqual(eased.simMonth, stateB.simMonth);
+  });
+
+  it('eases temperatureC instead of dropping it', () => {
+    const t = eased.controls.audio.temperatureC;
+    assert.strictEqual(typeof t, 'number');
+    const a = stateA.controls.audio.temperatureC;
+    const b = stateB.controls.audio.temperatureC;
+    assert.strictEqual(t, a + (b - a) * 0.25);
+  });
+
+  it('easeWorldState drops no control field the compiler emits', () => {
+    for (const group of ['lighting', 'audio', 'atmosphere', 'visual', 'postprocess']) {
+      assert.deepStrictEqual(
+        Object.keys(eased.controls[group]).sort(),
+        Object.keys(stateB.controls[group]).sort(),
+        `easeWorldState dropped fields from controls.${group}`);
+    }
+  });
+
+  it('falls back to target temperatureC when the current state predates B047', () => {
+    const legacy = JSON.parse(JSON.stringify(stateA));
+    delete legacy.controls.audio.temperatureC;
+    const easedLegacy = easeWorldState(legacy, stateB, 0.25);
+    assert.strictEqual(easedLegacy.controls.audio.temperatureC, stateB.controls.audio.temperatureC);
+  });
+
+  it('eased state still validates against the contract', () => {
+    const result = validateWorldState(eased);
+    assert.ok(result.valid, `eased state invalid: ${result.errors.join('; ')}`);
   });
 });
