@@ -181,7 +181,8 @@
     "viewpoints": {
       "type": "array",
       "minItems": 1,
-      "description": "Named camera anchors the world offers. Aperture-to-viewpoint mapping is venue-profile configuration, not package content. Units for unreal_level_v1: centimeters (Unreal convention); future content types define their own frames.",
+      "maxItems": 1,
+      "description": "Named eye anchors. 'position' is the eye origin where the room's viewer stands in the world; 'facing_deg' and 'fov_hint' are authoring/framing hints, NOT camera parameters. Screen geometry (aperture size, position, orientation) lives in the venue profile, which derives off-axis frusta from it. A package never describes apertures. Array holds one entry in v0.1 — array shape is not a commitment to any future multi-position design. Units for unreal_level_v1: centimeters (Unreal convention); future content types define their own frames.",
       "items": {
         "type": "object",
         "additionalProperties": false,

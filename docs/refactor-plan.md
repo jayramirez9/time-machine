@@ -23,12 +23,12 @@ The planning packet was generated off-repo. These corrections are load-bearing; 
 1. **Epic numbers.** The packet's `E07-locale-package` collides with the existing **E07 Cesium Integration** in `builds.md`. Assigned instead: **E08-locale-package**, **E09-authoring-pipeline**.
 2. **The GHCN-Daily provider already exists.** `lib/noaa.js` (Phase 3, DONE) is a GHCN-Daily provider via the NOAA CDO API, including hourly synthesis from daily obs. Packet Build 5 is re-scoped from "build the provider" to "adapt it to the contract": expose it as `provider: ghcn_daily`, add `augmentation_ref` compositing (authored hourly texture bounded by daily max/min), and a hand-checked fixture eval.
 3. **Provider enum extended.** The schema now includes `visualcrossing` — the engine's preferred paid 1940+ provider; packages must be able to declare it. A package-declared provider **overrides** the CLI auto-selection chain (the chain remains for non-package CLI use). This is new loader semantics, noted in Build P2.
-4. **Tracking files.** No `tasks.md`, `implementation-plan.md`, or `masterplan.md` exist here. Mapping: epic registration + build log → `builds.md`; task tracking → `ROADMAP.md`; product vision → `PRD.md`. The PRD v3.0 amendment is integrated in `PRD.md` (there is no separate `amendment-v3-flinch-standard.md`).
+4. **Tracking files.** No `implementation-plan.md` or `masterplan.md` exist here. Mapping: epic registration + build log → `builds.md`; current-build tasks → `tasks.md` (created 2026-08-05 at Jay's direction, packet v2); phase tracking → `ROADMAP.md`; product vision → `PRD.md`. The PRD v3.0 amendment is integrated in `PRD.md` (there is no separate `amendment-v3-flinch-standard.md`).
 5. **Solar-event math is new work.** Providers deliver per-hour solar altitude/azimuth; nothing computes dawn/sunrise/sunset/dusk *times* as a utility (`lib/noaa.js` has only an internal estimate). Build P3 includes a small astro module (standard NOAA solar equations) for schedule solar anchors.
 6. **`preset` grep hazard (Build P9).** `lib/localePresets.js`, `lib/scalePresets.js`, and Remote Control presets are legitimate and are *not* the retired preset system. The supersession grep must not sweep them. Open item: locale-preset tuning values are expected to migrate into package data over the ports; `localePresets.js` retires only when the last non-package path stops using it.
 7. **Provenance-mode routing doctrine.** `v3-pivot-plan` step 6 wanted the mode threaded compiler→router/dispatch. Under D001's provenance-opacity invariant, that engine-side threading is **superseded**: the engine reads mode for display/logging only. The authoring-side half survives intact (mode-aware `resolveEra()` observed→capture, per-mode `era-audit`, mode-tagged classifier output, assembler dropping the historical-only assumption). This partially answers open product question 3 in `v3-pivot-plan.md`: routing is authoring-time.
 8. **7d.4 Live Verification Sprint is absorbed, not dropped.** The fresh UE 5.8.1 project (U-track) changes 7d.4's context: code-complete live-verify items (rendering config, capture client, splat streaming) get verified against the *new* project during U1/U2 and the ports — fold the 7d.4 first-boot checklist (`docs/rd-workstation-spec.md`) into U1.
-9. **In-flight work lands first.** Uncommitted WIP in the working tree (simMonth + temperatureC in `worldStateCompiler`/`worldStateContract`) is pivot-plan step 2, half done. It and the wildlife split (step 3) are guest-facing, independent of this refactor, and complete before Build P1.
+9. **In-flight work lands first.** In-flight WIP on branch `wip-b047-simmonth-temperature` (simMonth + temperatureC in `worldStateCompiler`/`worldStateContract`) is pivot-plan step 2, half done. It and the wildlife split (step 3) are guest-facing, independent of this refactor, and complete before Build P1.
 
 ## Scope
 
@@ -38,7 +38,7 @@ The planning packet was generated off-repo. These corrections are load-bearing; 
 - Schedule channel v0 (authored "other 23 hours" as a separate channel from weather) + solar-event astro module
 - GHCN-Daily contract adaptation (see Reconciliation 2)
 - Porting the three existing locales to packages — this IS the Unreal rebuild on the a7500; do not rebuild the scenes bespoke and port later
-- Fresh Unreal project on the a7500 — UE 5.8.1, new `time-machine-unreal` repo, Core Environment Rig
+- Fresh Unreal project on the a7500 — UE 5.8.1, new `time-machine-unreal` repo, Core Environment Rig, kit/PCG foundation (U3)
 - Flinch eval harness v0 extending `tm-eval.js` (`SUITES` registry)
 - Removal/supersession of preset-system and accuracy-layer references in docs and code (coordinated with provenance Builds A/B)
 
@@ -49,6 +49,7 @@ The planning packet was generated off-repo. These corrections are load-bearing; 
 - Repo split (engine → platform level) — module seams only
 - Mass directory reorganization — see Migration Rules
 - Pivot-plan XL bets (photo-first ingest, memory mode, Temporal Asset Library) — sequenced after this refactor; the E09 seam is where photo-first lands
+- **Movement within a locale.** The ability to change position within a locale — including operating the hero aperture as a navigation surface — is a future feature. The model is undecided: v0.1 commits to nothing about how movement works, its granularity, or how it interacts with the venue profile. `viewpoints` is an array and can hold multiple positions if that proves to be the shape; this is not an assertion that it will. Implementation requires a new D-record.
 
 ## Epic Registration (in `builds.md`)
 
@@ -57,19 +58,19 @@ The planning packet was generated off-repo. These corrections are load-bearing; 
 | **E08-locale-package** | NEW | Package contract, loader, schedule channel, three conformance ports |
 | **E09-authoring-pipeline** | NEW (stub) | Mode-specific authoring front-ends + shared back-end; also home of the provenance refactor Builds A/B/C (Environment Profile envelope + agents). Seam only in this refactor — no front-end builds |
 | **E01-weather-providers** | EXTENDED | GHCN-Daily contract adaptation |
-| **E04-unreal-dispatch** | EXTENDED | Unreal Track (U1, U2) |
+| **E04-unreal-dispatch** | EXTENDED | Unreal Track (U1–U3; a second era kit lands as its own U build when P7 approaches) |
 | **E06-eval-system** | EXTENDED | Flinch eval harness |
 
 ## Merged Build Sequence
 
-Build numbers are assigned from the head of `builds.md` at execution time. One build per session. Commit format `B{NNN}: description`; update `builds.md` and `ROADMAP.md` at each boundary. Letters below are plan-labels, not build numbers.
+Build numbers are assigned from the head of `builds.md` at execution time. One build per session. Commit format `B{NNN}: description`; update `builds.md`, `tasks.md`, and `ROADMAP.md` at each boundary. Letters below are plan-labels, not build numbers.
 
-**Tracks:** W (wildlife, in flight) → P (package, Mac-side) ∥ U (Unreal, a7500) ∥ A (provenance refactor, Mac-side). Only the ports (P4, P6, P7) require U2 — **P5 and P8 are Mac-side and U-independent** (P5 needs P2; P8 needs P1+P2), so if the a7500 slips again (it was DOA once), run them ahead of P4. A-track slots into Mac-side gaps while U-track renders/installs.
+**Tracks:** W (wildlife, in flight) → P (package, Mac-side) ∥ U (Unreal, a7500) ∥ A (provenance refactor, Mac-side). U-gating: P4 requires U2; **P6 additionally requires U3** (the kit/PCG foundation — Baton Rouge is the first geometry-heavy port). **P5 and P8 are Mac-side and U-independent** (P5 needs P2; P8 needs P1+P2), so if the a7500 slips again (it was DOA once), run them ahead of P4. A-track slots into Mac-side gaps while U-track renders/installs.
 
 **Ports run as drafts until P8.** The required eval suites named in the manifests do not exist until P8, so P4–P7 packages stay `status: draft` and load via `--allow-draft`. That is the sanctioned path — CLAUDE.md rule 3 forbids weakening the *gate*, not using drafts.
 
-### W1 — Finish simMonth + temperature threading (E02) — *WIP in working tree*
-Compiler/contract halves are done (uncommitted). Remaining: expose `simMonth`/`temperatureC` through the WS payload to `audio-engine.html`, tests. `simMonth` joined `REQUIRED_FIELDS`, so hand-built fixtures in `test/goldenState.test.js` and `test/phase1.test.js` need surgery, not just new assertions. Eval: contract suite green; both fields present in published state.
+### W1 — Finish simMonth + temperature threading (E02) — *WIP on branch `wip-b047-simmonth-temperature`*
+Compiler/contract halves are committed on that branch. Remaining: expose `simMonth`/`temperatureC` through the WS payload to `audio-engine.html`, tests. `simMonth` joined `REQUIRED_FIELDS`, so hand-built fixtures in `test/goldenState.test.js` and `test/phase1.test.js` need surgery, not just new assertions. Eval: contract suite green; both fields present in published state.
 
 ### W2 — Wildlife day/night split (E03)
 Split `insect_chorus` into separately gated day/night events on existing `diurnalWeights` + new temperature input: cicada=day+temp-gated, katydid=night, birds suppressed at night. Kills the canonical midnight-cicada flinch. Eval: profile-generator output + audio-engine gating tests; manual audition at simulated 22:00 July Georgia scene.
@@ -92,17 +93,20 @@ Reusable weather-receivable rig in `/Game/Core/`: SunSky/directional + Sky Atmos
 ### A1–A4 — Provenance refactor (E09) — *Mac-side, slots between P3 and P4 while U-track runs*
 Per `docs/scope-code-provenance-refactor.md` + pivot-plan steps 1, 4, 5, 7, in order: **A1** complete stray-confidence inventory (incl. `test/goldenState.test.js:185,213`, `test/phase1.test.js:31`); **A2** Build A — envelope flip to `{data, knownCompromises?}` + provenance declaration; **A3** Build B — strip confidence emission across the 8 agents + all stray consumers, launcher dot → mode badge; **A4** Build C — ecology agent emits per-species diurnal/temperature gates on the reshaped envelope. **Carve-out:** `representationSelector.js` + its test untouched (`evidenceConfidence` is sanctioned internal metadata). Authoring-side mode routing (mode-aware `resolveEra`, per-mode `era-audit`) follows as its own build; engine-side mode threading is superseded (Reconciliation 7).
 
+### U3 — Kit and PCG foundation (E04) — *before P6*
+The reuse machinery the locale ports consume. Content conventions in `/Game/Kits/{era}/`, `/Game/Data/`, `/Game/PCG/`. First era kit (`1970s-suburban-us` — massing, roof forms, cladding materials, era-tell props) and the footprint-to-building PCG graph that extrudes structures from imported footprint data. Fidelity band convention as an authoring standard: Band A (photo-verified, hand-finished), Band B (evidence-derived, PCG from kit), Band C (low-detail real geometry, massing and atmosphere only) — bands authored against the **occupied region of the room** (four occupants, parallax, three apertures), not a single point. Locale geometry organizes into Level Instances by spatial region. **No view-dependent geometry:** all locale geometry is real geometry — no billboards, no omitted backs; Band C is low-detail real geometry, never a painted plane (three sightlines + parallax + Lumen HWRT sampling offscreen geometry). Eval: a hand-authored fixture footprint set (~10 buildings) runs through the PCG graph and produces era-legible massing with complete geometry; band assignment inspectable per Level Instance; kit committed and reusable — a second same-era locale consumes it without modification.
+
 ### P4 — Port `nyc-present` (E08) — *requires U2*
-First conformance port. Observed mode, `binding: live`, Open-Meteo. Rebuild the level on the a7500 *as this package*. Eval: replay parity against recorded golden states; live smoke test (sun, clouds, conditions coherent with actual NYC weather).
+First conformance port. Observed mode, `binding: live`, Open-Meteo. Rebuild the level on the a7500 *as this package*. Reuse path: Cesium World Terrain + OSM Buildings and the existing terrain pipeline — present-day geometry needs no era kit, so P4 gates only on U2. Eval: replay parity against recorded golden states; live smoke test (sun, clouds, conditions coherent with actual NYC weather).
 
 ### P5 — GHCN-Daily contract adaptation (E01)
 Expose `lib/noaa.js` as `provider: ghcn_daily` behind the loader; implement `augmentation_ref` compositing (authored hourly curves bounded by daily max/min); hand-checked historical fixture set. Eval: known dates return correct daily values; WorldState contract conformance; missing station days fall back to authored texture with no visual pop (rate-limiter path), logged.
 
-### P6 — Port `baton-rouge-1978` (E08)
-Historical mode, `binding: archive`, `date_policy: fixed` (1978-07-04). Exercises the schedule channel with a real authored day. **Provider note:** parity replay must compare like-for-like — golden states recorded from Visual Crossing don't diff cleanly against Open-Meteo archive; pick the binding at port time and record fresh goldens from it. Eval: full 24h golden replay; archive weather matches recorded values; schedule events fire per P3 semantics; no channel bleed.
+### P6 — Port `baton-rouge-1978` (E08) — *requires U3*
+Historical mode, `binding: archive`, `date_policy: fixed` (1978-07-04). Exercises the schedule channel with a real authored day. Consumes the `1970s-suburban-us` kit and the footprint PCG graph from U3. Era ground truth for this locale is 1978 historical aerial photography (see the ground-truth acquisition note in `docs/architecture-v3.md` — stage 3 is the one pipeline stage with no engineering answer; it is per-locale sourcing). **Provider note:** parity replay must compare like-for-like — golden states recorded from Visual Crossing don't diff cleanly against Open-Meteo archive; pick the binding at port time and record fresh goldens from it. Eval: full 24h golden replay; archive weather matches recorded values; schedule events fire per P3 semantics; no channel bleed.
 
 ### P7 — Port `nyc-1884` (E08)
-Historical mode, GHCN-Daily + authored hourly augmentation. Stresses the pre-1940 path and lineage fields (photo, Sanborn refs). Eval: 24h replay on a documented 1884 date; daily values match station record; augmentation respects daily max/min bounds.
+Historical mode, GHCN-Daily + authored hourly augmentation. Stresses the pre-1940 path and lineage fields (photo, Sanborn refs). **Kit dependency:** needs an 1880s era kit (rowhouse/brownstone massing, Sanborn-derived footprints) that U3 does not build — a second kit build on the U track, scoped as its own build when P7 approaches; the U3 PCG graph is reused, only kit content is new. Eval: 24h replay on a documented 1884 date; daily values match station record; augmentation respects daily max/min bounds.
 
 ### P8 — Flinch eval harness v0 (E06)
 Per-mode suites in `tm-eval.js`, results written to each manifest's `evals.results`: all modes — schedule-validity, loop-detection, lineage-completeness; historical — sun-astro, weather-record-diff, anachronism checklist (manual runner); observed — landmark-fidelity checklist, live-coherence; authored — internal-consistency checklist, plausibility. Manual suites are structured checklists with recorded results — automate incrementally, never block publishing machinery on automation. Eval: failing required suite blocks `published` load end-to-end (P2 gate proven); passing flips it loadable; `tm-eval --json` reports per-package status.
