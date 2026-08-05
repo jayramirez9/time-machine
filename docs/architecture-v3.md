@@ -91,7 +91,7 @@ engine/               # runtime — provenance-free, future platform lift
   router/             # transforms, rate limiter (existing)
   transport/          # Unreal Remote Control (existing)
 pipeline/             # E09 authoring — seam only in this refactor
-locales/              # packages: nyc-present/, baton-rouge-1978/, nyc-1884/
+locales/              # packages: nyc-present/, baton-rouge-1985/ (D002), nyc-1884/
   {id}/manifest.json
   {id}/assets/
 contracts/            # locale-package.schema.json (worldStateContract stays in lib/ until a dedicated move build)
@@ -172,8 +172,8 @@ Address + year in, package out. Stage 0 precedes everything; stages 1→2→3 ar
 |---|---|---|
 | 0 | Specify | Address → lat/lon, target date. The manifest anchor |
 | 1 | Georeference | Cesium GeoReference; origin rebased to the viewpoint. Every downstream source now agrees on one coordinate system |
-| 2 | Terrain | USGS 3DEP DEM → R16 → Landscape (existing fetcher). **Per-locale judgment: is present terrain valid for the target year?** Baton Rouge 1978 mostly yes; NYC 1884 emphatically no (landfill) |
-| 3 | Era ground truth | The most era-dependent input. Source changes per era: ~1978 = historical aerial photography (USGS EarthExplorer single frames, USDA surveys, state GIS archives); 1884 = Sanborn plus bird's-eye lithographs. Directly observed for the actual year beats reprojecting present-day OSM backward |
+| 2 | Terrain | USGS 3DEP DEM → R16 → Landscape (existing fetcher). **Per-locale judgment: is present terrain valid for the target year?** Baton Rouge 1985 mostly yes; NYC 1884 emphatically no (landfill) |
+| 3 | Era ground truth | The most era-dependent input. Source changes per era: ~1985 = mid-80s aerial photography (USGS NHAP 1980–87 via EarthExplorer, USDA surveys, state GIS archives); 1884 = Sanborn plus bird's-eye lithographs. Directly observed for the actual year beats reprojecting present-day OSM backward |
 | 4 | Roads and parcels | Vectorize from ground truth → Landscape/PCG splines. Road width and curb presence are strong era tells |
 | 5 | Structures | Footprints + inferred height → PCG extrusion from the era kit |
 | 6 | Vegetation | Canopy mask → PCG scatter. Species matters; often the highest flinch value per dollar |

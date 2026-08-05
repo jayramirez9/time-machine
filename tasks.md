@@ -17,7 +17,7 @@ P1 is set up below and can be picked up as soon as W1/W2 land (or first, if Jay 
 
 ### Reference manifests
 - [ ] `locales/nyc-present/manifest.json` — observed / `binding: live` / open_meteo (draft; spatial ref may point at the not-yet-rebuilt level)
-- [ ] `locales/baton-rouge-1978/manifest.json` — historical / `binding: archive` / provider provisional (confirmed at P6; see contract note) / `date_policy: fixed` 1978-07-04
+- [ ] `locales/baton-rouge-1985/manifest.json` — historical / `binding: archive` / provider provisional (confirmed at P6) / `date_policy: fixed` — 1985 placeholder date until Jay selects the anchor photo (D002)
 - [ ] `locales/nyc-1884/manifest.json` — historical / `binding: archive` / ghcn_daily + `augmentation_ref` / lineage sources with `id`s so `lineage:{id}` anchors resolve
 - [ ] All three carry `status: draft`, per-mode `evals.required` sets, viewpoint = single eye-origin entry (v2 semantics)
 
