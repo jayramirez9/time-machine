@@ -9,7 +9,7 @@ Epics and builds for the Time Machine project. See `~/.claude/memory/programming
 | E01 | Weather Providers | Active — extended (`docs/refactor-plan.md` P5) |
 | E02 | World State Pipeline | Active |
 | E03 | Audio Engine | Active |
-| E04 | Unreal Dispatch | Active — extended (`docs/refactor-plan.md` U1–U2) |
+| E04 | Unreal Dispatch | Active — extended (`docs/refactor-plan.md` U1–U3; second era kit as its own U build when P7 approaches) |
 | E05 | Terrain Pipeline | Active |
 | E06 | Eval System | Active — extended (`docs/refactor-plan.md` P8) |
 | E07 | Cesium Integration | Active |

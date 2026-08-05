@@ -56,7 +56,7 @@ Environmental data channel. One binding per package:
 - `location`: `{ lat, lon, elevation_m? }`
 - `date_policy`: exactly one of —
   - `{ "type": "live" }` — now, at location (observed mode)
-  - `{ "type": "fixed", "date": "1978-07-04" }` — one canonical day
+  - `{ "type": "fixed", "date": "1985-06-15" }` — one canonical day
   - `{ "type": "window", "start", "end", "loop": true }` — a season or range
 - `era_bounds` (optional): validity range of the archive source
 - `augmentation_ref` (optional): authored hourly texture composited over daily-resolution records (the GHCN-Daily case — daily obs bound the day; authored curves supply hourly life within max/min)
@@ -77,7 +77,11 @@ Micro-events that make sound do so by carrying audio asset refs in `ref`; the sc
 - No engine- or host-specific parameters. Channel mapping to the physical 5.1.2 layout is venue-profile configuration, not package content.
 
 ### `viewpoints` (required)
-Named camera anchors in the world: `{ id, label, position: {x, y, z}, facing_deg, fov_hint? }`. Units for `unreal_level_v1` are centimeters (Unreal convention); future content types define their own frames. The package declares what views the world offers; the venue profile maps physical apertures to viewpoints. Same world, different rooms.
+Named eye anchors in the world: `{ id, label, position: {x, y, z}, facing_deg, fov_hint? }`. Units for `unreal_level_v1` are centimeters (Unreal convention); future content types define their own frames.
+
+**Semantics:** `position` is the **eye origin** — where the room's viewer stands in the world. `facing_deg` and `fov_hint` are authoring/framing hints (default orientation, band planning), **not** camera parameters. Screen geometry — the physical size, position, and orientation of each aperture relative to the eye — lives entirely in the venue profile, which derives off-axis frusta from it. A package never describes apertures. Same world, different rooms.
+
+The array holds one entry in v0.1. It is an array for shape, not as a commitment to any future multi-position design (see movement deferral in `docs/architecture-v3.md`).
 
 ### `motion` (optional, v0.1 placeholder)
 `cues[]`: `{ id, trigger, ref }`. Loose by design until the motion story firms up.
@@ -85,7 +89,7 @@ Named camera anchors in the world: `{ id, label, position: {x, y, z}, facing_deg
 ### `evals` (required)
 - `required[]`: suite ids this package must pass to publish. Per-mode defaults:
   - all modes: `schedule-validity`, `loop-detection`, `lineage-completeness`
-  - historical_reconstruction: + `flinch-historical` (anachronism checklist), `sun-astro`, `weather-record-diff`
+  - historical_reconstruction: + `flinch-historical` (anachronism checklist; for living-witness scenes the recorded Witness Test session is this suite's manual run — D002), `sun-astro`, `weather-record-diff`
   - observed: + `flinch-observed` (landmark fidelity checklist), `live-coherence`
   - authored: + `flinch-authored` (internal-consistency checklist), `plausibility`
 - `results`: `{ suiteId: { status: "pass" | "fail" | "pending", date, run_ref?, notes? } }` — written by `tm-eval`, read by the loader's publish gate.
@@ -146,26 +150,28 @@ These three are the conformance tests — they span all three provenance modes a
 }
 ```
 
-### `baton-rouge-1978` — historical, archive (post-1940)
+### `baton-rouge-1985` — historical, archive (post-1940) — the witness scene (D002)
+
+*The 1985 date below is a placeholder — the canonical date resolves from the anchor photo when Jay selects it (D002 decision 2).*
 
 ```json
 {
   "schema_version": "0.1.0",
-  "package": { "id": "baton-rouge-1978", "name": "Baton Rouge — July 4, 1978", "version": "0.1.0",
+  "package": { "id": "baton-rouge-1985", "name": "Baton Rouge — 1985", "version": "0.1.0",
     "status": "draft", "created": "2026-08-03", "engine_min_version": "0.0.0" },
   "provenance": { "mode": "historical_reconstruction",
     "truth_standard": "Contradicting what a witness of this place and time would know.",
-    "anchor": { "photo_ref": "lineage:photo-br-1978", "date": "1978-07-04", "location_text": "Baton Rouge, LA suburb" } },
-  "spatial": { "content_type": "unreal_level_v1", "content_ref": "/Game/Locales/BR1978/Main", "extension_method": "procedural" },
+    "anchor": { "photo_ref": "lineage:photo-br-1985", "date": "1985-06-15", "location_text": "Baton Rouge, LA suburb" } },
+  "spatial": { "content_type": "unreal_level_v1", "content_ref": "/Game/Locales/BR1985/Main", "extension_method": "procedural" },
   "weather": { "binding": "archive", "provider": "open_meteo",
     "location": { "lat": 30.4515, "lon": -91.1871 },
-    "date_policy": { "type": "fixed", "date": "1978-07-04" } },
+    "date_policy": { "type": "fixed", "date": "1985-06-15" } },
   "schedule": { "timezone": "America/Chicago", "events": [
     { "id": "fireworks", "type": "audio_event", "anchor": "solar", "solar": { "event": "dusk", "offset_min": 45 }, "ref": "assets/audio/fireworks-distant.wav" } ] },
   "audio": { "beds": [ { "id": "suburb-bed", "role": "base", "ref": "assets/audio/suburb-summer-bed.wav" } ] },
   "viewpoints": [ { "id": "vp-porch", "label": "Front porch", "position": { "x": 0, "y": 0, "z": 160 }, "facing_deg": 210 } ],
   "evals": { "required": ["schedule-validity", "loop-detection", "lineage-completeness", "flinch-historical", "sun-astro", "weather-record-diff"], "results": {} },
-  "lineage": { "sources": [ { "type": "photo", "id": "photo-br-1978", "ref": "family-archive/br-frontyard-1978.jpg", "date": "1978-07" } ] }
+  "lineage": { "sources": [ { "type": "photo", "id": "photo-br-1985", "ref": "family-archive/anchor-tbd.jpg", "date": "1985", "note": "PLACEHOLDER — anchor photo not yet selected (D002 §2); anchor.date and date_policy.date resolve from it" } ] }
 }
 ```
 
