@@ -7,7 +7,7 @@ Current-build task list (Forge Lazar stack). Read `builds.md` for the next build
 Per `docs/refactor-plan.md` §Merged Build Sequence, two in-flight builds precede P1:
 
 - [x] **W1** — simMonth + temperatureC threading — **B047, 2026-08-05.** (Fixture surgery turned out unnecessary — golden tests compile states, and the hand-built fixtures are invalid-case tests; they got `simMonth` added for single-failure hygiene. Real find: `easeWorldState` was dropping `temperatureC` from every published state.)
-- [ ] **W2** — wildlife day/night split (cicada=day+temp, katydid=night, birds off at night)
+- [x] **W2** — wildlife day/night split — **B048, 2026-08-05.** (Birds turned out already night-suppressed by the `bird_song` window — now regression-guarded. Follow-up owed at P6: regenerate `gen_*` profiles + ElevenLabs assets for the new event ids; committed profiles keep the old blended event until then.)
 
 P1 is set up below and can be picked up as soon as W1/W2 land (or first, if Jay reorders — P1 touches no runtime code, so there is no dependency either way).
 
