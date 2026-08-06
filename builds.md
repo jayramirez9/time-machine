@@ -6,15 +6,16 @@ Epics and builds for the Time Machine project. See `~/.claude/memory/programming
 
 | ID | Name | Status |
 |----|------|--------|
-| E01 | Weather Providers | Active — extended (`docs/refactor-plan.md` P5) |
+| E01 | Weather Providers | Core active; P5 extension paused by D003 |
 | E02 | World State Pipeline | Active |
 | E03 | Audio Engine | Active |
-| E04 | Unreal Dispatch | Active — extended (`docs/refactor-plan.md` U1–U3; second era kit as its own U build when P7 approaches) |
+| E04 | Unreal Dispatch | Active for Experience Proof EP0–EP2; U2/U3 extensions paused by D003 |
 | E05 | Terrain Pipeline | Active |
-| E06 | Eval System | Active — extended (`docs/refactor-plan.md` P8) |
+| E06 | Eval System | Core active; P8 extension paused by D003 |
 | E07 | Cesium Integration | Active |
-| E08 | Locale Package | Planned — `docs/refactor-plan.md` |
-| E09 | Authoring Pipeline | Stub (provenance refactor A/B/C land here; no front-end builds yet) |
+| E08 | Locale Package | Paused by D003 — restart plan preserved in `docs/refactor-plan.md` |
+| E09 | Authoring Pipeline | Paused by D003 (provenance refactor A/B/C preserved) |
+| E10 | Experience Proof | Active — a7500 → office lab → Scene 0 → guest sessions (`docs/experience-proof-plan.md`) |
 
 ---
 

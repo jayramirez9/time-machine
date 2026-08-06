@@ -6,6 +6,23 @@ Living document. Phase numbering matches PRD. Phases are sequential but items wi
 
 ---
 
+## Current Milestone — Experience Proof (ACTIVE)
+
+**Decision:** D003, 2026-08-06.
+**Plan:** `docs/experience-proof-plan.md`
+
+The project is pausing platform expansion to build one convincing world on the a7500 and experience it through a reversible office lab approximating the first room. This is the stage before PRD §19 MVP: prove presence, then spend on witness accuracy and platform scale.
+
+- [ ] **EP0 — Close the workstation loop:** finish the a7500 box-side U1 checklist and pass RC + LFS live checks.
+- [ ] **EP1 — Make one screen breathe:** Core Environment Rig, existing WorldState path, matched browser audio, accelerated light/weather cycle.
+- [ ] **EP2 — Build the office lab:** hero/end-wall view + one or two side apertures, fixed eye position, bounded nDisplay venue profile with geometry-derived frusta, controlled room light, basic directional audio.
+- [ ] **EP3 — Author Scene 0:** observed/authored atmospheric world; lightweight PRD §14.6 Provenance Declaration; 10–15 minute coherent run; no historical reconstruction dependency.
+- [ ] **EP4 — Guest sessions:** 3–5 non-technical sessions; rank the three highest-leverage barriers to presence and record an evidence-backed Presence Gate pass/fail. A failure iterates EP2/EP3 rather than closing D003.
+
+**Parked behind this milestone:** Locale Package P1–P9, provenance A1–A4, Phase 7d capture/3DGS, new agents/catalogs, NYC 1884 expansion, and Baton Rouge 1985 content authoring. Preserved plans are restart maps, not active queues.
+
+---
+
 ## Phase 0 — Complete the Weather Loop (DONE)
 
 One location, one era, full weather→visual+audio loop running end-to-end in Unreal.
@@ -225,9 +242,9 @@ Make the audio engine smarter about when and how events fire.
 
 ---
 
-## Phase 7d — Capture-Based Geometry (3DGS) — **NEXT / ACTIVE**
+## Phase 7d — Capture-Based Geometry (3DGS) — **PARKED BEHIND EXPERIENCE PROOF**
 
-> **Why this is now the priority.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
+> **Why this was previously prioritized.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
 >
 > **Key external facts (June 2026):** Cesium for Unreal now streams **3DGS tilesets with hierarchical LOD** from Cesium ion (the existing dependency — no new vendor). Cesium ion reconstructs **photos → mesh / point cloud / Gaussian splats** (iTwin Capture). Format is standardized via Khronos glTF extensions `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Unreal **5.8** (releasing this month) ships **Megalights** (production-ready — many shadowed lights cheaply) and **Lumen Lite** (2× faster GI; announced as "Lumen Medium"). These de-risk the lamp-heavy lighting design and the Mac/perf ceiling.
 

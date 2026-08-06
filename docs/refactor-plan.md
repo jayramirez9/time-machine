@@ -1,10 +1,12 @@
 # Time Machine — Locale Package Refactor Plan (Implementation Plan)
 
-**Status:** Ratified 2026-08-04 (adapted from the 2026-08-03 planning packet; corrections in §Reconciliation)
+**Status:** Ratified 2026-08-04; **paused by D003 on 2026-08-06 until the Experience Proof exits**
 **Governing decision:** `docs/decisions/D001-locale-package-contract.md`
 **Contract:** `contracts/locale-package-v0.1.md` + `contracts/locale-package.schema.json`
 **Architecture:** `docs/architecture-v3.md`
 **Companion:** `docs/v3-pivot-plan.md` (content-level pivot map this plan absorbs the structural half of), `docs/scope-code-provenance-refactor.md` (Builds A/B/C spec)
+
+> **D003 priority override:** This remains the restart plan for Locale Packages, provenance cleanup, and the Unreal content rebuild, but it is not the active queue. Complete `docs/experience-proof-plan.md` first. Scene 0 uses the existing engine path directly; P1 resumes when a second real scene makes package switching/configuration duplication a felt problem, or when Jay explicitly reactivates it after the guest sessions.
 
 ---
 
@@ -62,6 +64,8 @@ The planning packet was generated off-repo. These corrections are load-bearing; 
 | **E06-eval-system** | EXTENDED | Flinch eval harness |
 
 ## Merged Build Sequence
+
+**Paused.** The sequence below is preserved intact so the work can restart without re-planning. D003's EP0–EP4 queue in `tasks.md` takes precedence.
 
 Build numbers are assigned from the head of `builds.md` at execution time. One build per session. Commit format `B{NNN}: description`; update `builds.md`, `tasks.md`, and `ROADMAP.md` at each boundary. Letters below are plan-labels, not build numbers.
 
