@@ -1,15 +1,17 @@
 # Spike: Generative Far-Field Backdrop (Phase 7d.5)
 
-**Status:** Scoped — runs after the Phase A / 7d.4 sprint (needs the near-field 1884 scene standing to judge the seam).
+**Status:** Scoped, **parked under D003** (Experience Proof first). When it resumes it still runs after the Phase A / 7d.4 sprint — it needs the near-field 1884 scene standing to judge the seam.
 **Type:** Bounded-application spike, **gated by a free pre-test** (§1). Time-box: pre-test ~2 hours (no spend); if it passes, ~1–2 days including new plumbing.
 **Subject:** The horizon band of the 1884 Manhattan scene — everything beyond the walkable near-field.
 **Trigger:** [`image-blaster`](https://github.com/neilsonnn/image-blaster) (MIT) — single image → 3DGS + collider mesh + panorama + SFX as Claude skills over World Labs **Marble** (`marble-1.1`) and FAL. Reviewed at commit `4acb43b` (2026-05-14), read 2026-07-22.
 
 ## This is not a request to amend the PRD
 
-**PRD §17 already rules on this.** The "generative-world-model boundary" paragraph (`PRD.md:485`) puts generative world models out of bounds for the historical core, and then names the exception:
+**PRD §17 already rules on this.** The "generative-world-model boundary" paragraph (`PRD.md` §17) puts generative world models out of bounds for the historical and observed regimes, and then names the exception:
 
-> They may be used only where invention is honest: present-day/live scenes, or **clearly-flagged low-confidence distant background that no archival source covers**. They are never a source of historical truth.
+> They remain usable where invention is honest: present-day or live scenes, **distant background no source covers**, and the authored regime (§17 Provenance Modes), where there is no date to violate.
+
+*(Quotation updated 2026-08-13 to PRD v3.0 wording. An earlier draft of this doc quoted the pre-v3.0 text — "clearly-flagged low-confidence distant background that no **archival** source covers" — whose extra word narrowed the exception more than the constitution does. Under v3.0 the reason for the boundary is also different: not citation, but that generative models **cannot be date-gated** (§5.6) — they produce anachronism they cannot detect.)*
 
 So the far-field backdrop use case is **already permitted, conditionally**. The same position is applied to World Labs Marble by name in `docs/review-year1-2026-07.md`, and the ROADMAP's *Quarantined* bucket carries the same carve-out. This spike does not propose admitting a new regime; **the policy is settled and stays settled.**
 
@@ -49,8 +51,30 @@ Put invented geometry in the frame and that sentence resolves to: **the guest ca
 | Arm | Method | Cost | Plumbing needed |
 |-----|--------|------|-----------------|
 | **A — Baseline** | Horizon as it stands (procedural massing falloff) | $0 | none |
-| **B — Splat backdrop** | Plate → Marble `marble-1.1` → `.spz` → UE 5.8 | ~$1.20/world | ⚠️ SPZ→UE path unproven on our stack |
+| **B — Splat backdrop** | Plate → Marble `marble-1.1` → `.spz` → UE 5.8 | ~$1.20/world | ⚠️ still unproven **on our stack**; vendor now claims a documented path (2026-08, unverified) — see Watch note |
 | **C — Panorama backdrop** | Same Marble call → `assets.imagery.pano_url` → backdrop geometry with a WorldState-driven material | same call, $0 extra | ⚠️ **new** — see below |
+| **D — Mesh seed** *(not scoped; watch only)* | Plate → Marble **HQ mesh export** → UE as geometry, then enhanced in-editor | ~$1.20 + $2.80 HQ tier (vendor-stated; additive-vs-replacement unconfirmed) | Unknown — no arm authored, see below |
+
+### Watch note (2026-08-13): the vendor Unreal path, and the seed-vs-backdrop distinction
+
+**Source and trust level:** a World Labs marketing email, read 2026-08-13, claiming Unreal import tutorials across three plugin workflows (scene import, collision geometry, lighting). **Nobody here has read the tutorials or run the plugin.** This is a vendor claim, not a verification — and note the repo already recorded "a documented Unreal path" a month earlier (`review-year1-2026-07.md` §4) *while deliberately keeping* Arm B's ⚠️, because the flag was always about **our stack**, not about whether documentation exists. Nothing about our stack changed. §6 criterion 6 — *does `.spz` land in UE 5.8, and does it survive the near-field's Lumen/Megalights setup* — remains the honest statement of where the risk lives.
+
+The claimed "lighting" workflow is assumed to mean scene lighting placed *around* a baked splat, not splat relighting. If it turned out to be the latter it would contradict a position the year-1 review calls a constitutional fact about the regime (§4 item 2, §6 item 1) — and it would be genuine news. Unverified either way.
+
+The note's real value is a distinction this doc never drew. Arms B and C both treat Marble output as a **finished backdrop**. A third posture is Marble as a **seed** — generate rough geometry, then enhance it in-editor with our own weather, sun, and materials (the posture taken toward City Sample in the local `Unreal/` working dir).
+
+That posture only works off the **mesh** export, not the splat:
+
+- **Splat output is a dead end for seeding.** Baked capture-time lighting, not editable geometry. It cannot obey the WorldState sun/weather loop, which is the whole point of enhancement. Same constraint as `review-year1-2026-07.md` §4 item 2 and §6 item 1.
+- **Mesh output is at least the right *kind* of thing** — geometry Lumen could relight and an artist could edit, though nobody here has run the export to confirm. Cost is the HQ tier ($2.80/world, vendor-stated), previously dismissed as unnecessary because backdrop arms don't need it. A seed arm would.
+
+Three open risks before Arm D is worth authoring, in governing order:
+
+0. **PRD §17 still fences this, and Arm D does not escape §7.** The carve-out is *distant background no source covers*. "Seed" implies geometry promoted toward the near-field, and in-editor cleanup does **not** cure anachronism the model cannot detect — which is §17's actual reason under v3.0, and the §5.6 failure it exists to prevent. Arm D inherits §7 unchanged: heroes or anything a guest can approach are out of bounds, as is anything carrying a historical claim, **regardless of how good the mesh is.**
+1. **CLAUDE.md rule 15 (no view-dependent geometry).** Single-image generative worlds degrade away from the source viewpoint — thin backs, invented occluded volumes. Three apertures with different sightlines, occupant parallax, and Lumen HWRT sampling offscreen geometry are exactly the conditions that expose it. Whether a Marble mesh survives that is unmeasured.
+2. **Mesh quality as a starting point.** Unknown whether the export is a usable base or costs more cleanup than procedural massing. This is the real question, and it is not answered by an import tutorial.
+
+**Verdict: watch, do not schedule.** Risks 1 and 2 are cheap to test later; risk 0 may close the question outright. None of this is a felt defect in the room. Revisit per the D003 resume trigger in `docs/experience-proof-plan.md` — "only for a named asset or scene problem that conventional Unreal content cannot meet."
 
 ### Correction: how Arm C's grading actually has to work
 
