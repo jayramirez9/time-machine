@@ -2,6 +2,8 @@
 
 **Status: LANDED in `PRD.md` (v2.2, July 2026).** All four edits + the version-line bump are in. This file is retained as the design rationale for the addition and as the home of the open questions still owed a decision (footer) — those were deferred to a later session, not resolved.
 
+**⚠️ Partially superseded by PRD v3.1 (September 2026):** the "Why it is buildable" text below ("the guest's photographs are not the geometry source") was inverted by Jay's direct ruling — the photographs are now the **primary source and authority**, with present-day capture demoted to supporting scaffolding reconciled to them. The live text is `PRD.md` §3.5; this file preserves the v2.2 reasoning as history.
+
 **Design intent:** an *addition, not a replacement*. The historical North Star (§3) stays the North Star. This establishes a **second mode** that runs on the same engine, and makes the two small constitutional touches required so the new mode doesn't read as violating the existing Laws.
 
 The edits (five, counting the version-line bump): **(0)** version line v2.1→v2.2 · **(1)** Version block → v2.2 amendment note · **(2)** new **§3.5** (the substantive framing) · **(3)** §9 → one new use case · **(4)** §17 generative boundary → one paragraph relocating authority.

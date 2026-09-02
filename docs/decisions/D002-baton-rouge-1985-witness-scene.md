@@ -26,7 +26,7 @@ The deciding fact: **Jay's family photos anchor 1985, not 1978.** Under the phot
 - The Accepted Trade-offs deferral in the refactor plan is resolved: no fourth scene is added; the witness scene and the conformance port are the same build, so the witness window costs nothing extra in sequence.
 - P6 gains a Jay-side prerequisite with lead time: anchor-photo selection + mid-80s aerial acquisition (start now; sourcing is the long pole per architecture stage 3).
 - **If the anchor photo lands outside 1985** (1984, 1986…), the package id, `locales/` directory, and `content_ref` rename together per CLAUDE.md rule 17 — do it before P4 while it is still a text edit, not an Unreal content rename.
-- Memory mode (§3.5) gets its first real-world validation case for free when P6 passes the Witness Test.
+- Memory mode (§3.5) gets its first real-world validation case for free when P6 passes the Witness Test. *(PRD v3.1 note: this validates the mode's shape — witness verifying a rebuilt remembered place — not the photo→geometry ingest path v3.1 made the mode's core; BR-1985 stays hand-authored with the photo on the §27 wall per item 3.)*
 
 ## Alternatives considered
 
