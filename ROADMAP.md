@@ -6,6 +6,23 @@ Living document. Phase numbering matches PRD. Phases are sequential but items wi
 
 ---
 
+## Current Milestone — Experience Proof (ACTIVE)
+
+**Decision:** D003, 2026-08-06.
+**Plan:** `docs/experience-proof-plan.md`
+
+The project is pausing platform expansion to build one convincing world on the a7500 and experience it through a reversible office lab approximating the first room. This is the stage before PRD §19 MVP: prove presence, then spend on witness accuracy and platform scale.
+
+- [ ] **EP0 — Close the workstation loop:** finish the a7500 box-side U1 checklist and pass RC + LFS live checks.
+- [ ] **EP1 — Make one screen breathe:** Core Environment Rig, existing WorldState path, matched browser audio, accelerated light/weather cycle.
+- [ ] **EP2 — Build the office lab:** hero/end-wall view + one or two side apertures, fixed eye position, bounded nDisplay venue profile with geometry-derived frusta, controlled room light, basic directional audio.
+- [ ] **EP3 — Author Scene 0:** observed/authored atmospheric world; lightweight PRD §14.6 Provenance Declaration; 10–15 minute coherent run; no historical reconstruction dependency.
+- [ ] **EP4 — Guest sessions:** 3–5 non-technical sessions; rank the three highest-leverage barriers to presence and record an evidence-backed Presence Gate pass/fail. A failure iterates EP2/EP3 rather than closing D003.
+
+**Parked behind this milestone:** Locale Package P1–P9, provenance A1–A4, Phase 7d capture/3DGS, new agents/catalogs, NYC 1884 expansion, and Baton Rouge 1985 content authoring. Preserved plans are restart maps, not active queues.
+
+---
+
 ## Phase 0 — Complete the Weather Loop (DONE)
 
 One location, one era, full weather→visual+audio loop running end-to-end in Unreal.
@@ -225,9 +242,9 @@ Make the audio engine smarter about when and how events fire.
 
 ---
 
-## Phase 7d — Capture-Based Geometry (3DGS) — **NEXT / ACTIVE**
+## Phase 7d — Capture-Based Geometry (3DGS) — **PARKED BEHIND EXPERIENCE PROOF**
 
-> **Why this is now the priority.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
+> **Why this was previously prioritized.** A 2026 technology review (see *Technology Watch* at the bottom of this file) concluded that the steepest visual-quality gains have moved to **capture-based reconstruction** (3D Gaussian Splatting), and that the tooling for it now ships on dependencies Time Machine already uses. This phase implements the **Representation Regimes** model added to PRD §17: geometry representation is chosen *per feature* by available evidence. It does **not** replace the procedural + archival pipeline (Phases 6/7b) — that remains the only path for pre-photographic and demolished features, and is the product's moat. It adds the *capture* path for features where photographic evidence exists, and fixes the photogrammetry "broccoli trees / melted powerlines" gap logged on the Baton Rouge test.
 >
 > **Key external facts (June 2026):** Cesium for Unreal now streams **3DGS tilesets with hierarchical LOD** from Cesium ion (the existing dependency — no new vendor). Cesium ion reconstructs **photos → mesh / point cloud / Gaussian splats** (iTwin Capture). Format is standardized via Khronos glTF extensions `KHR_gaussian_splatting` + `KHR_gaussian_splatting_compression_spz` (SPZ ≈ 90% compression). Unreal **5.8** (releasing this month) ships **Megalights** (production-ready — many shadowed lights cheaply) and **Lumen Lite** (2× faster GI; announced as "Lumen Medium"). These de-risk the lamp-heavy lighting design and the Mac/perf ceiling.
 
@@ -385,8 +402,9 @@ External technology that informs the roadmap. Volatile by nature — this is whe
   >
   > **So don't reach for this to solve the "Mac hardware ceiling" risk (PRD §21).** It will look like the answer — bake, stream, run on weak hardware, skip the GPU — and it trades the product's core mechanic for a demo: quiet when you make it, permanent afterward. The PRD's own answer to that risk is *"define production hardware baseline that can hit realism targets… Windows + NVIDIA"*; it was never open to a fidelity-reduction fix. A fortiori: the July 2026 review already declined baked lighting for hero buildings even where capture is viable (`docs/review-year1-2026-07.md:36`) — refusing it for a whole scene, for frame rate alone, follows.
   >
-  > Legitimate use is **showing** a scene, never running one (ADU handoff, investor pitch, Roadster trailer) — but Phase B MRQ pre-renders (`docs/rd-workstation-spec.md`) already own that and win on fidelity; the bake's only edge is walkability + browser reach. Separately useful today: [`splat-transform`](https://github.com/playcanvas/splat-transform) (MIT; reads/writes SPZ, emits streamed multi-LOD) bears on **7d.5 Arm B** — *"does `.spz` land in UE 5.8"* (`docs/spike-generative-backdrop.md:95`) — not on 7d.2-A, where ion streams the tileset and no local SPZ ever reaches Unreal.
+  > Legitimate use is **showing** a scene, never running one (ADU handoff, investor pitch, Roadster trailer) — but Phase B MRQ pre-renders (`docs/rd-workstation-spec.md`) already own that and win on fidelity; the bake's only edge is walkability + browser reach. Separately useful today: [`splat-transform`](https://github.com/playcanvas/splat-transform) (MIT; reads/writes SPZ, emits streamed multi-LOD) bears on **7d.5 Arm B** — *"does `.spz` land in UE 5.8"* (`docs/spike-generative-backdrop.md` §6 criterion 6) — not on 7d.2-A, where ion streams the tileset and no local SPZ ever reaches Unreal.
 
 **Quarantined (explicitly out of bounds for the historical core — PRD §17 generative-world-model boundary):**
 - **Google Genie 3** (public Jan 29 2026; AI Ultra US; 720p/24fps; ~few-min consistency) and generative world models generally. They invent rather than cite — fine for present-day/live or clearly-flagged low-confidence background, never a source of historical truth.
 - **World Labs Marble** (`marble-1.1`, ~$1.20/world; single image → 3DGS + collider mesh + panorama) — same quarantine, same carve-out. **Phase 7d.5 tests whether the far-field backdrop actually falls inside §17's existing "no archival source covers" exception** — it does not seek to widen the boundary, and the pre-test may close the question for free. Surfaced by [`image-blaster`](https://github.com/neilsonnn/image-blaster) (MIT).
+  > **Watch (2026-08-13):** vendor marketing mail claims Unreal import tutorials covering three plugin workflows (scene import, collision, lighting). **Unverified — a marketing email, not a read of the plugin**, and nothing about our stack changed, so 7d.5 §6 criterion 6 ("does `.spz` land in UE 5.8") stands. No ruling changes; D003 keeps 7d.5 parked. It does raise an unscoped **mesh-seed** posture — HQ mesh export as rough geometry enhanced in-editor with our own sun/weather, rather than a finished backdrop — recorded as **Arm D** in `docs/spike-generative-backdrop.md`. Watch only, do not schedule.

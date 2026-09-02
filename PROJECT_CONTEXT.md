@@ -1,16 +1,16 @@
 # PROJECT_CONTEXT.md
 
-> **Staleness note (2026-07-08):** `ROADMAP.md` is the source of truth for current work; this doc's body below is a historical snapshot (Phase 6/7 era). Only this header is kept current.
+> **Current direction (2026-08-06):** D003 makes the **Experience Proof** the active milestone: finish the a7500 live loop, build the reversible office lab, author one observed/authored Scene 0, and run 3–5 guest sessions. `ROADMAP.md`, `tasks.md`, and `docs/experience-proof-plan.md` are the sources of truth. The body below remains a historical Phase 6/7 snapshot.
 
 ## Project
 Time Machine — Immersive environment software (world state engine driving Unreal scenes, procedural + capture-based historical reconstruction)
-Version: Code-side through 7c complete (7b UE-editor work still stacked for the box); **Phase 7d (3DGS capture pipeline) active**. 1,592 tests. (A pre-existing TZ-dependent local flake in `test/worldStateCompiler.test.js` — the compiler read the scene hour in the daemon's timezone, not the scene's — was fixed in PR #7 `fix-worldstate-local-hour` by deriving the hour from `timestampLocal`; suite is now green on non-UTC boxes too.) CI live (eval gate + AI PR reviewer).
+Version: Code-side through 7c complete; **Experience Proof active, Phase 7d and the Locale Package refactor parked by D003**. 1,615 tests recorded at B049. CI live (eval gate + AI PR reviewer).
 HQ: Henhouse
 
 **PRD is now v3.0 (Flinch Standard, 2026-07-29).** The governing law is "would someone who was there flinch?" — accuracy is worth what it costs to prevent that flinch, nothing beyond. The confidence/citation apparatus is demoted from a product requirement to internal engineering metadata. **Phase 7's accuracy-manifest deliverables (7.1 confidence/citation envelope, 7.8 Accuracy Manifest generator) are superseded** by the Provenance Declaration (PRD §14.6/§23); the code that emits them (`lib/environmentProfile.js` layer envelope, `lib/agents/*` confidence emission) is scheduled for refactor — see `docs/scope-code-provenance-refactor.md`. The PRD also drew a software-vs-hardware scope boundary: physical display/audio architecture moved to `../henhouse-adu`.
 
 ## Current Sprint
-**R&D workstation — first unit DOA (shipping damage); free higher-tier replacement due 2026-07-23** (Corsair a7500: RTX 5090, **Ryzen 9 9950X3D** 16C, up from the ordered 9900X3D — `docs/rd-workstation-spec.md`, incl. arrival checks and a thermal caveat on the 240 mm AIO). Ion client corrections **done 2026-07-22** (built from ion's `openapi.yaml`: `RASTER_IMAGERY` + required `outputs:[…SPLATS_3DTILES]`, derived assets captured off the create response). Next: a write-scope ion token from Jay, then the Trinity live-verification run (ROADMAP 7d.2). When the box arrives: Live Verification Sprint (ROADMAP 7d.4), then **7d.5** generative far-field backdrop (`docs/spike-generative-backdrop.md` — free pre-test first; it may close the question without spend).
+**Experience Proof — D003.** Close the a7500 box-side U1 checklist, build the minimum Core Environment Rig through the existing engine path, arrange the office as a temporary hero-wall + side-aperture room, author one observed/authored atmospheric Scene 0, then run 3–5 guest sessions. The next roadmap comes from felt defects in those sessions. Locale Packages, provenance cleanup, capture/3DGS, and Baton Rouge 1985 content authoring are parked until this milestone exits.
 
 ### Phase 7 — The Agent Layer (DONE)
 - **7.1 Profile Schema**: `docs/environment-profile-schema.md`, `lib/environmentProfile.js` — 9 PRD layers, confidence/citation envelope, accuracy manifest. `profiles/nyc_1884.json` first complete profile.

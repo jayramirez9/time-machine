@@ -1,19 +1,71 @@
 # Tasks — Current Build
 
-Current-build task list (Forge Lazar stack). Read `builds.md` for the next build number; `docs/refactor-plan.md` for the full sequence; `ROADMAP.md` for phase context. Update this file and `builds.md` at every build boundary.
+Current-build task list (Forge Lazar stack). Read `docs/experience-proof-plan.md` for the active sequence, `builds.md` for the next build number, and `ROADMAP.md` for phase context. `docs/refactor-plan.md` is the parked restart sequence. Update this file and `builds.md` at every build boundary.
 
 ## Queue position
 
-Per `docs/refactor-plan.md` §Merged Build Sequence, two in-flight builds precede P1:
+**Current direction: Experience Proof (D003).** The active queue is the a7500 + office-lab milestone in `docs/experience-proof-plan.md`. Locale Package P1 and the rest of `docs/refactor-plan.md` are preserved below but parked until the Experience Proof exits.
+
+### EP0 — Close the workstation loop
 
 - [x] **W1** — simMonth + temperatureC threading — **B047, 2026-08-05.** (Fixture surgery turned out unnecessary — golden tests compile states, and the hand-built fixtures are invalid-case tests; they got `simMonth` added for single-failure hygiene. Real find: `easeWorldState` was dropping `temperatureC` from every published state.)
 - [x] **W2** — wildlife day/night split — **B048, 2026-08-05.** (Birds turned out already night-suppressed by the `bird_song` window — now regression-guarded. Follow-up owed at P6: regenerate `gen_*` profiles + ElevenLabs assets for the new event ids; committed profiles keep the old blended event until then.)
-
 - [x] **U1 (Mac side)** — fresh Unreal project bootstrap — **B049, 2026-08-05.** `time-machine-unreal` repo live (LFS + conventions + `SETUP.md` a7500 checklist); `UNREAL_RC_HOST` threaded through all RC tools + dispatch; native UE 5.8 MCP kept, Aura skipped, old unrealMCP + Ludus removed from config. **Open box-side (Jay, `SETUP.md` steps 1–7):** drivers/Defender/DDC, project settings + plugins, RC LAN bind + firewall, repo adoption, then the U1 exit eval (RC `/remote/info` from Mac, property round-trip, LFS round-trip). Confirm the a7500's LAN IP (routes.json assumes `192.168.68.79`).
+- [ ] Complete `../time-machine-unreal/SETUP.md` steps 1–7 on the a7500.
+- [ ] Confirm the a7500 LAN IP and the RC target in `routes.json`.
+- [ ] Pass `/remote/info`, property set/get, and LFS round-trip checks.
 
-P1 is set up below and can be picked up as soon as W1/W2 land (or first, if Jay reorders — P1 touches no runtime code, so there is no dependency either way).
+### EP1 — Make one screen breathe
 
-## Build P1 — Locale Package contract validation (E08-locale-package)
+- [ ] Build the minimum Core Environment Rig in the fresh UE 5.8 project.
+- [ ] Drive sun, clouds, fog, precipitation, and light progression from existing WorldState routing.
+- [ ] Run existing browser audio from the same state.
+- [ ] Complete a 10–15 minute accelerated light + weather cycle.
+
+### EP2 — Build the office lab
+
+- [ ] Tape the Content Node/trailer occupied area in the Henhouse office.
+- [ ] Establish a fixed seated eye position.
+- [ ] Arrange available displays as one hero/end-wall view plus one or two side apertures.
+- [ ] Build the minimum nDisplay venue profile: one design eye origin, measured Screen transforms, geometry-derived off-axis frusta, and output mapping for the available displays.
+- [ ] Reject mirrored or hand-tuned-FOV shortcuts; pass a simple cross-surface exposure and motion-coherence check.
+- [ ] Control ambient light and frame the displays as openings.
+- [ ] Route a basic directional bed and one aperture-anchored audio cue through available speakers.
+
+### EP3 — Author Scene 0
+
+- [ ] Choose one observed/authored atmospheric world; do not begin with Baton Rouge 1985.
+- [ ] Author coherent adjacent views, a canonical hour, one atmosphere/weather transition, and a matched soundscape.
+- [ ] Write the lightweight PRD §14.6 Provenance Declaration for Scene 0; no package loader or publish gate required.
+- [ ] Run the complete 10–15 minute Experience Proof without explanation or operator UI.
+
+### EP4 — Guest sessions
+
+- [ ] Run 3–5 non-technical guest sessions.
+- [ ] Record felt defects by room/display, camera/frustum, rendering, audio, world-state coherence, content, or operation.
+- [ ] Rank the three highest-leverage barriers to presence.
+- [ ] Record an evidence-backed Presence Gate pass/fail decision.
+- [ ] If the gate fails, iterate EP2/EP3 and rerun the guest check; do not close D003.
+- [ ] After a pass, write the next roadmap from observed failures and explicitly choose which parked work resumes.
+
+## Parked queue
+
+P1 is fully scoped below so no planning is lost. It resumes only when D003 exits or when a second real scene makes manual configuration/content switching the binding problem.
+
+## Parked — Future experiment: Henhouse concept visualization
+
+**Status: captured, not active implementation.** Use this to communicate the vision to friends, family, prospective collaborators, and early customer interviews before committing to production hardware. It does not interrupt the Experience Proof queue or freeze the physical design. Most deliverables are henhouse-adu / Henhouse-brand work — rehome to `../henhouse-adu/tasks.md` or the hub if this activates. **Guard: do not show concept imagery to anyone in the EP4 guest pool before their session** — EP4 requires unprompted reactions, and primed guests contaminate the Presence Gate evidence.
+
+- [ ] Create a simple, dimensioned SketchUp blockout compiled from the ratified `../henhouse-adu` authorities — D004 + D002 (26' × 102" exterior, conventional A-frame tongue, rear guest door). Content Node interior is pre-B008, so interior views are illustrative, not dimensioned. Treat the blockout as the geometric source of truth for concept images, not as construction documentation.
+- [ ] Draft a small visual identity board: silhouette, proportions, exterior materials/colors, logo placement, interior palette, and lighting character. Hitch type and guest-door position are ratified inputs (D004; `../henhouse-adu/configs/content-node.md`), not identity variables; revise the board when B007/B008 land.
+- [ ] Export consistent exterior and interior reference views from SketchUp: side, rear three-quarter, arrival/hero, cutaway, and seated-eye interior.
+- [ ] Use Nano Banana Pro for a small set of campaign-quality hero images and Nano Banana 2 for rapid environment, configuration, and aspect-ratio variants while preserving the reference geometry. (Repo elsewhere writes "Nano Banana (Gemini)" — confirm current model names at execution.) No synthesized people in any render — the PRD's no-synthesized-people law applies to marketing imagery too.
+- [ ] Produce an initial five-scene concept set around one recognizable Henhouse room, mapped to the canonical cartridge names in `../henhouse-adu/masterplan.md`: atmospheric Time Machine, 1985 historical, Sportsbook/Lounge, Content Node (Mobile Studio), and inside-the-photograph memory experience.
+- [ ] Assemble a restrained Pebble Flow-inspired one-page concept presentation in Figma or a lightweight site: full-bleed imagery, minimal copy, consistent typography, and the working message **“One room. Many worlds.”**
+- [ ] Mark all pre-build imagery as **Henhouse concept visualization** and do not represent generated mechanical details as decided engineering.
+- [ ] Treat reactions as discovery evidence: record which scene creates spontaneous pull, who imagines booking it, and which use deserves a bounded follow-up experiment.
+
+## Parked — Build P1: Locale Package contract validation (E08-locale-package)
 
 **Scope guard: no runtime code changes.** Manifests, validator, fixtures, eval registration only. The engine does not learn to load packages until P2.
 
