@@ -52,6 +52,19 @@ Current-build task list (Forge Lazar stack). Read `docs/experience-proof-plan.md
 
 P1 is fully scoped below so no planning is lost. It resumes only when D003 exits or when a second real scene makes manual configuration/content switching the binding problem.
 
+## Parked — Future experiment: Henhouse concept visualization
+
+**Status: captured, not active implementation.** Use this to communicate the vision to friends, family, prospective collaborators, and early customer interviews before committing to production hardware. It does not interrupt the Experience Proof queue or freeze the physical design. Most deliverables are henhouse-adu / Henhouse-brand work — rehome to `../henhouse-adu/tasks.md` or the hub if this activates. **Guard: do not show concept imagery to anyone in the EP4 guest pool before their session** — EP4 requires unprompted reactions, and primed guests contaminate the Presence Gate evidence.
+
+- [ ] Create a simple, dimensioned SketchUp blockout compiled from the ratified `../henhouse-adu` authorities — D004 + D002 (26' × 102" exterior, conventional A-frame tongue, rear guest door). Content Node interior is pre-B008, so interior views are illustrative, not dimensioned. Treat the blockout as the geometric source of truth for concept images, not as construction documentation.
+- [ ] Draft a small visual identity board: silhouette, proportions, exterior materials/colors, logo placement, interior palette, and lighting character. Hitch type and guest-door position are ratified inputs (D004; `../henhouse-adu/configs/content-node.md`), not identity variables; revise the board when B007/B008 land.
+- [ ] Export consistent exterior and interior reference views from SketchUp: side, rear three-quarter, arrival/hero, cutaway, and seated-eye interior.
+- [ ] Use Nano Banana Pro for a small set of campaign-quality hero images and Nano Banana 2 for rapid environment, configuration, and aspect-ratio variants while preserving the reference geometry. (Repo elsewhere writes "Nano Banana (Gemini)" — confirm current model names at execution.) No synthesized people in any render — the PRD's no-synthesized-people law applies to marketing imagery too.
+- [ ] Produce an initial five-scene concept set around one recognizable Henhouse room, mapped to the canonical cartridge names in `../henhouse-adu/masterplan.md`: atmospheric Time Machine, 1985 historical, Sportsbook/Lounge, Content Node (Mobile Studio), and inside-the-photograph memory experience.
+- [ ] Assemble a restrained Pebble Flow-inspired one-page concept presentation in Figma or a lightweight site: full-bleed imagery, minimal copy, consistent typography, and the working message **“One room. Many worlds.”**
+- [ ] Mark all pre-build imagery as **Henhouse concept visualization** and do not represent generated mechanical details as decided engineering.
+- [ ] Treat reactions as discovery evidence: record which scene creates spontaneous pull, who imagines booking it, and which use deserves a bounded follow-up experiment.
+
 ## Parked — Build P1: Locale Package contract validation (E08-locale-package)
 
 **Scope guard: no runtime code changes.** Manifests, validator, fixtures, eval registration only. The engine does not learn to load packages until P2.

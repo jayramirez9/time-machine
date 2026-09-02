@@ -151,6 +151,7 @@ The milestone passes when:
 - New research agents, catalogs, international support, and Temporal Asset Library work.
 - NYC 1884 expansion and the Baton Rouge 1985 Witness Test.
 - Production operator UI, calibration, and reliability work beyond what Scene 0 exposes.
+- The Henhouse concept-visualization experiment (SketchUp blockout + generated hero imagery; captured in `tasks.md`). If run before EP4, its imagery must not reach the EP4 guest pool — primed guests contaminate the Presence Gate evidence.
 
 Parked means preserved, not rejected. `docs/refactor-plan.md` remains the restart plan for platform work.
 
