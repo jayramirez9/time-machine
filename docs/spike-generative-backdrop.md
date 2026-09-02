@@ -51,7 +51,7 @@ Put invented geometry in the frame and that sentence resolves to: **the guest ca
 | Arm | Method | Cost | Plumbing needed |
 |-----|--------|------|-----------------|
 | **A — Baseline** | Horizon as it stands (procedural massing falloff) | $0 | none |
-| **B — Splat backdrop** | Plate → Marble `marble-1.1` → `.spz` → UE 5.8 | ~$1.20/world | ⚠️ still unproven **on our stack**; vendor now claims a documented path (2026-08, unverified) — see Watch note |
+| **B — Splat backdrop** | Plate → Marble `marble-1.1` → `.spz` → UE 5.8 | ~$1.20/world | ⚠️ still unproven **on our stack**; vendor now claims a documented path (2026-08, unverified) — see 2026-08-13 watch note |
 | **C — Panorama backdrop** | Same Marble call → `assets.imagery.pano_url` → backdrop geometry with a WorldState-driven material | same call, $0 extra | ⚠️ **new** — see below |
 | **D — Mesh seed** *(not scoped; watch only)* | Plate → Marble **HQ mesh export** → UE as geometry, then enhanced in-editor | ~$1.20 + $2.80 HQ tier (vendor-stated; additive-vs-replacement unconfirmed) | Unknown — no arm authored, see below |
 
@@ -76,6 +76,18 @@ Three open risks before Arm D is worth authoring, in governing order:
 
 **Verdict: watch, do not schedule.** Risks 1 and 2 are cheap to test later; risk 0 may close the question outright. None of this is a felt defect in the room. Revisit per the D003 resume trigger in `docs/experience-proof-plan.md` — "only for a named asset or scene problem that conventional Unreal content cannot meet."
 
+### Watch note (2026-09-02): Atlas — the model behind future Marble
+
+**Source and trust level:** World Labs' public blog post announcing **Atlas** (worldlabs.ai/blog/atlas, 2026-09-01, read 2026-09-02). A vendor announcement, not a hands-on — same trust level as the 2026-08-13 note. Early access only, no pricing, no engine-integration or mesh-export claims.
+
+Atlas is a multimodal autoregressive diffusion transformer that "will power future versions of Marble." Announced capabilities: camera-controlled video generation (up to 1 min / 1440p on designed camera paths), **spatial reconstruction from as few as 2–3 images** (up to 100+ in spatial context, claimed to outperform specialized 3D-reconstruction models), space-time simulation, and image/360-pano generation. Outputs: video, point clouds, Gaussian splats, depth maps.
+
+**What does not change:** the post says nothing about lighting (except as a training-data variation axis) or generation latency — its only speed claim is about *rendering* the finished splat scene on-device, a different thing. The following is therefore **our inference, unverified either way** (same voice as the note above): splat and video outputs are assumed to carry baked generation-time lighting and so cannot obey the WorldState sun/weather loop (same dead-end as the splat-seed analysis above), and generation is assumed offline, so nothing here touches the Experience Proof. Point clouds and depth maps are the one geometry-shaped exception worth naming — depth carries no lighting at all, and the post describes jointly generating views and estimating their geometry — but an unstructured coloured point cloud is not Lumen-relightable, material-bearing geometry either, so the honest disposition is still watch. Arm B's ⚠️ and §6 criterion 6 stand; risks 0–2 above stand; the §17 quarantine and the no-synthesized-people law stand.
+
+**What to re-test at re-read time:** the few-image reconstruction claim aims squarely at sparse **archival** reconstruction — the sparsity that the 7d.1 prep finding showed makes archival→splat marginal. It does *not* gate PRD §3.5 memory-mode capture: §3.5's "Why it is buildable" rules that most memory venues still stand and the guest's photographs are the set dressing and date evidence, **not the geometry source** (present-day dense capture is; the 7d.2 Cesium ion photos→3DGS path is the named candidate there), and D002 routes the BR-1985 anchor photo to the §27 Photo Test wall, not an ingest pipeline. There is a live tension inside §3.5 — its division-of-truth paragraph says the guest's photos "establish the space" — recorded here, not resolved here. Where few-image reconstruction *would* matter: demolished or remodeled memory venues, unseen-wall fill under §3.5's relocated authority, and the archival far-field this spike already covers. Two questions decide whether Atlas ever graduates past watch: (1) does faithful few-image reconstruction hold up on *our* inputs — old, sparse, non-overlapping photos, often B&W or faded (the §4 colour risk applies); (2) does any Atlas-era product emit **relightable geometry** rather than baked splats/video — the criterion that would actually move the seed posture from watch to a scoped arm. Re-read this note (a $0 act — this is not authorization to resume capture work) when the capture resume trigger in `docs/experience-proof-plan.md` §Resume Triggers fires, or when memory-mode/BR-1985 work begins.
+
+**Verdict unchanged: watch, do not schedule.**
+
 ### Correction: how Arm C's grading actually has to work
 
 An earlier draft of this doc claimed the panorama could be re-tinted per era **and per weather state** through `resolveToneMapping(year)`. **That was wrong**, and the error mattered enough to be worth recording:
@@ -97,7 +109,7 @@ Had the spike run on the original claim, criterion 4 below would have "failed" a
   - A Gemini-generated period street view (`lib/geminiImageGen.js`) — color and full resolution, but fully invented.
 - Unreal 5.8 with the near-field 1884 scene standing.
 
-**⚠️ Colour is an unsolved input risk.** Every archival plate on hand is black-and-white. Marble from a B&W plate will likely produce a monochrome or oddly-toned world, and the fix is not the Arm C material (that shifts tint, it does not invent chrominance). **Lead with the Gemini plate** and treat the archival plate as a control for how badly monochrome degrades the result. Score it (criterion 5).
+**⚠️ Colour is an unsolved input risk.** Every archival plate on hand is black-and-white. Marble from a B&W plate will likely produce a monochrome or oddly-toned world, and the fix is not the Arm C material (that shifts tint, it does not invent chrominance). **Lead with the Gemini plate** and treat the archival plate as a control for how badly monochrome degrades the result. Score it (criterion 4).
 
 **Single image only.** The client sends one `image_prompt` (+ optional `text_prompt`); no multi-image. That is precisely why it's interesting — the 7d.1 prep found LOC holdings too sparse for photogrammetric capture (~9 items, all ≤640px). Generative needs only one image. It solves sparsity *by inventing*, which the PRD permits **only** in the uncovered-background case tested in §1.
 
