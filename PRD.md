@@ -4,15 +4,19 @@ PRD + Brand Constitution for the Time Machine Platform
 
 ## Version
 
-v3.0 — Experience Bible / Product Requirements Document
+v3.2 — Experience Bible / Product Requirements Document
 Owner: Henhouse Holdings / Time Machine
-Status: North Star + v3 build specification (Programmable Environment Engine — historical, observed, and authored provenance; Personal Memory Reconstruction as a second application)
+Status: North Star + v3 build specification (Programmable Environment Engine — three authoring routes: Historical, Memory, Authored)
 
-**v3.0 amendment (July 2026):** Replaces the **Accuracy Contract** with the **Flinch Standard** (§5.0) as the governing law — accuracy is worth exactly what it costs to prevent the flinch of someone who was there, and nothing beyond that. Inverts the authoring pipeline to **photo-first** (§3.1): a dated, located photograph is the specification, not reference material. Reframes Time Machine's identity as a **programmable environment engine** spanning three provenance modes — historical, observed, authored (§2, §17 Provenance Modes) — rather than one product's render layer. Demotes the confidence/citation envelope from a product contract to internal engineering metadata (§17, §23), and the accuracy manifest to a **provenance declaration**. Adds diurnal state authoring (§25), the witness window (§26), and the Photo/Witness acceptance tests (§27).
+**v3.2 amendment (September 2026):** Names the **three authoring routes** (§2, §17 Provenance Modes) by what the guest hands us, and makes that the product taxonomy. **Route 1, Historical** — a place and a date (1985 Baton Rouge at a street address; 1884 Manhattan; 1969 Boston Common); the archive is the authority; the pipeline we have built to date. **Route 2, Memory** — the guest's photographs of a day; the guest is the authority; a bespoke place built from those photographs, with that day's true environment — weather, light, the season's real sound — supplied by the same engine as Route 1. **Route 3, Authored** — a brief; the author or the source canon is the authority; real (Lake Oconee at dusk) or fictional (a snowy cabin, a Star Wars planet). Two corrections follow. First, **§3.1 "the photograph is the spec" is a technique the Historical route uses whenever a dated frame exists — not a mode of its own and not the primary mode.** The v3.0 §3.1 text made photo-first the primary mode wherever a dated frame survives, which caused a place-and-date scene (Baton Rouge 1985) to read as a photo pipeline; it is Historical, and its family photographs are evidence inside that route. Second, the v3.0 **Observed** mode (present-day real place) is folded into Authored as its real-place case; the "Observed is not the easy mode" analysis is retained there unchanged. **Contract alignment is owed, not done here:** the Locale Package contract's `provenance.mode` enum still encodes the v3.0 cut (`historical_reconstruction | observed | authored`) and has no Memory value. Realigning it is a contract change under CLAUDE.md rule 7 (schema semver bump, reference manifests, contract evals, D001 amendment) and is sequenced as its own build, tracked in `tasks.md` under the E08 parked queue. That build also owns the prose that still speaks v3.0's vocabulary: `docs/architecture-v3.md` (its Authored definition, "no external referent," is now wrong for the real-place case; its observed-mode composite rule), CLAUDE.md rule 2, and `docs/temporal-asset-library.md`. Until then `observed` is read as "Authored, real place, live-bound" and Memory packages have no contract home. In this document "mode" and "route" are the same word; body text that says "historical mode" or "memory mode" means the route.
+
+**v3.1 amendment (September 2026):** Extends the photo-first inversion (§3.1) into memory mode (§3.5): **the guest's photographs are the primary source of the reconstruction — the ingredients, not a quality check.** The v2.2 text of §3.5 "Why it is buildable" had ruled the opposite ("the guest's photographs are not the geometry source"), making present-day capture the geometry source reconciled back to the memory's date; that direction is inverted. Present-day capture of a still-standing venue is demoted to optional supporting evidence — scaffolding reconciled *to the photographs*, never the reverse (also recorded at the §17 selector) — and the remodeled or demolished venue is a first-class case, not an exception. The division-of-truth **principle** (guest supplies the *what*, Time Machine supplies the *when*) is unchanged; its statement is sharpened to name the photographs the primary source. The relocated-authority principle and the historical North Star's primacy are unchanged. The **no-synthesized-people law is unchanged but its enforcement surface hardens**: the primary source is now photographs that contain people, and their presence in frame is explicitly not a license — §3.5 now says so in place.
+
+**v3.0 amendment (July 2026):** Replaces the **Accuracy Contract** with the **Flinch Standard** (§5.0) as the governing law — accuracy is worth exactly what it costs to prevent the flinch of someone who was there, and nothing beyond that. Inverts the authoring pipeline to **photo-first** (§3.1): a dated, located photograph is the specification, not reference material. Reframes Time Machine's identity as a **programmable environment engine** spanning three provenance modes — historical, observed, authored (§2, §17 Provenance Modes; superseded by the v3.2 authoring routes) — rather than one product's render layer. Demotes the confidence/citation envelope from a product contract to internal engineering metadata (§17, §23), and the accuracy manifest to a **provenance declaration**. Adds diurnal state authoring (§25), the witness window (§26), and the Photo/Witness acceptance tests (§27).
 
 **Scope boundary (software vs. hardware).** v3.0 draws the line between the *engine* and the *venue*. This PRD governs software only — world state, provenance, authoring, audio logic, acceptance. The physical display and audio architecture the same July 2026 working session specified (surface classes, panel-vs-LED, aperture emitters, the side-aperture pre-provision rule) lives in `../henhouse-adu`, the venue project, cross-referenced in `docs/time-machine-crossref.md` there. This document does not spec hardware; where earlier versions did, those references are demoted to pointers.
 
-**v2.2 amendment (July 2026):** Adds **§3.5 — The Second Mode (Personal Memory Reconstruction)**, a second application of the same engine in which the source of ground truth is the guest's own photographs and memory rather than the archival record. It introduces one constitutional refinement — the **relocated-authority principle** (§3.5, §17): the Laws are not suspended in this mode, but their ground-truth source shifts from *the cited archive* to *the person whose memory it is, present to verify*. Under v3.0 this is recognizable as the Flinch Standard's own logic — the guest **is** the witness. The historical North Star (§3) is unchanged and remains primary.
+**v2.2 amendment (July 2026):** Adds **§3.5 — The Second Route (Personal Memory Reconstruction)** *(titled "The Second Mode" until v3.2)*, a second application of the same engine in which the source of ground truth is the guest's own photographs and memory rather than the archival record. It introduces one constitutional refinement — the **relocated-authority principle** (§3.5, §17): the Laws are not suspended in this mode, but their ground-truth source shifts from *the cited archive* to *the person whose memory it is, present to verify*. Under v3.0 this is recognizable as the Flinch Standard's own logic — the guest **is** the witness. The historical North Star (§3) is unchanged and remains primary.
 
 **v2.1 amendment (June 2026):** Adds the **Representation Regimes** model (§17) — geometry representation is chosen per-feature by available evidence, not by a single pipeline — and codifies the **generative-world-model boundary** (§17). Under v3.0 its justification rests on date-gating (§5.6) rather than citation. All specific technologies (3D Gaussian Splatting, Unreal versions, asset generators) are deliberately kept out of this document and tracked in `ROADMAP.md`, per the §3 principle that the pipeline rides the quality curve without architectural change.
 
@@ -24,13 +28,13 @@ If a future decision contradicts this, the decision is wrong—unless we explici
 
 ## 2) Product Summary
 
-Time Machine is a **programmable environment engine**. It recreates a specific place — historical, present-day, or authored — and renders it through surfaces that behave like real architectural apertures, with environmental audio driven by the same world state. The room becomes a portal into a coherent, living world: one universe, many windows.
+Time Machine is a **programmable environment engine**. It recreates a specific place — historical, remembered, or authored — and renders it through surfaces that behave like real architectural apertures, with environmental audio driven by the same world state. The room becomes a portal into a coherent, living world: one universe, many windows.
 
 The environment is not tied to one product. The immersive cartridge is simply the configuration where the environment *is* the product rather than the backdrop; the same engine can dress any room. (How the environment is *displayed* — surface count, panel classes, speaker topology — is a venue-hardware decision and lives in `../henhouse-adu`, not here.)
 
 The engine supports:
 
-* Programmable environments across three **provenance modes**: historical, observed, and authored (§17 Provenance Modes)
+* Programmable environments across three **authoring routes**, distinguished by what the guest hands us: Historical (a place and a date), Memory (the guest's photographs), Authored (a brief — real or fictional). §17 Provenance Modes.
 * World-state simulation (time-of-day, weather, atmosphere, environment semantics) driving a full 24-hour cycle
 * Environmental audio driven by the same world state (directional, contextual, non-looping, period-aware)
 * Multi-surface coherence where the configuration calls for it (directional accuracy + synchronization + exposure/color coherence)
@@ -76,7 +80,9 @@ Photo (dated, located)
 
 This inverts the v2 pipeline (Place × Time → research → assemble → generate → validate). Research does not disappear — it moves downstream, and its job changes from *establishing what was there* to *filling what the frame does not show and gating what may appear.*
 
-**Where no dated frame exists** — a demolished side street known only from a Sanborn footprint and a stereograph of the wrong block — the photo cannot be the spec, and the procedural + archival regime (§17) carries the scene as it did under v2. Photo-first is the *primary* mode wherever a dated frame survives, not the only one. What both modes answer to is the same witness.
+**Where no dated frame exists** — a demolished side street known only from a Sanborn footprint and a stereograph of the wrong block — the photo cannot be the spec, and the procedural + archival regime (§17) carries the scene as it did under v2. Both answer to the same witness.
+
+*(v3.2)* **This is a technique of the Historical route, not a route of its own.** The guest hands us a place and a date; the archive is the authority; a dated frame, where one survives, is the strongest evidence in that archive and is used as the spec for what it shows. It does not change who the authority is or what the input was. Baton Rouge 1985 at a street address is Historical even though family photographs anchor its date and dress its parcel. The route where photographs *are* the input and the guest is the authority is Memory (§3.5).
 
 **Product definition, one sentence: make me be inside this photograph.**
 
@@ -102,9 +108,11 @@ Examples of the bar:
 
 Rule: Missing detail is forgivable. Incorrect detail breaks trust.
 
-## 3.5) The Second Mode — Personal Memory Reconstruction
+## 3.5) The Second Route — Personal Memory Reconstruction
 
 The North Star (§3) points at *history* — any Place × Time, assembled from the archival record, for anyone. The same engine, pointed at a different source of truth, produces a second thing that may matter to people even more: **a day you can walk back into.**
+
+*(v3.2)* This is the **Memory route** (§17): the input is the guest's photographs, not a place and a date, and the guest is the authority. It is a separate route because the product is a *bespoke* place built from those photographs: they are the authority for the reconstructed venue — its geometry and how it was dressed that day — rendered through the apertures. The engine that serves the Historical route supplies the true environment of that date — its weather, its light, the season's real sound. An anniversary from the 1990s gets that day's weather and the birds that were actually singing; the photographs define what the place looks like.
 
 A guest brings photographs of a place that mattered to them and the date it happened — a wedding, a childhood home, a grandparent's shop, a last summer. Time Machine reconstructs that specific place and re-creates the true environment of that specific day, and the guest sits inside it again. Not a slideshow. Not a recreation "in the style of." **The actual day.**
 
@@ -112,7 +120,7 @@ A guest brings photographs of a place that mattered to them and the date it happ
 
 This mode works because responsibility splits cleanly, and each half is sourced from what is actually good at it:
 
-* **The guest supplies the *what*** — the place, as geometry. Their photographs establish the space and how it was dressed that day: the flowers, the arch, the arrangement of a room.
+* **The guest supplies the *what*** — the place, as geometry. Their photographs are the **primary source**: they establish the space and how it was dressed that day — the flowers, the arch, the arrangement of a room. The photograph is the spec here exactly as it is in §3.1.
 * **Time Machine supplies the *when*** — the true environment of that date, from the same factual engine that drives historical mode. The **real weather** that day (NOAA records reach back to the 1800s), the **season's real sound** (cicadas in an August dusk, the birds that were actually singing), the **wind**, the **light** — the golden hour as the evening actually ran long. This is the product's most mature capability, and here it does exactly what it was built to do: make the environment *true*, not evocative.
 
 "Sit in that day" is therefore not a metaphor. The world outside the windows is the world that was actually there. The room within is the room the guest remembers. Every cue still agrees (Law 5.1) — it is simply a different day being made coherent.
@@ -136,9 +144,9 @@ The guests in the memory are the real people who physically return to the room �
 
 ### Why it is buildable — and buildable early
 
-The mode sidesteps the two hardest problems in the historical program:
+The mode softens the two hardest problems in the historical program:
 
-* **No archival sparsity.** Most memory venues still stand. The building is captured *today* — dense, present-day, high-resolution — which is the capture pipeline's easy case, not the archival-photo hard case. The guest's photographs are not the geometry source; they are the **set dressing and the date evidence.** But present-day capture is a geometry *starting point*, not the finished shell: it carries post-date reality (a later renovation, new signage, a tree since planted), and that must be **reconciled back to the memory's date under the guest's authority** — Law 5.6 (No Anachronisms) governs the result exactly as it governs the historical core.
+* **The photographs are the spec — here as everywhere (§3.1).** *(v3.1)* The guest's photographs are the **primary source and the authority** for the reconstruction: the ingredients, not a quality check — and, as under v2.2, still the **date evidence** that anchors the day. Because the photographs are family photographs, they will contain people; persons in frame are **excluded from reconstruction**, and their presence in the source is not a license against the no-synthesized-people law below. Sparsity is survivable here in a way it is not in historical mode, for two reasons the archive can never supply. First, when the venue still stands, a dense present-day capture — possibly a guest-captured walkthrough; intake mechanics are an open product question — provides **supporting scaffolding** for what the photographs under-cover; it carries post-date reality (a later renovation, new signage, a tree since planted) and is therefore **reconciled to the photographs and the memory's date, never the reverse.** Law 5.6 (No Anachronisms) governs the result exactly as it governs the historical core. Second, the memory's owner is present to verify the fill — the relocated-authority principle carries what neither source covers. The remodeled sanctuary, the gutted childhood home, and the demolished reception hall are first-class cases of this mode, not exceptions: there, the photographs plus the guest's verification *are* the whole record. First-class does not mean equally cheap — the still-standing venue remains the early, buildable case; the photographs-only case leans on reconstruction capability still maturing.
 * **No relighting-of-history puzzle for the shell** — though the guest will want that day's actual evening light, which is why the hero structure favors relightable representation (mesh + PBR) over frozen capture, consistent with the Representation Regimes model (§17).
 
 The engine that makes each bespoke reconstruction affordable rather than an artisan project is the automation already built for historical mode — scene bootstrap, the capture pipeline, the profile assembler. Historical mode scales *breadth* (any place, automatically). Memory mode scales *depth* at the places people care about most. They are complementary uses of one system.
@@ -471,7 +479,7 @@ Under v3.0 the **Accuracy Manifest is replaced by a Provenance Declaration.** It
 
 Every scene declares:
 
-* Provenance mode: historical / observed / authored (§17)
+* Authoring route: historical / memory / authored (§17). *Until the contract realignment build lands, packages still declare the v3.0 enum (`historical_reconstruction` / `observed` / `authored`); read `observed` as Authored, real place, live-bound.*
 * Date/time window and location scope
 * The **gates in force** — the date-gating cutoffs per asset class (§5.6): media, vehicles, signage, materials, clothing, technology, language, wildlife
 * Music catalog: date cutoff, genre weights, format
@@ -606,23 +614,25 @@ demolished / no usable imagery             → procedural + archival
 low confidence everywhere                  → reduce detail (Law 5.5), do not invent
 ```
 
-**The generative-world-model boundary.** Generative world models — systems that *invent* navigable environments from a prompt — remain **out of bounds for the historical and observed regimes**. Under v3.0 the reason is no longer citation. It is that **they cannot be date-gated (§5.6).** A generative model asked for 1958 Fremont Street will produce a plausible sign in a typeface introduced in 1971, a car body that never existed, a fixture from the wrong decade — and it has no mechanism to know it did. It produces anachronism it cannot detect, which is precisely the failure §5.6 exists to make impossible. They remain usable where invention is honest: present-day or live scenes, distant background no source covers, and the authored regime (§17 Provenance Modes), where there is no date to violate.
+**The generative-world-model boundary.** Generative world models — systems that *invent* navigable environments from a prompt — remain **out of bounds for the Historical and Memory routes** — where "out of bounds" means *inventing the world*: generating the venue, the block, the room. It does not mean the bounded fill of what the photographs did not capture, which Memory permits under a living authority (below) and which is corrected, not invented. Under v3.0 the reason is no longer citation. It is that **they cannot be date-gated (§5.6).** A generative model asked for 1958 Fremont Street will produce a plausible sign in a typeface introduced in 1971, a car body that never existed, a fixture from the wrong decade — and it has no mechanism to know it did. It produces anachronism it cannot detect, which is precisely the failure §5.6 exists to make impossible. They remain usable where invention is honest: present-day or live scenes, distant background no source covers, and the Authored route (§17 Provenance Modes), where there is no date to violate. *(v3.2: this sentence keeps its v3.0 meaning; "present-day or live scenes" and "the authored regime" are now both the Authored route.)*
 
 Both regimes feed the same Environment Profile and hang off the same WorldState. As with weather inputs, the downstream pipeline does not care which regime produced a given feature — only that its provenance is recorded (§14.6).
 
-**Authority in memory mode.** The boundary above governs the *historical core*, where the archive is the arbiter and invention is forbidden. In Personal Memory Reconstruction (§3.5), the arbiter is the guest, present to verify — so filling in geometry the guest's photographs did not capture is permitted, because it is corrected against a living authority rather than fabricated against a cited one. The provenance discipline is unchanged: contributed geometry and dressing are recorded as guest-authored in the same provenance declaration (§14.6). Memory mode reconstructs place and environment only; it never synthesizes people (§3.5).
+**Authority in memory mode.** The boundary above governs the *historical core*, where the archive is the arbiter and invention is forbidden. In Personal Memory Reconstruction (§3.5), the arbiter is the guest, present to verify — so filling in geometry the guest's photographs did not capture is permitted, because it is corrected against a living authority rather than fabricated against a cited one. *(v3.1)* The selector's `survives today + imagery available → capture` rule is subordinated in this mode: present-day capture of a still-standing venue yields **supporting scaffolding, not authority** — the guest's photographs and the guest's verification outrank it, and the capture is reconciled to them (§3.5). The provenance discipline is unchanged: contributed geometry and dressing are recorded as guest-authored in the same provenance declaration (§14.6). Memory mode reconstructs place and environment only; it never synthesizes people (§3.5).
 
 ### Provenance Modes
 
-Provenance is declared per scene. It determines what "correct" means, not how much correctness is required — **the flinch bar (§5.0) is identical across all three.**
+*(v3.2)* There are three ways to author a world, distinguished by **what the guest hands us** — which fixes who the authority is. Provenance is declared per scene as the route it was built under. It determines what "correct" means, not how much correctness is required — **the flinch bar (§5.0) is identical across all three.**
 
-| Mode | Truth standard | Characteristic failure |
-|---|---|---|
-| **Historical** | Date-gated, witness-verified | Anachronism |
-| **Observed** (present-day, natural) | Geographic, meteorological, ecological fidelity | Generic-looking place |
-| **Authored** (fiction, licensed IP) | Canon fidelity to the source work | Off-model |
+| Route | Input | Authority | Truth standard | Characteristic failure |
+|---|---|---|---|---|
+| **Historical** | A place and a date | The archive | Date-gated, witness-verified | Anachronism |
+| **Memory** (§3.5) | The guest's photographs of a day | The guest, present to verify | Fidelity to the photographs; that day's true environment | Wrong dressing the owner would notice |
+| **Authored** | A brief — a real place, or a fiction | The author; the source canon | Real place: geographic, meteorological, ecological fidelity. Fiction: canon fidelity to the source work | Real place: generic-looking place. Fiction: off-model |
 
-**Observed is not the easy mode.** Fewer surfaces can flinch, but each carries far more of the guest's attention and there is nothing to hide behind. In Chinatown, slightly wrong birds are masked by neon, traffic, a radio, conversation, truck idle. At Lake Oconee at 6am the soundscape *is* the scene, and one wrong bird is not one percent of what is perceived — it is a third of it. Visually the same inversion holds: brick and signage is tractable geometry; water, wind-driven vegetation, and dappled canopy light are the hardest problems in real-time rendering, and the natural scene is all three at once with nothing else to look at.
+The Historical route is where the product began and where most of the work to date lives; it remains the focus. Memory reuses its engine — the same sound-bed pipeline, weather record, and date gates — pointed at the guest's day. Authored covers both Lake Oconee at dusk and a snowy cabin; the real-place case was v3.0's **Observed** mode, and the following holds for it unchanged.
+
+**The real place is not the easy case.** Fewer surfaces can flinch, but each carries far more of the guest's attention and there is nothing to hide behind. In Chinatown, slightly wrong birds are masked by neon, traffic, a radio, conversation, truck idle. At Lake Oconee at 6am the soundscape *is* the scene, and one wrong bird is not one percent of what is perceived — it is a third of it. Visually the same inversion holds: brick and signage is tractable geometry; water, wind-driven vegetation, and dappled canopy light are the hardest problems in real-time rendering, and the natural scene is all three at once with nothing else to look at.
 
 The provenance declaration (§14.6) states which mode a scene runs under. That is the whole of what it declares about truth — not an evidence audit.
 
@@ -1129,7 +1139,7 @@ Someone who was eight on Fremont Street in 1958 is seventy-six. Someone who work
 
 ## 27) Scene Acceptance (The Photo Test and The Witness Test)
 
-These replace the accuracy manifest as the scene acceptance gate. They work identically for historical, observed, and authored scenes, and they measure the only failure that costs anything.
+These replace the accuracy manifest as the scene acceptance gate. They work identically across all three authoring routes, and they measure the only failure that costs anything.
 
 **The Photo Test.** Print the source photograph. Mount it beside the aperture. Render the same view, same hour, same weather. Show a person. Ask what is different. Every gap they name is a backlog item.
 

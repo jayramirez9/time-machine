@@ -65,6 +65,15 @@ P1 is fully scoped below so no planning is lost. It resumes only when D003 exits
 - [ ] Mark all pre-build imagery as **Henhouse concept visualization** and do not represent generated mechanical details as decided engineering.
 - [ ] Treat reactions as discovery evidence: record which scene creates spontaneous pull, who imagines booking it, and which use deserves a bounded follow-up experiment.
 
+## Parked — Contract realignment to PRD v3.2 authoring routes (E08-locale-package, owed)
+
+PRD v3.2 (2026-09-03) made the product taxonomy Historical / Memory / Authored and folded `observed` into Authored's real-place case. The Locale Package contract still encodes v3.0. One build, under CLAUDE.md rule 7, sequenced after P1 (P1 drafts manifests against the current enum):
+
+- [ ] `provenance.mode` enum → add a Memory value; decide whether `observed` survives as Authored's live-bound real-place sub-case or becomes `authored` + `date_policy.type: live` (needs a D001 amendment either way)
+- [ ] Per-mode anchor grounding + `evals.required` minimum sets for the Memory value (`flinch-memory`? suite id is a schema-minor bump)
+- [ ] Schema semver bump + all `locales/*/manifest.json` + contract eval suite passing, same commit
+- [ ] Prose: `contracts/locale-package-v0.1.md`, `docs/architecture-v3.md` (Authored definition "no external referent" is wrong for real places; observed composite rule), CLAUDE.md rule 2, `docs/temporal-asset-library.md` §14.6 citation
+
 ## Parked — Build P1: Locale Package contract validation (E08-locale-package)
 
 **Scope guard: no runtime code changes.** Manifests, validator, fixtures, eval registration only. The engine does not learn to load packages until P2.
