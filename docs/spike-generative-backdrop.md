@@ -11,7 +11,7 @@
 
 > They remain usable where invention is honest: present-day or live scenes, **distant background no source covers**, and the authored regime (§17 Provenance Modes), where there is no date to violate.
 
-*(Quotation updated 2026-08-13 to PRD v3.0 wording. An earlier draft of this doc quoted the pre-v3.0 text — "clearly-flagged low-confidence distant background that no **archival** source covers" — whose extra word narrowed the exception more than the constitution does. Under v3.0 the reason for the boundary is also different: not citation, but that generative models **cannot be date-gated** (§5.6) — they produce anachronism they cannot detect.)*
+*(PRD v3.2, 2026-09-03: the quoted sentence is unchanged in meaning; "present-day or live scenes" and "the authored regime" are now both the Authored route, and "observed" reads as Authored's real-place case. Quotation updated 2026-08-13 to PRD v3.0 wording. An earlier draft of this doc quoted the pre-v3.0 text — "clearly-flagged low-confidence distant background that no **archival** source covers" — whose extra word narrowed the exception more than the constitution does. Under v3.0 the reason for the boundary is also different: not citation, but that generative models **cannot be date-gated** (§5.6) — they produce anachronism they cannot detect.)*
 
 So the far-field backdrop use case is **already permitted, conditionally**. The same position is applied to World Labs Marble by name in `docs/review-year1-2026-07.md`, and the ROADMAP's *Quarantined* bucket carries the same carve-out. This spike does not propose admitting a new regime; **the policy is settled and stays settled.**
 
