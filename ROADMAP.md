@@ -385,6 +385,8 @@ The v3.0 pipeline inversion (PRD §3.1: *the photograph is the spec*) as concret
 
 External technology that informs the roadmap. Volatile by nature — this is where dated, vendor-specific facts live so the PRD (the constitution) doesn't carry them. Re-scan periodically; promote anything that changes the plan into a phase above.
 
+> **As of 2026-09-03, new watch items land in `docs/tech-watch.md`**, which also carries an index of every watch item across this section and `docs/spike-generative-backdrop.md`. This section is not moved.
+
 **Drove Phase 7d (acted on):**
 - **3D Gaussian Splatting (3DGS)** — capture-based photoreal reconstruction; preserves thin structures (power lines, foliage, glass) where photogrammetry fails. Now the steepest quality curve in real-time 3D.
 - **Cesium for Unreal 3DGS streaming** (Cesium blog, Apr 27 2026) — hierarchical-LOD splat tilesets stream from Cesium ion. *On the dependency we already use.*

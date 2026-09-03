@@ -55,6 +55,8 @@ Put invented geometry in the frame and that sentence resolves to: **the guest ca
 | **C — Panorama backdrop** | Same Marble call → `assets.imagery.pano_url` → backdrop geometry with a WorldState-driven material | same call, $0 extra | ⚠️ **new** — see below |
 | **D — Mesh seed** *(not scoped; watch only)* | Plate → Marble **HQ mesh export** → UE as geometry, then enhanced in-editor | ~$1.20 + $2.80 HQ tier (vendor-stated; additive-vs-replacement unconfirmed) | Unknown — no arm authored, see below |
 
+*(Watch notes for items that are not about generative backdrops live in `docs/tech-watch.md` as of 2026-09-03; the two below stay here because they bear on this spike's arms.)*
+
 ### Watch note (2026-08-13): the vendor Unreal path, and the seed-vs-backdrop distinction
 
 **Source and trust level:** a World Labs marketing email, read 2026-08-13, claiming Unreal import tutorials across three plugin workflows (scene import, collision geometry, lighting). **Nobody here has read the tutorials or run the plugin.** This is a vendor claim, not a verification — and note the repo already recorded "a documented Unreal path" a month earlier (`review-year1-2026-07.md` §4) *while deliberately keeping* Arm B's ⚠️, because the flag was always about **our stack**, not about whether documentation exists. Nothing about our stack changed. §6 criterion 6 — *does `.spz` land in UE 5.8, and does it survive the near-field's Lumen/Megalights setup* — remains the honest statement of where the risk lives.
